@@ -1,3 +1,4 @@
+use near_contract_standards::non_fungible_token::core::NonFungibleTokenCore;
 use near_contract_standards::non_fungible_token::metadata::TokenMetadata;
 use near_contract_standards::non_fungible_token::{NonFungibleToken, Token, TokenId};
 use near_sdk::__private::schemars::Set;
@@ -48,10 +49,10 @@ pub struct Contract {
     next_reward_id: RewardId,
     box_type_by_token_id: LookupMap<TokenId, BoxType>,
     next_token_id: u32,
-    // all time fields are in nanoseconds
-    registration_start_time_ns: Option<Timestamp>,
-    registration_end_time_ns: Option<Timestamp>,
-    claiming_start_time_ns: Option<Timestamp>,
+    // all time fields are in milliseconds
+    registration_start_time_ms: Option<Timestamp>,
+    registration_end_time_ms: Option<Timestamp>,
+    claiming_start_time_ms: Option<Timestamp>,
     participants: LookupSet<AccountId>,
     // https://github.com/near-ndc/i-am-human
     registry_iah_contract: AccountId,
@@ -100,9 +101,9 @@ impl Contract {
             next_reward_id: 0,
             next_token_id: 1,
             box_type_by_token_id: LookupMap::new(StorageKey::BoxTypeByToken),
-            registration_start_time_ns: None,
-            registration_end_time_ns: None,
-            claiming_start_time_ns: None,
+            registration_start_time_ms: None,
+            registration_end_time_ms: None,
+            claiming_start_time_ms: None,
             participants: LookupSet::new(StorageKey::Participants),
             registry_iah_contract,
             issuer_iah_contract,
@@ -154,6 +155,7 @@ impl Contract {
         reward_id
     }
 
+    #[payable]
     pub fn add_near_reward(&mut self, box_type: BoxType, reward: InputReward) {
         self.assert_only_owner();
 
@@ -186,70 +188,82 @@ impl Contract {
     pub fn start_registration(&mut self, when: Option<Timestamp>) {
         self.assert_only_owner();
 
-        // either right now, or provided time in nanoseconds
-        let time_ns = when.unwrap_or_else(|| env::block_timestamp());
+        // either right now, or provided time in milliseconds
+        let time_ms = when.unwrap_or_else(|| env::block_timestamp_ms());
 
         require!(
-            self.registration_start_time_ns.is_none(),
+            self.registration_start_time_ms.is_none(),
             "Can't override registration start time"
         );
 
-        self.registration_start_time_ns = Some(time_ns);
+        self.registration_start_time_ms = Some(time_ms);
     }
 
     pub fn stop_registration(&mut self, when: Option<Timestamp>) {
         self.assert_only_owner();
 
-        // either right now, or provided time in nanoseconds
-        let time_ns = when.unwrap_or_else(|| env::block_timestamp());
+        // either right now, or provided time in milliseconds
+        let time_ms = when.unwrap_or_else(|| env::block_timestamp_ms());
 
         require!(
-            self.registration_start_time_ns.is_some(),
+            self.registration_start_time_ms.is_some(),
             "End registration time can't be set if start time wasn't provided"
         );
 
         require!(
-            self.registration_start_time_ns.unwrap() < time_ns,
+            self.registration_start_time_ms.unwrap() < time_ms,
             "End registration time must be later than start"
         );
 
         require!(
-            self.registration_end_time_ns.is_none(),
+            self.registration_end_time_ms.is_none(),
             "Can't override registration end time"
         );
 
-        self.registration_end_time_ns = Some(time_ns);
+        self.registration_end_time_ms = Some(time_ms);
+    }
+
+    pub fn is_account_registered(&self, account_id: AccountId) -> bool {
+        self.participants.contains(&account_id)
+    }
+
+    pub fn get_registry_iah_contract(&self) -> String {
+        self.registry_iah_contract.to_string()
+    }
+
+    pub fn get_issuer_iah_contract(&self) -> String {
+        self.issuer_iah_contract.to_string()
     }
 
     pub fn start_claiming(&mut self, when: Option<Timestamp>) {
         self.assert_only_owner();
 
         require!(
+            self.claiming_start_time_ms.is_none(),
+            "Can't override claiming start time"
+        );
+
+        require!(
             self.internal_state() == State::RegistrationEnded,
             "Can't start claiming before registration ends"
         );
 
-        // either right now, or provided time in nanoseconds
-        let time_ns = when.unwrap_or_else(|| env::block_timestamp());
+        // either right now, or provided time in milliseconds
+        let time_ms = when.unwrap_or_else(|| env::block_timestamp_ms());
 
-        require!(
-            self.claiming_start_time_ns.is_none(),
-            "Can't override claiming start time"
-        );
-
-        self.claiming_start_time_ns = Some(time_ns);
+        self.claiming_start_time_ms = Some(time_ms);
     }
 
     pub fn get_registration_start_time(&self) -> Option<Timestamp> {
-        self.registration_start_time_ns
+        self.registration_start_time_ms
     }
 
     pub fn get_registration_end_time(&self) -> Option<Timestamp> {
-        self.registration_end_time_ns
+        self.registration_end_time_ms
     }
 
     pub fn get_claiming_start_time(&self) -> Option<Timestamp> {
-        self.claiming_start_time_ns
+        self.claiming_start_time_ms
     }
 
     pub fn register(&mut self) -> Promise {
@@ -278,15 +292,21 @@ impl Contract {
                 cross_contract_gas,
             );
 
+        let verification_callback_promise = Self::ext(env::current_account_id())
+            .with_static_gas(cross_contract_gas)
+            .on_iah_verification_callback();
+
         let callback_promise = Self::ext(env::current_account_id())
             .with_static_gas(cross_contract_gas)
             .on_register_callback(participant_id.clone());
 
-        get_iah_verification_promise.then(callback_promise)
+        get_iah_verification_promise
+            .then(verification_callback_promise)
+            .then(callback_promise)
     }
 
     #[private]
-    pub fn on_register_callback(&mut self, participant_id: AccountId) -> bool {
+    pub fn on_iah_verification_callback(&self) -> bool {
         // https://docs.rs/near-sdk/latest/near_sdk/env/fn.promise_results_count.html
         assert_eq!(env::promise_results_count(), 1, "ERR_TOO_MANY_RESULTS");
 
@@ -299,14 +319,10 @@ impl Contract {
                     self.registry_iah_contract.clone()
                 );
 
-                self.participants.remove(&participant_id);
-
                 false
             }
             PromiseResult::NotReady => {
-                log!("Promise isn't ready yet");
-
-                self.participants.remove(&participant_id);
+                log!("Promise for on_iah_verification_callback isn't ready yet");
 
                 false
             }
@@ -317,8 +333,6 @@ impl Contract {
                     Err(_) => {
                         log!("Couldn't deserialize cross-contract results");
 
-                        self.participants.remove(&participant_id);
-
                         false
                     }
                     Ok(data) => {
@@ -327,27 +341,72 @@ impl Contract {
                         match verification_result {
                             None => {
                                 log!(
-                                    "Verification data about {} not found in registry {} for issuer {}",
-                                    participant_id,
+                                    "Verification data not found in registry {} for issuer {}",
                                     self.registry_iah_contract,
                                     self.issuer_iah_contract
                                 );
 
-                                self.participants.remove(&participant_id);
-
                                 false
                             }
-                            Some(_) => {
-                                log!(
-                                    "Confirming that user {} is verified in registry {}",
-                                    participant_id,
-                                    self.registry_iah_contract
-                                );
-
-                                true
-                            }
+                            Some(_) => true,
                         }
                     }
+                }
+            }
+        }
+    }
+
+    #[private]
+    pub fn on_register_callback(&mut self, participant_id: AccountId) -> bool {
+        // https://docs.rs/near-sdk/latest/near_sdk/env/fn.promise_results_count.html
+        assert_eq!(env::promise_results_count(), 1, "ERR_TOO_MANY_RESULTS");
+
+        let verified_result = env::promise_result(0);
+
+        match verified_result {
+            PromiseResult::Failed => {
+                log!("Something failed while validating verification status",);
+
+                self.participants.remove(&participant_id);
+
+                false
+            }
+            PromiseResult::NotReady => {
+                log!("Promise for on_register_callback isn't ready yet");
+
+                self.participants.remove(&participant_id);
+
+                false
+            }
+            PromiseResult::Successful(data) => {
+                let result = bool::try_from_slice(data.as_slice());
+
+                if result.is_err() {
+                    log!("Couldn't unwrap result from successful promise");
+
+                    self.participants.remove(&participant_id);
+
+                    return false;
+                }
+
+                let verified = result.unwrap();
+
+                if verified {
+                    log!(
+                        "Participant {} is verified and was successfully registered",
+                        participant_id,
+                    );
+
+                    return true;
+                } else {
+                    self.participants.remove(&participant_id);
+
+                    log!(
+                        "Participant {} is not verified, reverting registration status",
+                        participant_id
+                    );
+
+                    return false;
                 }
             }
         }
@@ -387,6 +446,7 @@ impl Contract {
         self.box_type_by_token_id.insert(&token_id, &box_type);
     }
 
+    #[payable]
     pub fn nft_mint(&mut self, box_type: BoxType, account: AccountId) {
         self.assert_only_owner();
 
@@ -399,6 +459,7 @@ impl Contract {
         self.internal_nft_mint(box_type, account);
     }
 
+    #[payable]
     pub fn nft_mint_many(&mut self, box_type: BoxType, accounts: Set<AccountId>) {
         self.assert_only_owner();
 
@@ -416,24 +477,25 @@ impl Contract {
     }
 
     pub fn nft_is_claimed(&self, token_id: TokenId) -> bool {
-        !self.unclaimed_tokens.contains(&token_id)
+        self.tokens.nft_token(token_id.clone()).is_some()
+            && !self.unclaimed_tokens.contains(&token_id)
     }
 
     fn internal_state(&self) -> State {
-        if self.claiming_start_time_ns.is_some()
-            && env::block_timestamp() >= self.claiming_start_time_ns.unwrap()
+        if self.claiming_start_time_ms.is_some()
+            && env::block_timestamp_ms() >= self.claiming_start_time_ms.unwrap()
         {
             return State::ClaimStarted;
         }
 
-        if self.registration_end_time_ns.is_some()
-            && env::block_timestamp() >= self.registration_end_time_ns.unwrap()
+        if self.registration_end_time_ms.is_some()
+            && env::block_timestamp_ms() >= self.registration_end_time_ms.unwrap()
         {
             return State::RegistrationEnded;
         }
 
-        if self.registration_start_time_ns.is_some()
-            && env::block_timestamp() >= self.registration_start_time_ns.unwrap()
+        if self.registration_start_time_ms.is_some()
+            && env::block_timestamp_ms() >= self.registration_start_time_ms.unwrap()
         {
             return State::RegistrationStarted;
         }

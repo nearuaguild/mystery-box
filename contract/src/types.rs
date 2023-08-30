@@ -5,7 +5,7 @@ use near_sdk::serde::{Deserialize, Serialize};
 use crate::utils::get_random_number;
 
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug, PartialEq)]
-#[serde(crate = "near_sdk::serde", tag = "box_type", rename_all = "snake_case")]
+#[serde(crate = "near_sdk::serde", rename_all = "snake_case")]
 pub enum BoxType {
     Legendary,
     Rare,
