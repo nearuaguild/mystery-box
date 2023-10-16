@@ -483,7 +483,7 @@ mod tests {
     use near_sdk::json_types::U128;
     use near_sdk::test_utils::VMContextBuilder;
 
-    use near_sdk::{testing_env, AccountId, Gas, ONE_NEAR};
+    use near_sdk::{testing_env, AccountId, ONE_NEAR};
 
     use crate::json::{JsonBoxStatus, JsonPoolRewards, JsonReward};
     use crate::types::BoxRarity;
@@ -601,6 +601,23 @@ mod tests {
         testing_env!(context
             .attached_deposit(0)
             .predecessor_account_id(user1())
+            .build());
+
+        contract.nft_burn("1".to_string());
+    }
+
+    #[should_panic(expected = "ERR_ONLY_OWNER_CAN_BURN")]
+    #[test]
+    fn test_burn_box_as_another_user_with_panic() {
+        let (mut contract, mut context) = setup();
+
+        testing_env!(context.attached_deposit(ONE_NEAR).build());
+
+        contract.nft_mint(user1(), BoxRarity::Rare);
+
+        testing_env!(context
+            .attached_deposit(0)
+            .predecessor_account_id(user2())
             .build());
 
         contract.nft_burn("1".to_string());

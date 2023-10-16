@@ -2,7 +2,7 @@ use near_contract_standards::non_fungible_token::TokenId;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::env::panic_str;
 use near_sdk::{collections::LookupMap, require};
-use near_sdk::{env, log, AccountId, Balance, IntoStorageKey};
+use near_sdk::{env, AccountId, Balance, IntoStorageKey};
 
 use crate::types::{BoxRarity, Capacity, PoolId, Reward};
 use crate::utils::get_random_number;
