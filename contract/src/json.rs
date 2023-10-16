@@ -20,7 +20,7 @@ pub enum JsonPoolRewards {
     },
     NonFungibleToken {
         contract_id: AccountId,
-        token_id: Vec<TokenId>,
+        token_ids: Vec<TokenId>,
     },
 }
 
@@ -33,7 +33,7 @@ impl Into<JsonPoolRewards> for &Pool {
             },
             Pool::NonFungibleToken(pool) => JsonPoolRewards::NonFungibleToken {
                 contract_id: pool.contract_id.clone(),
-                token_id: pool.available_tokens.clone(),
+                token_ids: pool.available_tokens.clone(),
             },
         }
     }

@@ -451,22 +451,15 @@ impl Contract {
         let nft_account_id = env::predecessor_account_id();
 
         // we're required to ensure that the predecessor account is whitelisted, since the function is public
-        assert!(
-            self.whitelisted_nft_contracts.contains(&nft_account_id),
-            "The NFT contract {} isn't whitelisted to be stored as reward",
-            nft_account_id
-        );
-
         require!(
-            self.owner_id == previous_owner_id,
-            "Only owner is able to transfer NFT as reward"
+            self.whitelisted_nft_contracts.contains(&nft_account_id),
+            "ERR_PREDECESSOR_NOT_WHITELISTED",
         );
 
-        let result = serde_json::from_value::<BoxRarity>(Value::String(msg));
+        require!(self.owner_id == previous_owner_id, "ERR_FORBIDDEN");
 
-        require!(result.is_ok(), "Can't parse BoxRarity value from msg");
-
-        let rarity = result.unwrap();
+        let rarity =
+            serde_json::from_value::<BoxRarity>(Value::String(msg)).expect("ERR_PARSE_MSG");
 
         // TODO: add storage management
         self.rewards.add_nft_pool(rarity, nft_account_id, token_id);
@@ -499,6 +492,10 @@ mod tests {
 
     fn user2() -> AccountId {
         AccountId::from_str("user2").unwrap()
+    }
+
+    fn nft() -> AccountId {
+        AccountId::from_str("nft_contract").unwrap()
     }
 
     fn setup() -> (Contract, VMContextBuilder) {
@@ -568,6 +565,108 @@ mod tests {
     }
 
     #[test]
+    fn test_add_nft_pool() {
+        let (mut contract, mut context) = setup();
+
+        testing_env!(context.build());
+
+        contract.whitelist_nft_contract(nft());
+
+        testing_env!(context.predecessor_account_id(nft()).build());
+
+        contract.nft_on_transfer(
+            owner(),
+            owner(),
+            "some_token".to_string(),
+            "rare".to_string(),
+        );
+
+        let rewards = contract.get_available_rewards(BoxRarity::Rare, None);
+
+        assert_eq!(rewards.len(), 1);
+
+        let reward = rewards.get(0).unwrap().to_owned();
+
+        assert_eq!(
+            reward,
+            JsonPoolRewards::NonFungibleToken {
+                contract_id: nft(),
+                token_ids: vec!["some_token".to_string()]
+            }
+        );
+    }
+
+    #[should_panic(expected = "ERR_PREDECESSOR_NOT_WHITELISTED")]
+    #[test]
+    fn test_add_nft_pool_without_whitelist_with_panic() {
+        let (mut contract, mut context) = setup();
+
+        testing_env!(context.predecessor_account_id(nft()).build());
+
+        contract.nft_on_transfer(
+            owner(),
+            owner(),
+            "some_token".to_string(),
+            "rare".to_string(),
+        );
+    }
+
+    #[test]
+    fn test_add_nft_pool_of_different_rarity() {
+        let (mut contract, mut context) = setup();
+
+        testing_env!(context.build());
+
+        contract.whitelist_nft_contract(nft());
+
+        testing_env!(context.predecessor_account_id(nft()).build());
+
+        contract.nft_on_transfer(
+            owner(),
+            owner(),
+            "some_token".to_string(),
+            "rare".to_string(),
+        );
+        contract.nft_on_transfer(
+            owner(),
+            owner(),
+            "some_token_2".to_string(),
+            "epic".to_string(),
+        );
+        contract.nft_on_transfer(
+            owner(),
+            owner(),
+            "some_token_3".to_string(),
+            "rare".to_string(),
+        );
+
+        let rare_rewards = contract.get_available_rewards(BoxRarity::Rare, None);
+        assert_eq!(rare_rewards.len(), 1);
+        let epic_rewards = contract.get_available_rewards(BoxRarity::Epic, None);
+        assert_eq!(epic_rewards.len(), 1);
+
+        let rare_reward = rare_rewards.get(0).unwrap().to_owned();
+
+        assert_eq!(
+            rare_reward,
+            JsonPoolRewards::NonFungibleToken {
+                contract_id: nft(),
+                token_ids: vec!["some_token".to_string(), "some_token_3".to_string()]
+            }
+        );
+
+        let epic_reward = epic_rewards.get(0).unwrap().to_owned();
+
+        assert_eq!(
+            epic_reward,
+            JsonPoolRewards::NonFungibleToken {
+                contract_id: nft(),
+                token_ids: vec!["some_token_2".to_string()]
+            }
+        );
+    }
+
+    #[test]
     fn test_mint_box() {
         let (mut contract, mut context) = setup();
 
@@ -624,7 +723,7 @@ mod tests {
     }
 
     #[test]
-    fn test_burn_box() {
+    fn test_burn_box_with_near_reward() {
         let (mut contract, mut context) = setup();
 
         testing_env!(context.attached_deposit(50 * ONE_NEAR * 2).build());
@@ -668,6 +767,53 @@ mod tests {
                 available: 4
             }
         );
+    }
+
+    #[test]
+    fn test_burn_box_with_nft_reward() {
+        let (mut contract, mut context) = setup();
+
+        testing_env!(context.attached_deposit(ONE_NEAR).build());
+
+        contract.whitelist_nft_contract(nft());
+        contract.nft_mint(user1(), BoxRarity::Rare);
+
+        testing_env!(context.predecessor_account_id(nft()).build());
+
+        contract.nft_on_transfer(
+            owner(),
+            owner(),
+            "some_token".to_string(),
+            "rare".to_string(),
+        );
+
+        testing_env!(context
+            .attached_deposit(0)
+            .predecessor_account_id(user1())
+            .build());
+
+        contract.nft_burn("1".to_string());
+
+        let boxes = contract.get_account_boxes(user1(), None);
+
+        assert_eq!(boxes.len(), 1);
+
+        let box_data = boxes.get(0).unwrap().to_owned();
+
+        assert_eq!(
+            box_data.status,
+            JsonBoxStatus::Claimed {
+                reward: JsonReward::NonFungibleToken {
+                    contract_id: nft(),
+                    token_id: "some_token".to_string()
+                }
+            }
+        );
+
+        let rewards = contract.get_available_rewards(BoxRarity::Rare, None);
+
+        // pool became empty
+        assert_eq!(rewards.len(), 0);
     }
 }
 

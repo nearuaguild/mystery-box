@@ -1,6 +1,7 @@
+use std::collections::HashSet;
+
 use near_contract_standards::non_fungible_token::TokenId;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::env::panic_str;
 use near_sdk::{collections::LookupMap, require};
 use near_sdk::{env, AccountId, Balance, IntoStorageKey};
 
@@ -10,7 +11,7 @@ use crate::utils::get_random_number;
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct RewardPoolContainer {
     pools: LookupMap<PoolId, Pool>,
-    pool_ids_by_rarity: LookupMap<BoxRarity, Vec<PoolId>>,
+    pool_ids_by_rarity: LookupMap<BoxRarity, HashSet<PoolId>>,
 }
 
 impl RewardPoolContainer {
@@ -36,21 +37,24 @@ impl RewardPoolContainer {
         self.pools.insert(&pool_id, &pool);
 
         let mut pool_ids = self.pool_ids_by_rarity.get(&rarity).unwrap_or_default();
-        pool_ids.push(pool_id);
+        pool_ids.insert(pool_id);
         self.pool_ids_by_rarity.insert(&rarity, &pool_ids);
     }
 
     pub fn add_nft_pool(&mut self, rarity: BoxRarity, contract_id: AccountId, token_id: TokenId) {
-        let mut pool = Pool::create_nft_pool(contract_id, rarity);
+        let pool_id = NonFungibleTokenPool::compose_id(contract_id.clone(), rarity.clone());
+
+        let mut pool = self
+            .pools
+            .get(&pool_id)
+            .unwrap_or(Pool::create_nft_pool(contract_id.clone(), rarity.clone()));
 
         pool.add_token(token_id);
-
-        let pool_id = pool.id();
 
         self.pools.insert(&pool_id, &pool);
 
         let mut pool_ids = self.pool_ids_by_rarity.get(&rarity).unwrap_or_default();
-        pool_ids.push(pool_id);
+        pool_ids.insert(pool_id);
         self.pool_ids_by_rarity.insert(&rarity, &pool_ids);
     }
 
@@ -407,10 +411,10 @@ impl Pool {
     }
 
     pub fn add_token(&mut self, token_id: TokenId) {
-        match self.to_owned() {
+        match self {
             // this should never panic
-            Self::Near(_) => panic_str("ERR_INAPPROPRIATE_POOL"),
-            Self::NonFungibleToken(mut pool) => pool.add_token(token_id),
+            Self::Near(_) => unreachable!(),
+            Self::NonFungibleToken(ref mut pool) => pool.add_token(token_id),
         };
     }
 }
