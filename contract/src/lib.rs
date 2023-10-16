@@ -564,6 +564,42 @@ mod tests {
         );
     }
 
+    #[should_panic(expected = "ERR_NEAR_POOL_ALREADY_EXIST")]
+    #[test]
+    fn test_add_near_pools_with_similar_ids_with_panic() {
+        let (mut contract, mut context) = setup();
+
+        testing_env!(context.attached_deposit(10 * ONE_NEAR).build());
+
+        contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), 5);
+        contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), 5);
+    }
+
+    #[test]
+    fn test_add_few_near_pools_in_one_block() {
+        let (mut contract, mut context) = setup();
+
+        testing_env!(context
+            .block_timestamp(0)
+            .attached_deposit(10 * ONE_NEAR)
+            .build());
+
+        contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), 5);
+
+        testing_env!(context.block_timestamp(1).build());
+        contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), 5);
+
+        testing_env!(context.block_timestamp(2).build());
+        contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), 5);
+
+        testing_env!(context.block_timestamp(3).build());
+        contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), 5);
+
+        let rewards = contract.get_available_rewards(BoxRarity::Rare, None);
+
+        assert_eq!(rewards.len(), 4);
+    }
+
     #[test]
     fn test_add_nft_pool() {
         let (mut contract, mut context) = setup();

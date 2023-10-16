@@ -34,6 +34,11 @@ impl RewardPoolContainer {
 
         let pool_id = pool.id();
 
+        require!(
+            !self.pools.contains_key(&pool_id),
+            "ERR_NEAR_POOL_ALREADY_EXIST"
+        );
+
         self.pools.insert(&pool_id, &pool);
 
         let mut pool_ids = self.pool_ids_by_rarity.get(&rarity).unwrap_or_default();
@@ -288,7 +293,7 @@ struct PendingNearReward {
 
 #[derive(BorshDeserialize, BorshSerialize, Clone)]
 pub struct NearPool {
-    nonce: u64,
+    nonce: u32,
     pub amount: Balance,
     pub capacity: Capacity,
     pub available: Capacity,
@@ -298,17 +303,19 @@ pub struct NearPool {
 
 impl NearPool {
     pub fn new(amount: Balance, capacity: Capacity) -> Self {
+        let nonce = env::block_timestamp() as u32;
+
         Self {
             amount,
             capacity,
             available: capacity,
             next_pending_reward_id: 0,
             pending_rewards: Vec::new(),
-            nonce: env::block_timestamp_ms(),
+            nonce,
         }
     }
 
-    pub fn compose_id(nonce: u64) -> PoolId {
+    pub fn compose_id(nonce: u32) -> PoolId {
         let nonce = nonce.to_string();
         let elements = vec!["near", nonce.as_str()];
         elements.join(":")
