@@ -1,44 +1,116 @@
+use near_contract_standards::non_fungible_token::TokenId;
 use near_sdk::{
+    json_types::U128,
     require,
     serde::{Deserialize, Serialize},
+    AccountId,
 };
 
-use crate::types::{BoxData, BoxId, BoxRarity, BoxStatus, Capacity, Reward, RewardPool};
+use crate::{
+    reward_pools::Pool,
+    types::{BoxData, BoxId, BoxRarity, BoxStatus, Capacity, Reward},
+};
 
 #[derive(Serialize, Deserialize)]
-#[serde(crate = "near_sdk::serde")]
-pub struct JsonReward {
-    pub reward: Reward,
-    pub box_rarity: BoxRarity,
-    pub available: Capacity,
+#[serde(crate = "near_sdk::serde", tag = "kind", rename_all = "snake_case")]
+pub enum JsonPoolRewards {
+    Near {
+        amount: U128,
+        capacity: Capacity,
+    },
+    NonFungibleToken {
+        contract_id: AccountId,
+        token_id: Vec<TokenId>,
+    },
 }
 
-impl JsonReward {
-    pub fn from(reward_pool: &RewardPool) -> Self {
-        Self {
-            reward: reward_pool.reward.clone(),
-            box_rarity: reward_pool.box_rarity.clone(),
-            available: reward_pool.available_capacity.clone(),
+impl Into<JsonPoolRewards> for &Pool {
+    fn into(self) -> JsonPoolRewards {
+        match self {
+            Pool::Near(pool) => JsonPoolRewards::Near {
+                amount: pool.amount.to_owned().into(),
+                capacity: pool.available.clone(),
+            },
+            Pool::NonFungibleToken(pool) => JsonPoolRewards::NonFungibleToken {
+                contract_id: pool.contract_id.clone(),
+                token_id: pool.available_tokens.clone(),
+            },
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde", tag = "kind", rename_all = "snake_case")]
+pub enum JsonReward {
+    Near {
+        amount: U128,
+    },
+    NonFungibleToken {
+        contract_id: AccountId,
+        token_id: TokenId,
+    },
+    Nothing,
+}
+
+impl Into<JsonReward> for Reward {
+    fn into(self) -> JsonReward {
+        match self {
+            Reward::Near { amount } => JsonReward::Near {
+                amount: amount.into(),
+            },
+            Reward::NonFungibleToken {
+                contract_id,
+                token_id,
+            } => JsonReward::NonFungibleToken {
+                contract_id,
+                token_id,
+            },
+        }
+    }
+}
+impl Into<JsonReward> for Option<Reward> {
+    fn into(self) -> JsonReward {
+        match self {
+            Option::None => JsonReward::Nothing,
+            Option::Some(reward) => reward.into(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde", tag = "kind", rename_all = "snake_case")]
+pub enum JsonBoxStatus {
+    Claimed { reward: JsonReward },
+    NonClaimed { token_id: TokenId },
+}
+
+impl Into<JsonBoxStatus> for BoxStatus {
+    fn into(self) -> JsonBoxStatus {
+        match self {
+            BoxStatus::Claimed { reward } => JsonBoxStatus::Claimed {
+                reward: reward.into(),
+            },
+            BoxStatus::NonClaimed { token_id } => JsonBoxStatus::NonClaimed { token_id },
         }
     }
 }
 
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
-pub struct JsonBoxData {
-    pub box_id: BoxId,
+pub struct JsonBox {
+    pub id: BoxId,
     pub ipfs: String,
     pub rarity: BoxRarity,
-    pub status: BoxStatus,
+    pub status: JsonBoxStatus,
 }
 
-impl JsonBoxData {
-    pub fn from(box_data: &BoxData) -> Self {
-        Self {
-            box_id: box_data.id.clone(),
-            ipfs: box_data.rarity.to_media_ipfs(),
-            rarity: box_data.rarity.clone(),
-            status: box_data.status.clone(),
+impl Into<JsonBox> for &BoxData {
+    fn into(self) -> JsonBox {
+        JsonBox {
+            id: self.id.clone(),
+            ipfs: self.ipfs(),
+            rarity: self.rarity.clone(),
+            status: self.status.to_owned().into(),
         }
     }
 }

@@ -58,7 +58,7 @@ impl MysteryBoxContainer {
         self.get_box(box_id).rarity
     }
 
-    pub fn claim_box(&mut self, box_id: BoxId, reward: Reward) {
+    pub fn claim_box(&mut self, box_id: BoxId, reward: Option<Reward>) {
         let mut box_data = self.get_box(&box_id);
 
         box_data.claim(reward);

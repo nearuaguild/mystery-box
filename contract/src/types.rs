@@ -1,9 +1,13 @@
+use std::fmt::{Display, Formatter, Result};
+
 use near_contract_standards::non_fungible_token::TokenId;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::serde::{Deserialize, Serialize};
-use near_sdk::{require, AccountId, Balance};
+use near_sdk::{AccountId, Balance};
 
-#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(
+    BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug, PartialEq, Copy,
+)]
 #[serde(crate = "near_sdk::serde", rename_all = "snake_case")]
 pub enum BoxRarity {
     Rare,
@@ -11,10 +15,19 @@ pub enum BoxRarity {
     Legendary,
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug, PartialEq)]
-#[serde(crate = "near_sdk::serde", tag = "kind", rename_all = "snake_case")]
+impl Display for BoxRarity {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        match self {
+            BoxRarity::Rare => write!(f, "rare"),
+            BoxRarity::Epic => write!(f, "epic"),
+            BoxRarity::Legendary => write!(f, "legendary"),
+        }
+    }
+}
+
+#[derive(BorshDeserialize, BorshSerialize, Clone, Debug, PartialEq)]
 pub enum BoxStatus {
-    Claimed { reward: Reward },
+    Claimed { reward: Option<Reward> },
     NonClaimed { token_id: TokenId },
 }
 
@@ -28,11 +41,10 @@ pub struct BoxData {
     pub owner_id: AccountId,
 }
 
-pub type RewardPoolId = u16;
+pub type PoolId = String;
 pub type Capacity = u64;
 
-#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug, PartialEq)]
-#[serde(crate = "near_sdk::serde", tag = "kind")]
+#[derive(BorshDeserialize, BorshSerialize, Clone, Debug, PartialEq)]
 pub enum Reward {
     Near {
         amount: Balance,
@@ -41,15 +53,6 @@ pub enum Reward {
         contract_id: AccountId,
         token_id: TokenId,
     },
-}
-
-#[derive(BorshDeserialize, BorshSerialize, Clone, Debug, PartialEq)]
-pub struct RewardPool {
-    pub id: RewardPoolId,
-    pub reward: Reward,
-    pub box_rarity: BoxRarity,
-    pub capacity: Capacity,
-    pub available_capacity: Capacity,
 }
 
 /// Implementation
@@ -83,44 +86,11 @@ impl BoxData {
         self.rarity.to_media_ipfs()
     }
 
-    pub fn claim(&mut self, reward: Reward) {
+    pub fn claim(&mut self, reward: Option<Reward>) {
         self.status = BoxStatus::Claimed { reward };
     }
 
     pub fn revert_claim(&mut self, token_id: TokenId) {
         self.status = BoxStatus::NonClaimed { token_id };
-    }
-}
-
-impl RewardPool {
-    pub fn from(
-        id: RewardPoolId,
-        reward: Reward,
-        capacity: Capacity,
-        box_rarity: BoxRarity,
-    ) -> Self {
-        Self {
-            id,
-            reward,
-            capacity,
-            available_capacity: capacity,
-            box_rarity,
-        }
-    }
-
-    pub fn assert_valid(&self) {
-        require!(self.capacity > 0, "Maximum reward capacity can't be zero");
-    }
-
-    pub fn increment_availability(&mut self) {
-        self.available_capacity += 1;
-    }
-
-    pub fn decrement_availability(&mut self) {
-        self.available_capacity -= 1;
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.available_capacity == 0
     }
 }

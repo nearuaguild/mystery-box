@@ -1,24 +1,24 @@
-use json::JsonBoxData;
-use json::JsonReward;
-use json::Pagination;
-use mystery_box::MysteryBoxContainer;
+use boxes::MysteryBoxContainer;
+use json::{JsonBox, JsonPoolRewards, Pagination};
 use near_contract_standards::non_fungible_token::metadata::TokenMetadata;
 use near_contract_standards::non_fungible_token::{NonFungibleToken, Token, TokenId};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::{LookupMap, LookupSet};
 use near_sdk::serde_json::{self, Value};
 use near_sdk::{
-    env, log, near_bindgen, require, AccountId, Balance, BorshStorageKey, Gas, PanicOnDefault,
-    Promise, PromiseOrValue, PromiseResult,
+    env, json_types::U128, log, near_bindgen, require, AccountId, BorshStorageKey, Gas,
+    PanicOnDefault, Promise, PromiseOrValue, PromiseResult, ONE_NEAR,
 };
-use reward_pool::RewardPoolContainer;
-use types::{BoxId, BoxRarity, Capacity, Reward, RewardPool, RewardPoolId};
+use reward_pools::{PendingRewardId, RewardPoolContainer};
+use types::{BoxId, BoxRarity, Capacity, PoolId, Reward};
 
+mod boxes;
 mod json;
-mod mystery_box;
-mod reward_pool;
+mod reward_pools;
 mod types;
 mod utils;
+
+const MINIMAL_NEAR_REWARD: u128 = ONE_NEAR / 10; // 0.1N
 
 #[derive(BorshStorageKey, BorshSerialize)]
 enum StorageKey {
@@ -107,10 +107,16 @@ impl Contract {
     }
 
     #[payable]
-    pub fn add_near_reward(&mut self, box_rarity: BoxRarity, amount: Balance, capacity: Capacity) {
+    pub fn add_near_reward(&mut self, rarity: BoxRarity, amount: U128, capacity: Capacity) {
         self.assert_only_owner();
 
-        let reward_deposit = amount * capacity as u128;
+        assert!(
+            MINIMAL_NEAR_REWARD <= amount.into(),
+            "The minimal reward in Near tokens is {} yocto",
+            MINIMAL_NEAR_REWARD
+        );
+
+        let reward_deposit = u128::from(amount) * capacity as u128;
 
         assert!(
             env::attached_deposit() > reward_deposit,
@@ -120,8 +126,7 @@ impl Contract {
 
         let storage_used_before = env::storage_usage();
 
-        let reward = Reward::Near { amount };
-        self.rewards.add_reward_pool(reward, box_rarity, capacity);
+        self.rewards.add_near_pool(rarity, amount.into(), capacity);
 
         let storage_used_after = env::storage_usage();
 
@@ -141,7 +146,7 @@ impl Contract {
         &self,
         account_id: AccountId,
         pagination: Option<Pagination>,
-    ) -> Vec<JsonBoxData> {
+    ) -> Vec<JsonBox> {
         let pagination = pagination.unwrap_or_default();
 
         pagination.assert_valid();
@@ -153,15 +158,15 @@ impl Contract {
                 pagination.calculate_offset(),
             )
             .iter()
-            .map(|box_data| JsonBoxData::from(box_data))
+            .map(|box_data| box_data.into())
             .collect()
     }
 
-    pub fn get_available_rewards_by_box_rarity(
+    pub fn get_available_rewards(
         &self,
         rarity: BoxRarity,
         pagination: Option<Pagination>,
-    ) -> Vec<JsonReward> {
+    ) -> Vec<JsonPoolRewards> {
         let pagination = pagination.unwrap_or_default();
 
         pagination.assert_valid();
@@ -173,7 +178,7 @@ impl Contract {
                 pagination.calculate_offset(),
             )
             .iter()
-            .map(|reward_pool| JsonReward::from(reward_pool))
+            .map(|pool| pool.into())
             .collect()
     }
 
@@ -275,10 +280,9 @@ impl Contract {
         let storage_deposit =
             env::storage_byte_cost() * (storage_used_after - storage_used_before) as u128;
 
-        assert_eq!(
-            storage_deposit,
-            env::attached_deposit(),
-            "Deposited amount must be equal to {} yocto",
+        assert!(
+            env::attached_deposit() >= storage_deposit,
+            "Deposited amount must be bigger than {} yocto",
             storage_deposit
         );
     }
@@ -309,14 +313,16 @@ impl Contract {
         &self,
         account_id: &AccountId,
         box_id: &BoxId,
-        reward_pool_id: &RewardPoolId,
+        pool_id: &PoolId,
+        pending_reward_id: &PendingRewardId,
     ) -> Promise {
         Promise::new(env::current_account_id()).function_call(
             "on_transfer_reward_callback".to_string(),
             serde_json::json!({
                 "account_id": account_id,
                 "box_id": box_id,
-                "reward_pool_id": reward_pool_id,
+                "pool_id": pool_id,
+                "pending_reward_id": pending_reward_id,
             })
             .to_string()
             .into_bytes(),
@@ -325,12 +331,8 @@ impl Contract {
         )
     }
 
-    fn create_transfer_reward_promise(
-        &self,
-        reward_pool: &RewardPool,
-        receiver_id: &AccountId,
-    ) -> Promise {
-        match reward_pool.reward.clone() {
+    fn create_transfer_reward_promise(&self, reward: Reward, receiver_id: &AccountId) -> Promise {
+        match reward {
             Reward::Near { amount } => Promise::new(receiver_id.clone()).transfer(amount),
             Reward::NonFungibleToken {
                 contract_id,
@@ -349,7 +351,8 @@ impl Contract {
         }
     }
 
-    pub fn nft_burn(&mut self, token_id: TokenId) -> Promise {
+    // TODO: return Option<JsonReward>
+    pub fn nft_burn(&mut self, token_id: TokenId) -> PromiseOrValue<bool> {
         let account_id = env::predecessor_account_id();
 
         let owner_id = self.nft.owner_by_id.get(&token_id).expect(
@@ -360,30 +363,40 @@ impl Contract {
             .as_str(),
         );
 
-        require!(
-            owner_id == account_id,
-            "Only token owner can burn his tokens"
-        );
+        require!(owner_id == account_id, "ERR_ONLY_OWNER_CAN_BURN");
 
-        let box_id = self
-            .token_to_box
-            .remove(&token_id)
-            .expect("Unexpected error, missing token_to_box relation");
+        // this should never panic
+        let box_id = self.token_to_box.remove(&token_id).expect("ERR_UNEXPECTED");
         self.internal_nft_burn(token_id, account_id.clone());
 
-        let box_rarity = self.boxes.get_box_rarity(&box_id);
+        let rarity = self.boxes.get_box_rarity(&box_id);
 
-        let reward_pool = self.rewards.find_random_available_reward_pool(box_rarity);
-        self.rewards.decrement_availability(reward_pool.id);
+        let pending_reward = self.rewards.take_random_reward(rarity);
 
-        self.boxes
-            .claim_box(box_id.clone(), reward_pool.reward.clone());
+        match pending_reward {
+            Option::None => {
+                self.boxes.claim_box(box_id.clone(), None);
 
-        let transfer_promise = self.create_transfer_reward_promise(&reward_pool, &account_id);
-        let callback_promise =
-            self.create_on_transfer_reward_callback_promise(&account_id, &box_id, &reward_pool.id);
+                PromiseOrValue::Value(true)
+            }
+            Option::Some(pending_reward) => {
+                let reward = pending_reward.reward;
 
-        transfer_promise.then(callback_promise)
+                self.boxes.claim_box(box_id.clone(), Some(reward.clone()));
+
+                let transfer_promise =
+                    self.create_transfer_reward_promise(reward.clone(), &account_id);
+                let callback_promise = self.create_on_transfer_reward_callback_promise(
+                    &account_id,
+                    &box_id,
+                    &pending_reward.pool_id,
+                    &pending_reward.id,
+                );
+
+                let promise = transfer_promise.then(callback_promise);
+                PromiseOrValue::Promise(promise)
+            }
+        }
     }
 
     #[private]
@@ -391,55 +404,45 @@ impl Contract {
         &mut self,
         account_id: AccountId,
         box_id: BoxId,
-        reward_pool_id: RewardPoolId,
+        pool_id: PoolId,
+        pending_reward_id: PendingRewardId,
     ) -> bool {
         // https://docs.rs/near-sdk/latest/near_sdk/env/fn.promise_results_count.html
         require!(env::promise_results_count() == 1, "ERR_TOO_MANY_RESULTS");
 
         let transfer_result = env::promise_result(0);
 
-        let box_rarity = self.boxes.get_box_rarity(&box_id);
+        let rarity = self.boxes.get_box_rarity(&box_id);
 
         match transfer_result {
-            PromiseResult::Failed => {
-                log!(
-                    "Something failed while transferring box {} reward of {:?} rarity to {}",
-                    box_id,
-                    box_rarity,
-                    account_id
-                );
-
-                self.rewards.increment_availability(reward_pool_id);
-                let token = self.internal_nft_mint(account_id, box_rarity);
-                self.token_to_box.insert(&token.token_id, &box_id);
-                self.boxes.revert_claim_box(box_id, token.token_id);
-
-                false
-            }
-            PromiseResult::NotReady => {
-                log!(
-                    "Promise isn't ready yet to transfer box {} reward of {:?} rarity to {}",
-                    box_id,
-                    box_rarity,
-                    account_id
-                );
-
-                self.rewards.increment_availability(reward_pool_id);
-                let token = self.internal_nft_mint(account_id, box_rarity);
-                self.token_to_box.insert(&token.token_id, &box_id);
-                self.boxes.revert_claim_box(box_id, token.token_id);
-
-                false
-            }
             PromiseResult::Successful(_) => {
                 log!(
                     "Successfully transferred box {} reward of {:?} rarity to {}",
                     box_id,
-                    box_rarity,
+                    rarity,
                     account_id
                 );
 
+                self.rewards
+                    .confirm_pending_reward(pool_id, pending_reward_id);
+
                 true
+            }
+            _ => {
+                log!(
+                    "Something failed while transferring box {} reward of {:?} rarity to {}",
+                    box_id,
+                    rarity,
+                    account_id
+                );
+
+                self.rewards
+                    .return_pending_reward(pool_id, pending_reward_id);
+                let token = self.internal_nft_mint(account_id, rarity);
+                self.token_to_box.insert(&token.token_id, &box_id);
+                self.boxes.revert_claim_box(box_id, token.token_id);
+
+                false
             }
         }
     }
@@ -469,14 +472,10 @@ impl Contract {
 
         require!(result.is_ok(), "Can't parse BoxRarity value from msg");
 
-        let box_rarity = result.unwrap();
+        let rarity = result.unwrap();
 
         // TODO: add storage management
-        let reward = Reward::NonFungibleToken {
-            contract_id: nft_account_id,
-            token_id: token_id,
-        };
-        self.rewards.add_reward_pool(reward, box_rarity, 1);
+        self.rewards.add_nft_pool(rarity, nft_account_id, token_id);
 
         // stands for OK response
         PromiseOrValue::Value(false)
