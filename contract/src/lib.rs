@@ -89,7 +89,7 @@ impl Contract {
     fn assert_only_owner(&self) {
         require!(
             env::predecessor_account_id() == self.owner_id,
-            "Only owner is capable of calling this function"
+            "ERR_FORBIDDEN"
         );
     }
 
@@ -118,12 +118,6 @@ impl Contract {
 
         let reward_deposit = u128::from(amount) * capacity as u128;
 
-        assert!(
-            env::attached_deposit() > reward_deposit,
-            "Deposited amount must be bigger than added rewards - {} yocto",
-            reward_deposit
-        );
-
         let storage_used_before = env::storage_usage();
 
         self.rewards.add_near_pool(rarity, amount.into(), capacity);
@@ -136,7 +130,7 @@ impl Contract {
         let total_deposit = storage_deposit + reward_deposit.clone();
 
         assert!(
-            env::attached_deposit() == total_deposit,
+            env::attached_deposit() >= total_deposit,
             "Deposited amount must be equal to {} yocto",
             total_deposit
         );
@@ -479,6 +473,154 @@ impl Contract {
 
         // stands for OK response
         PromiseOrValue::Value(false)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::str::FromStr;
+
+    use near_sdk::json_types::U128;
+    use near_sdk::test_utils::VMContextBuilder;
+
+    use near_sdk::{testing_env, AccountId, Gas, ONE_NEAR};
+
+    use crate::json::{JsonBoxStatus, JsonPoolRewards};
+    use crate::types::BoxRarity;
+    use crate::Contract;
+
+    fn owner() -> AccountId {
+        AccountId::from_str("owner").unwrap()
+    }
+
+    fn user1() -> AccountId {
+        AccountId::from_str("user1").unwrap()
+    }
+
+    fn user2() -> AccountId {
+        AccountId::from_str("user2").unwrap()
+    }
+
+    fn setup() -> (Contract, VMContextBuilder) {
+        let mut context = VMContextBuilder::new();
+
+        context.predecessor_account_id(owner());
+
+        testing_env!(context.build());
+
+        let contract = Contract::new(
+            AccountId::from_str("414").unwrap(),
+            AccountId::from_str("4142").unwrap(),
+        );
+
+        (contract, context)
+    }
+
+    #[test]
+    fn test_setup_succeeds() {
+        setup();
+    }
+
+    #[test]
+    #[should_panic(expected = "ERR_FORBIDDEN")]
+    fn test_ownership() {
+        let (mut contract, _) = setup();
+
+        assert_eq!(contract.owner_id, owner());
+
+        contract.set_owner(user1());
+
+        assert_eq!(contract.owner_id, user1());
+
+        // should panic since the predecessor is "owner" that no more has ownership
+        contract.set_owner(user2());
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_add_small_near_pool_with_panic() {
+        let (mut contract, _) = setup();
+
+        contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR / 10 - 1), 10);
+    }
+
+    #[test]
+    fn test_add_near_pool() {
+        let (mut contract, mut context) = setup();
+
+        testing_env!(context.attached_deposit(50 * ONE_NEAR * 2).build());
+
+        contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), 50);
+
+        let rewards = contract.get_available_rewards(BoxRarity::Rare, None);
+
+        assert_eq!(rewards.len(), 1);
+
+        let reward = rewards.get(0).unwrap().to_owned();
+
+        assert_eq!(
+            reward,
+            JsonPoolRewards::Near {
+                amount: U128(ONE_NEAR),
+                capacity: 50
+            }
+        );
+    }
+
+    #[test]
+    fn test_mint_box() {
+        let (mut contract, mut context) = setup();
+
+        testing_env!(context.attached_deposit(50 * ONE_NEAR * 2).build());
+
+        contract.nft_mint(user1(), BoxRarity::Rare);
+
+        let boxes = contract.get_account_boxes(user1(), None);
+
+        assert_eq!(boxes.len(), 1);
+
+        let box_data = boxes.get(0).unwrap().to_owned();
+
+        assert_eq!(
+            box_data.status,
+            JsonBoxStatus::NonClaimed {
+                token_id: "1".to_string()
+            }
+        );
+    }
+
+    #[should_panic(expected = "ERR_NO_POOLS_AVAILABLE")]
+    #[test]
+    fn test_burn_box_no_pools_with_panic() {
+        let (mut contract, mut context) = setup();
+
+        testing_env!(context.attached_deposit(50 * ONE_NEAR * 2).build());
+
+        contract.nft_mint(user1(), BoxRarity::Rare);
+
+        testing_env!(context
+            .attached_deposit(0)
+            .predecessor_account_id(user1())
+            .build());
+
+        contract.nft_burn("1".to_string());
+    }
+
+    #[test]
+    fn test_burn_box() {
+        let (mut contract, mut context) = setup();
+
+        testing_env!(context.attached_deposit(50 * ONE_NEAR * 2).build());
+
+        contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), 5);
+        contract.nft_mint(user1(), BoxRarity::Rare);
+
+        testing_env!(context
+            .attached_deposit(0)
+            .predecessor_account_id(user1())
+            .build());
+
+        contract.nft_burn("1".to_string());
     }
 }
 

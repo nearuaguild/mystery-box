@@ -11,7 +11,7 @@ use crate::{
     types::{BoxData, BoxId, BoxRarity, BoxStatus, Capacity, Reward},
 };
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 #[serde(crate = "near_sdk::serde", tag = "kind", rename_all = "snake_case")]
 pub enum JsonPoolRewards {
     Near {
@@ -39,7 +39,7 @@ impl Into<JsonPoolRewards> for &Pool {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(crate = "near_sdk::serde", tag = "kind", rename_all = "snake_case")]
 pub enum JsonReward {
     Near {
@@ -77,7 +77,7 @@ impl Into<JsonReward> for Option<Reward> {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(crate = "near_sdk::serde", tag = "kind", rename_all = "snake_case")]
 pub enum JsonBoxStatus {
     Claimed { reward: JsonReward },
