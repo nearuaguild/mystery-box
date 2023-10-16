@@ -485,7 +485,7 @@ mod tests {
 
     use near_sdk::{testing_env, AccountId, Gas, ONE_NEAR};
 
-    use crate::json::{JsonBoxStatus, JsonPoolRewards};
+    use crate::json::{JsonBoxStatus, JsonPoolRewards, JsonReward};
     use crate::types::BoxRarity;
     use crate::Contract;
 
@@ -562,7 +562,7 @@ mod tests {
             reward,
             JsonPoolRewards::Near {
                 amount: U128(ONE_NEAR),
-                capacity: 50
+                available: 50
             }
         );
     }
@@ -621,6 +621,36 @@ mod tests {
             .build());
 
         contract.nft_burn("1".to_string());
+
+        let boxes = contract.get_account_boxes(user1(), None);
+
+        assert_eq!(boxes.len(), 1);
+
+        let box_data = boxes.get(0).unwrap().to_owned();
+
+        assert_eq!(
+            box_data.status,
+            JsonBoxStatus::Claimed {
+                reward: JsonReward::Near {
+                    amount: U128(ONE_NEAR)
+                }
+            }
+        );
+
+        let rewards = contract.get_available_rewards(BoxRarity::Rare, None);
+
+        assert_eq!(rewards.len(), 1);
+
+        let reward = rewards.get(0).unwrap().to_owned();
+
+        // availability decreased
+        assert_eq!(
+            reward,
+            JsonPoolRewards::Near {
+                amount: U128(ONE_NEAR),
+                available: 4
+            }
+        );
     }
 }
 

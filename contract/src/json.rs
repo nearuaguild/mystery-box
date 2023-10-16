@@ -16,7 +16,7 @@ use crate::{
 pub enum JsonPoolRewards {
     Near {
         amount: U128,
-        capacity: Capacity,
+        available: Capacity,
     },
     NonFungibleToken {
         contract_id: AccountId,
@@ -29,7 +29,7 @@ impl Into<JsonPoolRewards> for &Pool {
         match self {
             Pool::Near(pool) => JsonPoolRewards::Near {
                 amount: pool.amount.to_owned().into(),
-                capacity: pool.available.clone(),
+                available: pool.available.clone(),
             },
             Pool::NonFungibleToken(pool) => JsonPoolRewards::NonFungibleToken {
                 contract_id: pool.contract_id.clone(),

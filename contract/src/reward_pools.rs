@@ -2,7 +2,7 @@ use near_contract_standards::non_fungible_token::TokenId;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::env::panic_str;
 use near_sdk::{collections::LookupMap, require};
-use near_sdk::{env, AccountId, Balance, IntoStorageKey};
+use near_sdk::{env, log, AccountId, Balance, IntoStorageKey};
 
 use crate::types::{BoxRarity, Capacity, PoolId, Reward};
 use crate::utils::get_random_number;
@@ -433,14 +433,23 @@ impl RewardPool for Pool {
     }
 
     fn take_reward_from_pool(&mut self, index: usize) -> Option<PendingReward> {
-        self.get_actual_pool().take_reward_from_pool(index)
+        match self {
+            Pool::Near(ref mut pool) => pool.take_reward_from_pool(index),
+            Pool::NonFungibleToken(ref mut pool) => pool.take_reward_from_pool(index),
+        }
     }
 
     fn return_pending_reward(&mut self, id: PendingRewardId) {
-        self.get_actual_pool().return_pending_reward(id);
+        match self {
+            Pool::Near(ref mut pool) => pool.return_pending_reward(id),
+            Pool::NonFungibleToken(ref mut pool) => pool.return_pending_reward(id),
+        }
     }
 
     fn confirm_pending_reward(&mut self, id: PendingRewardId) {
-        self.get_actual_pool().confirm_pending_reward(id);
+        match self {
+            Pool::Near(ref mut pool) => pool.confirm_pending_reward(id),
+            Pool::NonFungibleToken(ref mut pool) => pool.confirm_pending_reward(id),
+        }
     }
 }
