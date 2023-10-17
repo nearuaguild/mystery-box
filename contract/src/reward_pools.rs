@@ -2,6 +2,7 @@ use std::collections::HashSet;
 
 use near_contract_standards::non_fungible_token::TokenId;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
+use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{collections::LookupMap, require};
 use near_sdk::{env, AccountId, Balance, IntoStorageKey};
 
@@ -137,12 +138,18 @@ impl RewardPoolContainer {
         self.pools.insert(&pool_id, &pool);
     }
 
-    pub fn confirm_pending_reward(&mut self, pool_id: PoolId, pending_reward_id: PendingRewardId) {
+    pub fn confirm_pending_reward(
+        &mut self,
+        pool_id: PoolId,
+        pending_reward_id: PendingRewardId,
+    ) -> Reward {
         let mut pool = self.pools.get(&pool_id).expect("ERR_POOL_NOT_FOUND");
 
-        pool.confirm_pending_reward(pending_reward_id);
+        let reward = pool.confirm_pending_reward(pending_reward_id);
 
         self.pools.insert(&pool_id, &pool);
+
+        reward
     }
 }
 
@@ -153,12 +160,13 @@ pub trait RewardPool {
     fn capacity(&self) -> Capacity;
     fn take_reward_from_pool(&mut self, index: usize) -> Option<PendingReward>;
     fn return_pending_reward(&mut self, id: PendingRewardId);
-    fn confirm_pending_reward(&mut self, id: PendingRewardId);
+    fn confirm_pending_reward(&mut self, id: PendingRewardId) -> Reward;
 }
 
 pub type PendingRewardId = u32;
 
-#[derive(BorshDeserialize, BorshSerialize, Clone)]
+#[derive(BorshDeserialize, BorshSerialize, Clone, Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde", rename_all = "snake_case")]
 pub struct PendingReward {
     pub id: PendingRewardId,
     pub pool_id: PoolId,
@@ -273,14 +281,19 @@ impl RewardPool for NonFungibleTokenPool {
         self.available_tokens.push(pending_reward.token_id);
     }
 
-    fn confirm_pending_reward(&mut self, id: PendingRewardId) {
+    fn confirm_pending_reward(&mut self, id: PendingRewardId) -> Reward {
         let index = self
             .pending_rewards
             .iter()
             .position(|pr| pr.id == id)
             .expect("ERR_PENDING_REWARD_NOT_FOUND");
 
-        self.pending_rewards.remove(index);
+        let pending_nft_reward = self.pending_rewards.remove(index);
+
+        Reward::NonFungibleToken {
+            contract_id: self.contract_id.clone(),
+            token_id: pending_nft_reward.token_id,
+        }
     }
 }
 
@@ -384,7 +397,7 @@ impl RewardPool for NearPool {
         self.available += 1;
     }
 
-    fn confirm_pending_reward(&mut self, id: PendingRewardId) {
+    fn confirm_pending_reward(&mut self, id: PendingRewardId) -> Reward {
         let index = self
             .pending_rewards
             .iter()
@@ -392,6 +405,10 @@ impl RewardPool for NearPool {
             .expect("ERR_PENDING_REWARD_NOT_FOUND");
 
         self.pending_rewards.remove(index);
+
+        Reward::Near {
+            amount: self.amount,
+        }
     }
 }
 
@@ -457,7 +474,7 @@ impl RewardPool for Pool {
         }
     }
 
-    fn confirm_pending_reward(&mut self, id: PendingRewardId) {
+    fn confirm_pending_reward(&mut self, id: PendingRewardId) -> Reward {
         match self {
             Pool::Near(ref mut pool) => pool.confirm_pending_reward(id),
             Pool::NonFungibleToken(ref mut pool) => pool.confirm_pending_reward(id),

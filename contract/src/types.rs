@@ -44,7 +44,8 @@ pub struct BoxData {
 pub type PoolId = String;
 pub type Capacity = u64;
 
-#[derive(BorshDeserialize, BorshSerialize, Clone, Debug, PartialEq)]
+#[derive(BorshDeserialize, BorshSerialize, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde", rename_all = "snake_case")]
 pub enum Reward {
     Near {
         amount: Balance,

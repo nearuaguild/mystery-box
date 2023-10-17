@@ -1,5 +1,5 @@
 use boxes::MysteryBoxContainer;
-use json::{JsonBox, JsonPoolRewards, Pagination};
+use json::{JsonBox, JsonPoolRewards, JsonReward, Pagination};
 use near_contract_standards::non_fungible_token::metadata::TokenMetadata;
 use near_contract_standards::non_fungible_token::{NonFungibleToken, Token, TokenId};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
@@ -9,7 +9,7 @@ use near_sdk::{
     env, json_types::U128, log, near_bindgen, require, AccountId, BorshStorageKey, Gas,
     PanicOnDefault, Promise, PromiseOrValue, PromiseResult, ONE_NEAR,
 };
-use reward_pools::{PendingRewardId, RewardPoolContainer};
+use reward_pools::{PendingReward, PendingRewardId, RewardPoolContainer};
 use types::{BoxId, BoxRarity, Capacity, PoolId, Reward};
 
 mod boxes;
@@ -177,26 +177,18 @@ impl Contract {
     }
 
     #[private]
-    pub fn on_iah_verification_callback(&self) -> bool {
+    pub fn check_iah_verification_and_burn_callback(
+        &mut self,
+        receiver_id: AccountId,
+        box_id: BoxId,
+        pending_reward: Option<PendingReward>,
+    ) -> PromiseOrValue<Option<JsonReward>> {
         // https://docs.rs/near-sdk/latest/near_sdk/env/fn.promise_results_count.html
         assert_eq!(env::promise_results_count(), 1, "ERR_TOO_MANY_RESULTS");
 
         let iah_result = env::promise_result(0);
 
-        match iah_result {
-            PromiseResult::Failed => {
-                log!(
-                    "Something failed while getting data from IAH registry {}",
-                    self.registry_iah_contract.clone()
-                );
-
-                false
-            }
-            PromiseResult::NotReady => {
-                log!("Promise for on_iah_verification_callback isn't ready yet");
-
-                false
-            }
+        let is_verified = match iah_result {
             PromiseResult::Successful(data) => {
                 let deserealize_result = serde_json::from_slice::<Value>(data.as_slice());
 
@@ -224,7 +216,50 @@ impl Contract {
                     }
                 }
             }
+            _ => {
+                log!(
+                    "Something failed while getting data from IAH registry {}",
+                    self.registry_iah_contract.clone()
+                );
+
+                false
+            }
+        };
+
+        if !is_verified {
+            if let Some(pending_reward) = pending_reward {
+                self.rewards
+                    .return_pending_reward(pending_reward.pool_id, pending_reward.id);
+            }
+            return PromiseOrValue::Value(None);
+        };
+
+        match pending_reward {
+            Option::None => {
+                let reward: Option<Reward> = None;
+
+                self.boxes.claim_box(box_id, reward.clone());
+                PromiseOrValue::Value(Some(reward.into()))
+            }
+            Option::Some(pending_reward) => {
+                let transfer_promise =
+                    self.create_transfer_reward_promise(pending_reward.reward, &receiver_id);
+                let callback_promise = self.create_on_transfer_reward_callback_promise(
+                    &receiver_id,
+                    &box_id,
+                    &pending_reward.pool_id,
+                    &pending_reward.id,
+                );
+
+                let promise = transfer_promise.then(callback_promise);
+                PromiseOrValue::Promise(promise)
+            }
         }
+
+        // TODO: check if exists PendingReward
+        // TODO: claim nothing if no reward
+
+        // TODO: create transfer promises and confirm
     }
 
     fn internal_nft_mint(&mut self, account_id: AccountId, box_rarity: BoxRarity) -> Token {
@@ -345,8 +380,7 @@ impl Contract {
         }
     }
 
-    // TODO: return Option<JsonReward> instead of bool
-    pub fn nft_burn(&mut self, token_id: TokenId) -> PromiseOrValue<bool> {
+    pub fn nft_burn(&mut self, token_id: TokenId) -> Promise {
         let account_id = env::predecessor_account_id();
 
         let owner_id = self
@@ -365,30 +399,24 @@ impl Contract {
 
         let pending_reward = self.rewards.take_random_reward(rarity);
 
-        match pending_reward {
-            Option::None => {
-                self.boxes.claim_box(box_id.clone(), None);
+        let get_iah_verification_promise = Promise::new(self.registry_iah_contract.clone())
+            .function_call(
+                "sbt_tokens_by_owner".to_string(),
+                serde_json::json!({
+                    "issuer": self.issuer_iah_contract.clone(),
+                    "account": account_id.clone()
+                })
+                .to_string()
+                .into_bytes(),
+                0,
+                Gas::ONE_TERA * 5,
+            );
 
-                PromiseOrValue::Value(true)
-            }
-            Option::Some(pending_reward) => {
-                let reward = pending_reward.reward;
+        let on_iah_verification_callback_promise = Self::ext(env::current_account_id())
+            .with_static_gas(Gas::ONE_TERA * 5)
+            .check_iah_verification_and_burn_callback(owner_id, box_id, pending_reward);
 
-                self.boxes.claim_box(box_id.clone(), Some(reward.clone()));
-
-                let transfer_promise =
-                    self.create_transfer_reward_promise(reward.clone(), &account_id);
-                let callback_promise = self.create_on_transfer_reward_callback_promise(
-                    &account_id,
-                    &box_id,
-                    &pending_reward.pool_id,
-                    &pending_reward.id,
-                );
-
-                let promise = transfer_promise.then(callback_promise);
-                PromiseOrValue::Promise(promise)
-            }
-        }
+        get_iah_verification_promise.then(on_iah_verification_callback_promise)
     }
 
     #[private]
@@ -398,7 +426,7 @@ impl Contract {
         box_id: BoxId,
         pool_id: PoolId,
         pending_reward_id: PendingRewardId,
-    ) -> bool {
+    ) -> Option<JsonReward> {
         // https://docs.rs/near-sdk/latest/near_sdk/env/fn.promise_results_count.html
         require!(env::promise_results_count() == 1, "ERR_TOO_MANY_RESULTS");
 
@@ -415,10 +443,12 @@ impl Contract {
                     account_id
                 );
 
-                self.rewards
+                let reward = self
+                    .rewards
                     .confirm_pending_reward(pool_id, pending_reward_id);
+                self.boxes.claim_box(box_id, Some(reward.clone()));
 
-                true
+                Some(reward.into())
             }
             _ => {
                 log!(
@@ -432,16 +462,15 @@ impl Contract {
                     .return_pending_reward(pool_id, pending_reward_id);
                 let token = self.internal_nft_mint(account_id, rarity);
                 self.token_to_box.insert(&token.token_id, &box_id);
-                self.boxes.revert_claim_box(box_id, token.token_id);
 
-                false
+                None
             }
         }
     }
 
     pub fn nft_on_transfer(
         &mut self,
-        _sender_id: AccountId,
+        #[allow(unused_variables)] sender_id: AccountId,
         previous_owner_id: AccountId,
         token_id: TokenId,
         msg: String,
@@ -476,7 +505,7 @@ mod tests {
 
     use near_sdk::{testing_env, AccountId, ONE_NEAR};
 
-    use crate::json::{JsonBoxStatus, JsonPoolRewards, JsonReward};
+    use crate::json::{JsonBoxStatus, JsonPoolRewards};
     use crate::types::BoxRarity;
     use crate::Contract;
 
@@ -833,22 +862,6 @@ mod tests {
 
         contract.nft_burn("1".to_string());
 
-        let boxes = contract.get_account_boxes(user1(), None);
-
-        assert_eq!(boxes.len(), 1);
-
-        let box_data = boxes.get(0).unwrap().to_owned();
-
-        assert_eq!(
-            box_data.status,
-            JsonBoxStatus::Claimed {
-                reward: JsonReward::NonFungibleToken {
-                    contract_id: nft(),
-                    token_id: "some_token".to_string()
-                }
-            }
-        );
-
         let rewards = contract.get_available_rewards(BoxRarity::Rare, None);
 
         // pool became empty
@@ -857,90 +870,3 @@ mod tests {
 }
 
 // near_contract_standards::impl_non_fungible_token_enumeration!(Contract, nft);
-
-// let get_iah_verification_promise = Promise::new(self.registry_iah_contract.clone())
-// .function_call(
-//     "sbt_tokens_by_owner".to_string(),
-//     serde_json::json!({
-//         "issuer": self.issuer_iah_contract.clone(),
-//         "account": account_id.clone()
-//     })
-//     .to_string()
-//     .into_bytes(),
-//     0,
-//     Gas::ONE_TERA * 5,
-// );
-
-// let verification_callback_promise = Self::ext(env::current_account_id())
-// .with_static_gas(Gas::ONE_TERA * 5)
-// .on_iah_verification_callback();
-
-// let callback_promise = Self::ext(env::current_account_id())
-// .with_static_gas(Gas::ONE_TERA * 5)
-// .on_register_callback(account_id.clone());
-
-// get_iah_verification_promise
-// .then(verification_callback_promise)
-// .then(callback_promise)
-
-// #[private]
-// pub fn on_register_callback(&mut self, participant_id: AccountId) -> bool {
-//     // https://docs.rs/near-sdk/latest/near_sdk/env/fn.promise_results_count.html
-//     assert_eq!(env::promise_results_count(), 1, "ERR_TOO_MANY_RESULTS");
-
-//     let verified_result = env::promise_result(0);
-
-//     match verified_result {
-//         PromiseResult::Failed => {
-//             log!("Something failed while validating verification status",);
-
-//             self.participants.remove(&participant_id);
-
-//             false
-//         }
-//         PromiseResult::NotReady => {
-//             log!("Promise for on_register_callback isn't ready yet");
-
-//             self.participants.remove(&participant_id);
-
-//             false
-//         }
-//         PromiseResult::Successful(data) => {
-//             let result = bool::try_from_slice(data.as_slice());
-
-//             if result.is_err() {
-//                 log!("Couldn't unwrap result from successful promise");
-
-//                 self.participants.remove(&participant_id);
-
-//                 return false;
-//             }
-
-//             let verified = result.unwrap();
-
-//             if verified {
-//                 log!(
-//                     "Participant {} is verified and was successfully registered",
-//                     participant_id,
-//                 );
-
-//                 return true;
-//             } else {
-//                 self.participants.remove(&participant_id);
-
-//                 log!(
-//                     "Participant {} is not verified, reverting registration status",
-//                     participant_id
-//                 );
-
-//                 return false;
-//             }
-//         }
-//     }
-// }
-
-// for _ in participant.mintable_box_raritys.iter().take(5) {
-//     let box_rarity = self.participants.use_first_mintable_box(&account_id);
-
-//     self.internal_nft_mint(account_id.clone(), box_rarity.clone());
-// }
