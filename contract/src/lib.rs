@@ -345,22 +345,20 @@ impl Contract {
         }
     }
 
-    // TODO: return Option<JsonReward>
+    // TODO: return Option<JsonReward> instead of bool
     pub fn nft_burn(&mut self, token_id: TokenId) -> PromiseOrValue<bool> {
         let account_id = env::predecessor_account_id();
 
-        let owner_id = self.nft.owner_by_id.get(&token_id).expect(
-            format!(
-                "The token {} doesn't exist or has been already burnt",
-                token_id.clone()
-            )
-            .as_str(),
-        );
+        let owner_id = self
+            .nft
+            .owner_by_id
+            .get(&token_id)
+            .expect("ERR_TOKEN_NOT_FOUND");
 
         require!(owner_id == account_id, "ERR_ONLY_OWNER_CAN_BURN");
 
         // this should never panic
-        let box_id = self.token_to_box.remove(&token_id).expect("ERR_UNEXPECTED");
+        let box_id = self.token_to_box.remove(&token_id).unwrap();
         self.internal_nft_burn(token_id, account_id.clone());
 
         let rarity = self.boxes.get_box_rarity(&box_id);
@@ -758,8 +756,27 @@ mod tests {
         contract.nft_burn("1".to_string());
     }
 
+    #[should_panic(expected = "ERR_TOKEN_NOT_FOUND")]
     #[test]
-    fn test_burn_box_with_near_reward() {
+    fn test_burn_box_twice_with_panic() {
+        let (mut contract, mut context) = setup();
+
+        testing_env!(context.attached_deposit(5 * ONE_NEAR * 2).build());
+
+        contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), 5);
+        contract.nft_mint(user1(), BoxRarity::Rare);
+
+        testing_env!(context
+            .attached_deposit(0)
+            .predecessor_account_id(user1())
+            .build());
+
+        contract.nft_burn("1".to_string());
+        contract.nft_burn("1".to_string());
+    }
+
+    #[test]
+    fn test_burn_box_with_reward() {
         let (mut contract, mut context) = setup();
 
         testing_env!(context.attached_deposit(50 * ONE_NEAR * 2).build());
@@ -772,22 +789,8 @@ mod tests {
             .predecessor_account_id(user1())
             .build());
 
+        // promises aren't called
         contract.nft_burn("1".to_string());
-
-        let boxes = contract.get_account_boxes(user1(), None);
-
-        assert_eq!(boxes.len(), 1);
-
-        let box_data = boxes.get(0).unwrap().to_owned();
-
-        assert_eq!(
-            box_data.status,
-            JsonBoxStatus::Claimed {
-                reward: JsonReward::Near {
-                    amount: U128(ONE_NEAR)
-                }
-            }
-        );
 
         let rewards = contract.get_available_rewards(BoxRarity::Rare, None);
 
