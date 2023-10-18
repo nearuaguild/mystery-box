@@ -182,6 +182,7 @@ impl Contract {
         receiver_id: AccountId,
         box_id: BoxId,
         pending_reward: Option<PendingReward>,
+        rarity: BoxRarity,
     ) -> PromiseOrValue<Option<JsonReward>> {
         // https://docs.rs/near-sdk/latest/near_sdk/env/fn.promise_results_count.html
         assert_eq!(env::promise_results_count(), 1, "ERR_TOO_MANY_RESULTS");
@@ -231,6 +232,10 @@ impl Contract {
                 self.rewards
                     .return_pending_reward(pending_reward.pool_id, pending_reward.id);
             }
+
+            let token = self.internal_nft_mint(receiver_id, rarity);
+            self.token_to_box.insert(&token.token_id, &box_id);
+
             return PromiseOrValue::Value(None);
         };
 
@@ -414,7 +419,7 @@ impl Contract {
 
         let on_iah_verification_callback_promise = Self::ext(env::current_account_id())
             .with_static_gas(Gas::ONE_TERA * 5)
-            .check_iah_verification_and_burn_callback(owner_id, box_id, pending_reward);
+            .check_iah_verification_and_burn_callback(owner_id, box_id, pending_reward, rarity);
 
         get_iah_verification_promise.then(on_iah_verification_callback_promise)
     }
