@@ -1,9 +1,12 @@
 use std::fmt::{Display, Formatter, Result};
 
-use near_contract_standards::non_fungible_token::TokenId;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{AccountId, Balance};
+
+use crate::*;
+
+pub type TokenId = String;
 
 #[derive(
     BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug, PartialEq, Copy,
@@ -28,12 +31,12 @@ impl Display for BoxRarity {
 #[derive(BorshDeserialize, BorshSerialize, Clone, Debug, PartialEq)]
 pub enum BoxStatus {
     Claimed { reward: Option<Reward> },
-    NonClaimed { token_id: TokenId },
+    NonClaimed,
 }
 
-pub type BoxId = u64;
+pub type BoxId = u128;
 
-#[derive(BorshDeserialize, BorshSerialize)]
+#[derive(BorshDeserialize, BorshSerialize, Debug)]
 pub struct BoxData {
     pub id: BoxId,
     pub rarity: BoxRarity,
@@ -41,7 +44,7 @@ pub struct BoxData {
     pub owner_id: AccountId,
 }
 
-pub type PoolId = String;
+pub type PoolId = u32;
 pub type Capacity = u64;
 
 #[derive(BorshDeserialize, BorshSerialize, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -56,7 +59,6 @@ pub enum Reward {
     },
 }
 
-/// Implementation
 impl BoxRarity {
     pub fn to_media_ipfs(&self) -> String {
         match *self {
@@ -74,24 +76,27 @@ impl BoxRarity {
 }
 
 impl BoxData {
-    pub fn from(id: BoxId, rarity: BoxRarity, owner_id: AccountId, token_id: TokenId) -> Self {
+    pub fn new(id: BoxId, rarity: BoxRarity, owner_id: AccountId) -> Self {
         Self {
             id,
             rarity,
             owner_id,
-            status: BoxStatus::NonClaimed { token_id },
+            status: BoxStatus::NonClaimed,
         }
     }
 
     pub fn ipfs(&self) -> String {
         self.rarity.to_media_ipfs()
     }
+}
 
-    pub fn claim(&mut self, reward: Option<Reward>) {
-        self.status = BoxStatus::Claimed { reward };
-    }
-
-    pub fn revert_claim(&mut self, token_id: TokenId) {
-        self.status = BoxStatus::NonClaimed { token_id };
+impl From<BoxData> for JsonBox {
+    fn from(value: BoxData) -> Self {
+        Self {
+            id: value.id,
+            ipfs: value.ipfs(),
+            rarity: value.rarity,
+            status: value.status.into(),
+        }
     }
 }

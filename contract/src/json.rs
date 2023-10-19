@@ -1,14 +1,9 @@
-use near_contract_standards::non_fungible_token::TokenId;
+use crate::*;
 use near_sdk::{
     json_types::U128,
     require,
     serde::{Deserialize, Serialize},
     AccountId,
-};
-
-use crate::{
-    reward_pools::Pool,
-    types::{BoxData, BoxId, BoxRarity, BoxStatus, Capacity, Reward},
 };
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
@@ -22,21 +17,6 @@ pub enum JsonPoolRewards {
         contract_id: AccountId,
         token_ids: Vec<TokenId>,
     },
-}
-
-impl Into<JsonPoolRewards> for &Pool {
-    fn into(self) -> JsonPoolRewards {
-        match self {
-            Pool::Near(pool) => JsonPoolRewards::Near {
-                amount: pool.amount.to_owned().into(),
-                available: pool.available.clone(),
-            },
-            Pool::NonFungibleToken(pool) => JsonPoolRewards::NonFungibleToken {
-                contract_id: pool.contract_id.clone(),
-                token_ids: pool.available_tokens.clone(),
-            },
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -81,7 +61,7 @@ impl Into<JsonReward> for Option<Reward> {
 #[serde(crate = "near_sdk::serde", tag = "kind", rename_all = "snake_case")]
 pub enum JsonBoxStatus {
     Claimed { reward: JsonReward },
-    NonClaimed { token_id: TokenId },
+    NonClaimed,
 }
 
 impl Into<JsonBoxStatus> for BoxStatus {
@@ -90,7 +70,7 @@ impl Into<JsonBoxStatus> for BoxStatus {
             BoxStatus::Claimed { reward } => JsonBoxStatus::Claimed {
                 reward: reward.into(),
             },
-            BoxStatus::NonClaimed { token_id } => JsonBoxStatus::NonClaimed { token_id },
+            BoxStatus::NonClaimed => JsonBoxStatus::NonClaimed,
         }
     }
 }
@@ -131,16 +111,16 @@ impl Default for Pagination {
 impl Pagination {
     pub fn assert_valid(&self) {
         require!(
-            self.size <= 10,
-            "A single page can't contain more than 10 elements"
+            self.size <= 50,
+            "A single page can't contain more than 50 elements"
         )
     }
 
-    pub fn calculate_limit(&self) -> usize {
+    pub fn take(&self) -> usize {
         self.size.into()
     }
 
-    pub fn calculate_offset(&self) -> usize {
+    pub fn skip(&self) -> usize {
         (self.size * (self.page - 1)).into()
     }
 }

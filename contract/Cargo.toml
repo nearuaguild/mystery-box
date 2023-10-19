@@ -1,12 +1,11 @@
 [package]
 edition = "2021"
 name = "mystery_box"
-version = "0.3.1"
+version = "0.4.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-near-contract-standards = "4.0.0"
 near-sdk = "4.0.0"
 
 [lib]
