@@ -32,26 +32,27 @@ pub enum JsonReward {
     Nothing,
 }
 
-impl Into<JsonReward> for Reward {
-    fn into(self) -> JsonReward {
-        match self {
-            Reward::Near { amount } => JsonReward::Near {
+impl From<Reward> for JsonReward {
+    fn from(value: Reward) -> Self {
+        match value {
+            Reward::Near { amount } => Self::Near {
                 amount: amount.into(),
             },
             Reward::NonFungibleToken {
                 contract_id,
                 token_id,
-            } => JsonReward::NonFungibleToken {
+            } => Self::NonFungibleToken {
                 contract_id,
                 token_id,
             },
         }
     }
 }
-impl Into<JsonReward> for Option<Reward> {
-    fn into(self) -> JsonReward {
-        match self {
-            Option::None => JsonReward::Nothing,
+
+impl From<Option<Reward>> for JsonReward {
+    fn from(value: Option<Reward>) -> Self {
+        match value {
+            Option::None => Self::Nothing,
             Option::Some(reward) => reward.into(),
         }
     }
