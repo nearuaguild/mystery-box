@@ -83,7 +83,7 @@ impl Contract {
         receiver_id: AccountId,
         box_id: BoxId,
         pool_id: PoolId,
-    ) -> PromiseOrValue<Option<JsonReward>> {
+    ) -> PromiseOrValue<Option<(BoxId, BoxRarity, JsonReward)>> {
         // https://docs.rs/near-sdk/latest/near_sdk/env/fn.promise_results_count.html
         assert_eq!(env::promise_results_count(), 1, "ERR_TOO_MANY_RESULTS");
 
@@ -141,7 +141,9 @@ impl Contract {
         };
 
         match reward {
-            Option::None => PromiseOrValue::Value(Some(reward.into())),
+            Option::None => {
+                PromiseOrValue::Value(Some((box_data.id, box_data.rarity, reward.into())))
+            }
             Option::Some(reward) => PromiseOrValue::Promise(create_withdraw_box_reward_promise(
                 &receiver_id,
                 &box_id,
@@ -158,7 +160,7 @@ impl Contract {
         box_id: BoxId,
         pool_id: PoolId,
         reward: Reward,
-    ) -> Option<JsonReward> {
+    ) -> Option<(BoxId, BoxRarity, JsonReward)> {
         // https://docs.rs/near-sdk/latest/near_sdk/env/fn.promise_results_count.html
         require!(env::promise_results_count() == 1, "ERR_TOO_MANY_RESULTS");
 
@@ -172,7 +174,9 @@ impl Contract {
                     account_id
                 );
 
-                Some(reward.into())
+                let box_data = self.boxes.get(&box_id).unwrap();
+
+                Some((box_data.id, box_data.rarity, reward.into()))
             }
             _ => {
                 log!(
