@@ -81,6 +81,7 @@ const SingleBoxWrapper = styled.div`
   justify-content: space-between;
   align-items: center;
   height: 100%;
+  max-width: 280px;
 
   display: ${(props) => (props.active ? "flex" : "none")};
 `;
@@ -95,32 +96,31 @@ const levitation = styled.keyframes`
 `;
 
 const BoxImageWrapper = styled.div`
-  max-width: 200px;
-
   animation-duration: 3s;
   animation-iteration-count: ${(props) => (props.animate ? "infinite" : "0")};
   animation-name: ${levitation};
   animation-timing-function: ease;
   animation-direction: alternate-reverse;
+  text-align: center;
 
   img {
     object-fit: cover;
-    max-width: 100%;
+    max-width: 75%;
   }
 
   svg {
     position: absolute;
-    top: 48%;
+    top: 44%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 40px;
+    width: 42px;
   }
 `;
 
 const BoxImage = styled.img``;
 
 const BoxTitle = styled.div`
-  background: rgba(14, 18, 30, 0.5);
+  background: rgba(14, 18, 30, 0.6);
   border-radius: 50px;
   padding: 0.25em 3em;
   display: flex;
@@ -193,7 +193,7 @@ const BoxRewardTitle = styled.p`
 const BoxLockedTitle = styled.p`
   color: #a1e0ea;
   font-family: "Kodchasan", sans-serif;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   letter-spacing: 0em;
   text-align: center;
@@ -291,40 +291,25 @@ const ClaimedButton = styled.div`
     inset 0 0 25px rgba(43, 204, 194, 0.25);
 `;
 
-const WrapperText = styled.div`
-  @media (min-width: 768px) {
-    margin: 0em 4em;
-  }
-  @media (min-width: 512px) {
-    margin: 0em 2em;
-  }
-
-  margin: 0em 1em;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: end;
-`;
-
 const Logo = styled.img`
   height: 55px;
 `;
 
-const PrimaryText = styled.div`
-  @media (min-width: 512px) {
-    font-size: 24px;
-    line-height: 30px;
-  }
+const MintedBoxText = styled.p`
+  margin: 0;
 
-  font-size: 18px;
-  line-height: 24px;
+  color: white;
 
+  font-size: 14px;
   font-family: "Kodchasan", sans-serif;
   font-weight: 700;
   letter-spacing: 0em;
   text-align: center;
-  color: #ffffff;
   text-transform: uppercase;
+
+  span {
+    color: #2bccc2;
+  }
 `;
 
 const WrapperSocial = styled.div`
@@ -535,6 +520,10 @@ return (
             onClick={nextActiveBox}
           />
         </SliderWrapper>
+
+        <MintedBoxText>
+          <span>{props.total_supply}</span> minted boxes
+        </MintedBoxText>
 
         <WrapperSocial>
           <SocialText>Follow us</SocialText>
