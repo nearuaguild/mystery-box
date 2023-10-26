@@ -47,7 +47,7 @@ fn create_transfer_reward_callback_promise(
     pool_id: &PoolId,
     reward: &Reward,
 ) -> Promise {
-    Contract::ext(account_id.to_owned()).transfer_reward_callback(
+    Contract::ext(env::current_account_id()).transfer_reward_callback(
         account_id.to_owned(),
         box_id.to_owned(),
         pool_id.to_owned(),
