@@ -113,7 +113,10 @@ impl Contract {
             total_deposit
         );
 
-        // TODO: refund unused deposit
+        let refund = env::attached_deposit() - total_deposit;
+        if refund > 1 {
+            Promise::new(env::predecessor_account_id()).transfer(refund);
+        }
     }
 
     // TODO: add mint_many function (ensure <10 boxes are being created at time)
