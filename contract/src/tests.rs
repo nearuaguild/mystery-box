@@ -652,6 +652,28 @@ fn test_claim_nft_reward_succeeds() {
     contract.claim(1);
 }
 
+#[test]
+fn test_claim_for_multiple_pools_succeeds() {
+    let (mut contract, mut context) = setup();
+
+    testing_env!(context.attached_deposit(50 * ONE_NEAR).build());
+
+    contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), U64(20));
+    contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR / 2), U64(25));
+    contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR / 4), U64(35));
+    contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR / 10), U64(45));
+
+    contract.mint(user1(), BoxRarity::Rare);
+
+    testing_env!(context
+        .attached_deposit(1)
+        .predecessor_account_id(user1())
+        .random_seed([2; 32])
+        .build());
+
+    contract.claim(1);
+}
+
 #[should_panic]
 #[test]
 fn test_check_verification_and_claim_callback_by_someone_with_panic() {

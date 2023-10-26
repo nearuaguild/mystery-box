@@ -167,7 +167,7 @@ impl Contract {
             let next_pool = pool_iterator.next();
 
             // should never panic (Reward pools are over before a random one had been found)
-            require!(next_pool.is_some());
+            require!(next_pool.is_some(), "ERR_LOGIC");
 
             let pool = next_pool.unwrap().to_owned();
 
@@ -175,7 +175,7 @@ impl Contract {
                 break pool;
             }
 
-            last = pool.availability().clone();
+            last += pool.availability().clone();
         };
 
         let reward = random_pool.take_reward_from_pool();
