@@ -47,35 +47,6 @@ const SliderWrapper = styled.div`
   flex-basis: 60%;
 `;
 
-const LeftArrow = styled.div`
-  transform: rotate(135deg);
-  cursor: pointer;
-  width: 24px;
-  height: 24px;
-  border-left: none;
-  border-top: none;
-  border-right: 4px solid;
-  border-bottom: 4px solid;
-  border-color: ${(props) => (props.disabled ? "gray" : "white")};
-  border-radius: 1px;
-  box-shadow: 3px 3px 3px rgba(15, 15, 15, 0.45);
-`;
-
-const RightArrow = styled.div`
-  transform: rotate(-45deg);
-  cursor: pointer;
-  width: 24px;
-  height: 24px;
-  border-left: none;
-  border-top: none;
-  border-right: 4px solid;
-  border-bottom: 4px solid;
-
-  border-color: ${(props) => (props.disabled ? "gray" : "white")};
-  border-radius: 1px;
-  box-shadow: 3px 3px 3px rgba(15, 15, 15, 0.45);
-`;
-
 const SingleBoxWrapper = styled.div`
   flex-direction: column;
   justify-content: space-between;
@@ -513,6 +484,49 @@ const BoxComponent = ({ box }) => {
 
   return <></>;
 };
+
+const Svg = styled.svg`
+  height: 36px;
+  cursor: pointer;
+
+  ${(props) =>
+    !props.disabled
+      ? `filter: drop-shadow(0px 0px 4px rgba(43, 204, 193, 0.5));`
+      : ``}
+`;
+
+const RightArrow = ({ onClick, disabled }) => (
+  <Svg
+    viewBox="0 0 25.345 42"
+    disabled={disabled}
+    onClick={onClick}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M.398 3.585 3.983 0l17.395 17.394.015-.014 3.585 3.585-.015.014.014.015-3.585 3.585-.014-.014L3.984 41.959.399 38.374 17.793 20.98.399 3.585Z"
+      fill={disabled ? "#818B94" : "#fff"}
+    />
+  </Svg>
+);
+
+const LeftArrow = ({ onClick, disabled }) => (
+  <Svg
+    viewBox="0 0 25.345 42"
+    disabled={disabled}
+    onClick={onClick}
+    xmlns="http://www.w3.org/2000/svg"
+    transform="rotate(180)"
+  >
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M.398 3.585 3.983 0l17.395 17.394.015-.014 3.585 3.585-.015.014.014.015-3.585 3.585-.014-.014L3.984 41.959.399 38.374 17.793 20.98.399 3.585Z"
+      fill={disabled ? "#818B94" : "#fff"}
+    />
+  </Svg>
+);
 
 return (
   <>
