@@ -69,7 +69,7 @@ fn create_transfer_reward_promise(receiver_id: &AccountId, reward: &Reward) -> P
             })
             .to_string()
             .into_bytes(),
-            0,
+            1,
             Gas::ONE_TERA * 5,
         ),
     }
