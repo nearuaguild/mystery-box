@@ -44,7 +44,7 @@ const SliderWrapper = styled.div`
   justify-content: space-between;
   align-items: center;
 
-  min-height: 60%;
+  flex-basis: 60%;
 `;
 
 const LeftArrow = styled.div`
@@ -110,7 +110,7 @@ const BoxImageWrapper = styled.div`
 
   svg {
     position: absolute;
-    top: 44%;
+    top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 42px;
@@ -141,7 +141,10 @@ const BoxRewardWrapper = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
+  justify-content: space-evenly;
+
+  width: 100%;
+  flex-basis: 18%;
 `;
 
 const BoxRewardAmounts = styled.div`
@@ -150,11 +153,14 @@ const BoxRewardAmounts = styled.div`
   align-items: end;
   justify-content: space-between;
   margin: 0;
-  margin-right: 0.5em;
   padding: 0;
+  flex-basis: 35%;
 `;
 
 const BoxRewardAmount = styled.p`
+  overflow: hidden;
+  white-space: nowrap; /* Don't forget this one */
+  text-overflow: ellipsis;
   color: rgba(161, 224, 234, 1);
   font-family: "Kodchasan", sans-serif;
   font-size: 12px;
@@ -174,10 +180,14 @@ const BoxRewardTitles = styled.div`
   justify-content: space-between;
   margin: 0;
   padding: 0;
-  margin-left: 0.5em;
+
+  flex-basis: 50%;
 `;
 
 const BoxRewardTitle = styled.p`
+  overflow: hidden;
+  white-space: nowrap; /* Don't forget this one */
+  text-overflow: ellipsis;
   color: rgba(255, 255, 255, 1);
   font-family: "Kodchasan", sans-serif;
   font-size: 12px;
@@ -387,7 +397,13 @@ const NonClaimedBoxComponent = ({ box }) => {
     } else if (reward.kind === "non_fungible_token") {
       const { name } = Near.view(reward.contract_id, "nft_metadata");
 
-      return `${name} nft`;
+      const maximumNameLength = 12;
+      const shortName =
+        name.length > maximumNameLength
+          ? name.substring(0, maximumNameLength) + "..."
+          : name;
+
+      return `${shortName} nft`;
     }
   });
 
@@ -440,6 +456,7 @@ const LockedBoxComponent = ({ box }) => {
   return (
     <>
       <BoxTitle>{rarity} box</BoxTitle>
+      <BoxRewardWrapper />
       <BoxImageWrapper>
         <BoxImage src={image} />
         <LockIcon />
@@ -464,16 +481,18 @@ const OpenedBoxComponent = ({ box }) => {
     ).toNumber();
 
     text = `${amountInNear} near token`;
-  } else if (reward.kind === "nft") {
-    /** @todo: fetch title from the contract metadata  */
+  } else if (reward.kind === "non_fungible_token") {
+    const { name } = Near.view(reward.contract_id, "nft_metadata");
 
-    text = `${reward.contract_id} nft`;
+    text = `${name} nft`;
   }
 
   return (
     <>
       <BoxTitle>{rarity} box</BoxTitle>
-      <OpenedBoxRewardTitle>{text}</OpenedBoxRewardTitle>
+      <BoxRewardWrapper>
+        <OpenedBoxRewardTitle>{text}</OpenedBoxRewardTitle>
+      </BoxRewardWrapper>
       <BoxImageWrapper>
         <BoxImage src={image} />
       </BoxImageWrapper>
