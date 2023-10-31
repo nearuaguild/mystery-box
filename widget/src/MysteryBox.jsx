@@ -76,6 +76,10 @@ const fetchAndUpdateRewardsByRarity = (contract_id, rarity) => {
 const fetchUserBoxes = (contract_id, account_id) => {
   const boxes = Near.view(contract_id, "boxes_for_owner", {
     account_id: account_id,
+    pagination: {
+      page: 1,
+      size: 20
+    }
   });
 
   if (boxes === undefined) throw `No boxes returned :(`;
