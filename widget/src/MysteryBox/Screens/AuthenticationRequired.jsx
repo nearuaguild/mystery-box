@@ -22,7 +22,7 @@ const WrapperContent = styled.div`
   justify-content: space-between;
   align-items: center;
   background: linear-gradient(rgba(17, 22, 31, 0.5), rgba(17, 22, 31, 0.5)),
-    url("https://ipfs.near.social/ipfs/bafybeiee6uevwwu5vithbvf3wlkbae6hc7u2cqyabsxbndyibuhefrnna4");
+    url("https://ipfs.near.social/ipfs/bafkreiglg2ftzn7vtylgnq5uq2dhozyiynulqttburfoeowl2ce7i5xfne");
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
