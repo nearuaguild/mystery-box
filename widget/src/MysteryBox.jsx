@@ -1,4 +1,5 @@
-const widget_owner_id = "denbite.testnet";
+const widget_owner_id = "nearukraineguild.near";
+const rpc_endpoint = "https://rpc.mainnet.near.org";
 
 const account_id = context.accountId;
 const contract_id = props.contract_id;
@@ -109,8 +110,7 @@ const fetchTotalSupply = (contract_id) => {
 };
 
 const fetchTransactionByHash = (hash, sender_id) => {
-  // TODO: move RPC to config
-  return fetch("https://rpc.testnet.near.org", {
+  return fetch(rpc_endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
