@@ -196,9 +196,1485 @@ const onClick = () => {
   return props.onBack();
 };
 
-const LoadingReward = () => {
+const LoadingReward = ({ width, height }) => {
+  const source = `<div id="main"></div>
+  <style>
+  html {
+    width: ${width}px;
+    height: ${height}px;
+  }
+
+  body {
+    padding: 0;
+    margin: 0;
+  }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+  <script>
+  const element = document.getElementById('main');
+
+  const animation = {
+    v: "4.8.0",
+    meta: { g: "LottieFiles AE 3.4.5", a: "", k: "", d: "", tc: "" },
+    fr: 30,
+    ip: 0,
+    op: 151,
+    w: 800,
+    h: 800,
+    nm: "Lottie_Main_Comp 2",
+    ddd: 0,
+    assets: [
+      {
+        id: "image_0",
+        w: 636,
+        h: 633,
+        u: "",
+        p: "data:image/png;base64,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",
+        e: 1,
+      },
+      {
+        id: "comp_0",
+        layers: [
+          {
+            ddd: 0,
+            ind: 1,
+            ty: 2,
+            nm: "path2723.ai",
+            cl: "ai",
+            refId: "image_0",
+            sr: 1,
+            ks: {
+              o: { a: 0, k: 100, ix: 11 },
+              r: { a: 0, k: 0, ix: 10 },
+              p: { a: 0, k: [400, 400, 0], ix: 2 },
+              a: { a: 0, k: [318, 316.5, 0], ix: 1 },
+              s: {
+                a: 1,
+                k: [
+                  {
+                    i: { x: [0.833, 0.833, 0.833], y: [1, 1, -0.814] },
+                    o: { x: [0.167, 0.167, 0.167], y: [0.167, 0.167, 2.444] },
+                    t: 0,
+                    s: [24.214, 24.214, 100],
+                  },
+                  {
+                    i: { x: [0.833, 0.833, 0.833], y: [0.833, 0.833, -0.389] },
+                    o: { x: [0.167, 0.167, 0.167], y: [0, 0, 2.019] },
+                    t: 71,
+                    s: [34.591, 34.591, 100],
+                  },
+                  { t: 150, s: [24.214, 24.214, 100] },
+                ],
+                ix: 6,
+              },
+            },
+            ao: 0,
+            ip: 0,
+            op: 151,
+            st: 0,
+            bm: 0,
+          },
+          {
+            ddd: 0,
+            ind: 3,
+            ty: 4,
+            nm: "形状图层 10",
+            sr: 1,
+            ks: {
+              o: {
+                a: 1,
+                k: [
+                  {
+                    i: { x: [0.833], y: [0.833] },
+                    o: { x: [0.167], y: [0.167] },
+                    t: 2,
+                    s: [100],
+                  },
+                  { t: 62, s: [0] },
+                ],
+                ix: 11,
+              },
+              r: {
+                a: 1,
+                k: [
+                  {
+                    i: { x: [0.833], y: [0.833] },
+                    o: { x: [0.167], y: [0.167] },
+                    t: -304,
+                    s: [0],
+                  },
+                  {
+                    i: { x: [0.833], y: [0.833] },
+                    o: { x: [0.167], y: [0.167] },
+                    t: -153,
+                    s: [120],
+                  },
+                  {
+                    i: { x: [0.833], y: [0.833] },
+                    o: { x: [0.167], y: [0.167] },
+                    t: 0,
+                    s: [360],
+                  },
+                  { t: 151, s: [480] },
+                ],
+                ix: 10,
+              },
+              p: { a: 0, k: [400, 400, 0], ix: 2 },
+              a: { a: 0, k: [62.471, -110.018, 0], ix: 1 },
+              s: {
+                a: 1,
+                k: [
+                  {
+                    i: { x: [0.833, 0.833, 0.833], y: [0.833, 0.833, 1] },
+                    o: { x: [0.167, 0.167, 0.167], y: [0.167, 0.167, 0] },
+                    t: -304,
+                    s: [100, 100, 100],
+                  },
+                  {
+                    i: { x: [0.833, 0.833, 0.833], y: [0.833, 0.833, 1] },
+                    o: { x: [0.167, 0.167, 0.167], y: [0.167, 0.167, 0] },
+                    t: -153,
+                    s: [124, 124, 100],
+                  },
+                  {
+                    i: { x: [0.833, 0.833, 0.833], y: [0.833, 0.833, 1] },
+                    o: { x: [0.167, 0.167, 0.167], y: [0.167, 0.167, 0] },
+                    t: 0,
+                    s: [148, 148, 100],
+                  },
+                  { t: 151, s: [166, 166, 100] },
+                ],
+                ix: 6,
+              },
+            },
+            ao: 0,
+            shapes: [
+              {
+                ty: "gr",
+                it: [
+                  {
+                    d: 1,
+                    ty: "el",
+                    s: {
+                      a: 1,
+                      k: [
+                        {
+                          i: { x: [0.833, 0.833], y: [0.833, 0.833] },
+                          o: { x: [0.167, 0.167], y: [0.167, 0.167] },
+                          t: -304,
+                          s: [40, 40],
+                        },
+                        {
+                          i: { x: [0.833, 0.833], y: [0.833, 0.833] },
+                          o: { x: [0.167, 0.167], y: [0.167, 0.167] },
+                          t: -153,
+                          s: [24, 24],
+                        },
+                        {
+                          i: { x: [0.833, 0.833], y: [0.833, 0.833] },
+                          o: { x: [0.167, 0.167], y: [0.167, 0.167] },
+                          t: 0,
+                          s: [16, 16],
+                        },
+                        { t: 151, s: [0, 0] },
+                      ],
+                      ix: 2,
+                    },
+                    p: { a: 0, k: [0, 0], ix: 3 },
+                    nm: "椭圆路径 1",
+                    mn: "ADBE Vector Shape - Ellipse",
+                    hd: false,
+                  },
+                  {
+                    ty: "fl",
+                    c: {
+                      a: 0,
+                      k: [0.60282599926, 0.146082267165, 0.631372570992, 1],
+                      ix: 4,
+                    },
+                    o: { a: 0, k: 100, ix: 5 },
+                    r: 1,
+                    bm: 0,
+                    nm: "填充 1",
+                    mn: "ADBE Vector Graphic - Fill",
+                    hd: false,
+                  },
+                  {
+                    ty: "gr",
+                    it: [
+                      {
+                        d: 1,
+                        ty: "el",
+                        s: {
+                          a: 1,
+                          k: [
+                            {
+                              i: { x: [0.833, 0.833], y: [0.833, 0.833] },
+                              o: { x: [0.167, 0.167], y: [0.167, 0.167] },
+                              t: -304,
+                              s: [40, 40],
+                            },
+                            {
+                              i: { x: [0.833, 0.833], y: [0.833, 0.833] },
+                              o: { x: [0.167, 0.167], y: [0.167, 0.167] },
+                              t: -153,
+                              s: [24, 24],
+                            },
+                            {
+                              i: { x: [0.833, 0.833], y: [0.833, 0.833] },
+                              o: { x: [0.167, 0.167], y: [0.167, 0.167] },
+                              t: 2,
+                              s: [16, 16],
+                            },
+                            { t: 151, s: [0, 0] },
+                          ],
+                          ix: 2,
+                        },
+                        p: { a: 0, k: [0, 0], ix: 3 },
+                        nm: "椭圆路径 1",
+                        mn: "ADBE Vector Shape - Ellipse",
+                        hd: false,
+                      },
+                      {
+                        ty: "fl",
+                        c: {
+                          a: 0,
+                          k: [0.670000016689, 0.52999997139, 0.870000004768, 1],
+                          ix: 4,
+                        },
+                        o: { a: 0, k: 100, ix: 5 },
+                        r: 1,
+                        bm: 0,
+                        nm: "填充 1",
+                        mn: "ADBE Vector Graphic - Fill",
+                        hd: false,
+                      },
+                      {
+                        ty: "tr",
+                        p: { a: 0, k: [472.605, -2.23], ix: 2 },
+                        a: { a: 0, k: [0, 0], ix: 1 },
+                        s: { a: 0, k: [100, 100], ix: 3 },
+                        r: { a: 0, k: 0, ix: 6 },
+                        o: { a: 0, k: 100, ix: 7 },
+                        sk: { a: 0, k: 0, ix: 4 },
+                        sa: { a: 0, k: 0, ix: 5 },
+                        nm: "Transform",
+                      },
+                    ],
+                    nm: "椭圆 1",
+                    np: 2,
+                    cix: 2,
+                    bm: 0,
+                    ix: 3,
+                    mn: "ADBE Vector Group",
+                    hd: false,
+                  },
+                  {
+                    ty: "tr",
+                    p: { a: 0, k: [-173.832, -108.902], ix: 2 },
+                    a: { a: 0, k: [0, 0], ix: 1 },
+                    s: { a: 0, k: [100, 100], ix: 3 },
+                    r: { a: 0, k: 0, ix: 6 },
+                    o: { a: 0, k: 100, ix: 7 },
+                    sk: { a: 0, k: 0, ix: 4 },
+                    sa: { a: 0, k: 0, ix: 5 },
+                    nm: "Transform",
+                  },
+                ],
+                nm: "椭圆 1",
+                np: 3,
+                cix: 2,
+                bm: 0,
+                ix: 1,
+                mn: "ADBE Vector Group",
+                hd: false,
+              },
+            ],
+            ip: -304,
+            op: 636,
+            st: -304,
+            bm: 0,
+          },
+          {
+            ddd: 0,
+            ind: 4,
+            ty: 4,
+            nm: "形状图层 9",
+            sr: 1,
+            ks: {
+              o: { a: 0, k: 100, ix: 11 },
+              r: {
+                a: 1,
+                k: [
+                  {
+                    i: { x: [0.833], y: [0.833] },
+                    o: { x: [0.167], y: [0.167] },
+                    t: -151,
+                    s: [0],
+                  },
+                  {
+                    i: { x: [0.833], y: [0.833] },
+                    o: { x: [0.167], y: [0.167] },
+                    t: 0,
+                    s: [240],
+                  },
+                  { t: 151, s: [360] },
+                ],
+                ix: 10,
+              },
+              p: { a: 0, k: [400, 400, 0], ix: 2 },
+              a: { a: 0, k: [62.471, -110.018, 0], ix: 1 },
+              s: {
+                a: 1,
+                k: [
+                  {
+                    i: { x: [0.833, 0.833, 0.833], y: [0.833, 0.833, 1] },
+                    o: { x: [0.167, 0.167, 0.167], y: [0.167, 0.167, 0] },
+                    t: -151,
+                    s: [100, 100, 100],
+                  },
+                  {
+                    i: { x: [0.833, 0.833, 0.833], y: [0.833, 0.833, 1] },
+                    o: { x: [0.167, 0.167, 0.167], y: [0.167, 0.167, 0] },
+                    t: 0,
+                    s: [124, 124, 100],
+                  },
+                  { t: 151, s: [148, 148, 100] },
+                ],
+                ix: 6,
+              },
+            },
+            ao: 0,
+            shapes: [
+              {
+                ty: "gr",
+                it: [
+                  {
+                    d: 1,
+                    ty: "el",
+                    s: {
+                      a: 1,
+                      k: [
+                        {
+                          i: { x: [0.833, 0.833], y: [0.833, 0.833] },
+                          o: { x: [0.167, 0.167], y: [0.167, 0.167] },
+                          t: -151,
+                          s: [40, 40],
+                        },
+                        {
+                          i: { x: [0.833, 0.833], y: [0.833, 0.833] },
+                          o: { x: [0.167, 0.167], y: [0.167, 0.167] },
+                          t: 0,
+                          s: [24, 24],
+                        },
+                        { t: 151, s: [16, 16] },
+                      ],
+                      ix: 2,
+                    },
+                    p: { a: 0, k: [0, 0], ix: 3 },
+                    nm: "椭圆路径 1",
+                    mn: "ADBE Vector Shape - Ellipse",
+                    hd: false,
+                  },
+                  {
+                    ty: "fl",
+                    c: {
+                      a: 1,
+                      k: [
+                        {
+                          i: { x: [0.833], y: [1] },
+                          o: { x: [0.167], y: [0] },
+                          t: 0,
+                          s: [0.769999980927, 0.670000016689, 0.889999985695, 1],
+                        },
+                        {
+                          t: 151,
+                          s: [0.670000016689, 0.52999997139, 0.870000004768, 1],
+                        },
+                      ],
+                      ix: 4,
+                    },
+                    o: { a: 0, k: 100, ix: 5 },
+                    r: 1,
+                    bm: 0,
+                    nm: "填充 1",
+                    mn: "ADBE Vector Graphic - Fill",
+                    hd: false,
+                  },
+                  {
+                    ty: "gr",
+                    it: [
+                      {
+                        d: 1,
+                        ty: "el",
+                        s: {
+                          a: 1,
+                          k: [
+                            {
+                              i: { x: [0.833, 0.833], y: [0.833, 0.833] },
+                              o: { x: [0.167, 0.167], y: [0.167, 0.167] },
+                              t: -151,
+                              s: [40, 40],
+                            },
+                            {
+                              i: { x: [0.833, 0.833], y: [0.833, 0.833] },
+                              o: { x: [0.167, 0.167], y: [0.167, 0.167] },
+                              t: 0,
+                              s: [24, 24],
+                            },
+                            { t: 151, s: [16, 16] },
+                          ],
+                          ix: 2,
+                        },
+                        p: { a: 0, k: [0, 0], ix: 3 },
+                        nm: "椭圆路径 1",
+                        mn: "ADBE Vector Shape - Ellipse",
+                        hd: false,
+                      },
+                      {
+                        ty: "fl",
+                        c: {
+                          a: 1,
+                          k: [
+                            {
+                              i: { x: [0.833], y: [1] },
+                              o: { x: [0.167], y: [0] },
+                              t: 0,
+                              s: [
+                                0.769999980927, 0.670000016689, 0.889999985695, 1,
+                              ],
+                            },
+                            {
+                              t: 151,
+                              s: [
+                                0.670000016689, 0.52999997139, 0.870000004768, 1,
+                              ],
+                            },
+                          ],
+                          ix: 4,
+                        },
+                        o: { a: 0, k: 100, ix: 5 },
+                        r: 1,
+                        bm: 0,
+                        nm: "填充 1",
+                        mn: "ADBE Vector Graphic - Fill",
+                        hd: false,
+                      },
+                      {
+                        ty: "tr",
+                        p: { a: 0, k: [472.605, -2.23], ix: 2 },
+                        a: { a: 0, k: [0, 0], ix: 1 },
+                        s: { a: 0, k: [100, 100], ix: 3 },
+                        r: { a: 0, k: 0, ix: 6 },
+                        o: { a: 0, k: 100, ix: 7 },
+                        sk: { a: 0, k: 0, ix: 4 },
+                        sa: { a: 0, k: 0, ix: 5 },
+                        nm: "Transform",
+                      },
+                    ],
+                    nm: "椭圆 1",
+                    np: 2,
+                    cix: 2,
+                    bm: 0,
+                    ix: 3,
+                    mn: "ADBE Vector Group",
+                    hd: false,
+                  },
+                  {
+                    ty: "tr",
+                    p: { a: 0, k: [-173.832, -108.902], ix: 2 },
+                    a: { a: 0, k: [0, 0], ix: 1 },
+                    s: { a: 0, k: [100, 100], ix: 3 },
+                    r: { a: 0, k: 0, ix: 6 },
+                    o: { a: 0, k: 100, ix: 7 },
+                    sk: { a: 0, k: 0, ix: 4 },
+                    sa: { a: 0, k: 0, ix: 5 },
+                    nm: "Transform",
+                  },
+                ],
+                nm: "椭圆 1",
+                np: 3,
+                cix: 2,
+                bm: 0,
+                ix: 1,
+                mn: "ADBE Vector Group",
+                hd: false,
+              },
+            ],
+            ip: -151,
+            op: 789,
+            st: -151,
+            bm: 0,
+          },
+          {
+            ddd: 0,
+            ind: 5,
+            ty: 4,
+            nm: "形状图层 4",
+            sr: 1,
+            ks: {
+              o: { a: 0, k: 100, ix: 11 },
+              r: {
+                a: 1,
+                k: [
+                  {
+                    i: { x: [0.833], y: [0.833] },
+                    o: { x: [0.167], y: [0.167] },
+                    t: 0,
+                    s: [120],
+                  },
+                  { t: 151, s: [240] },
+                ],
+                ix: 10,
+              },
+              p: { a: 0, k: [400, 400, 0], ix: 2 },
+              a: { a: 0, k: [62.471, -110.018, 0], ix: 1 },
+              s: {
+                a: 1,
+                k: [
+                  {
+                    i: { x: [0.833, 0.833, 0.833], y: [0.833, 0.833, 1] },
+                    o: { x: [0.167, 0.167, 0.167], y: [0.167, 0.167, 0] },
+                    t: 0,
+                    s: [100, 100, 100],
+                  },
+                  { t: 151, s: [124, 124, 100] },
+                ],
+                ix: 6,
+              },
+            },
+            ao: 0,
+            shapes: [
+              {
+                ty: "gr",
+                it: [
+                  {
+                    d: 1,
+                    ty: "el",
+                    s: {
+                      a: 1,
+                      k: [
+                        {
+                          i: { x: [0.833, 0.833], y: [0.833, 0.833] },
+                          o: { x: [0.167, 0.167], y: [0.167, 0.167] },
+                          t: 0,
+                          s: [40, 40],
+                        },
+                        { t: 151, s: [24, 24] },
+                      ],
+                      ix: 2,
+                    },
+                    p: { a: 0, k: [0, 0], ix: 3 },
+                    nm: "椭圆路径 1",
+                    mn: "ADBE Vector Shape - Ellipse",
+                    hd: false,
+                  },
+                  {
+                    ty: "fl",
+                    c: {
+                      a: 1,
+                      k: [
+                        {
+                          i: { x: [0.833], y: [1] },
+                          o: { x: [0.167], y: [0] },
+                          t: 0,
+                          s: [1, 1, 1, 1],
+                        },
+                        {
+                          t: 149,
+                          s: [0.769999980927, 0.680000007153, 0.889999985695, 1],
+                        },
+                      ],
+                      ix: 4,
+                    },
+                    o: { a: 0, k: 100, ix: 5 },
+                    r: 1,
+                    bm: 0,
+                    nm: "填充 1",
+                    mn: "ADBE Vector Graphic - Fill",
+                    hd: false,
+                  },
+                  {
+                    ty: "gr",
+                    it: [
+                      {
+                        d: 1,
+                        ty: "el",
+                        s: {
+                          a: 1,
+                          k: [
+                            {
+                              i: { x: [0.833, 0.833], y: [0.833, 0.833] },
+                              o: { x: [0.167, 0.167], y: [0.167, 0.167] },
+                              t: 0,
+                              s: [40, 40],
+                            },
+                            { t: 151, s: [24, 24] },
+                          ],
+                          ix: 2,
+                        },
+                        p: { a: 0, k: [0, 0], ix: 3 },
+                        nm: "椭圆路径 1",
+                        mn: "ADBE Vector Shape - Ellipse",
+                        hd: false,
+                      },
+                      {
+                        ty: "fl",
+                        c: {
+                          a: 1,
+                          k: [
+                            {
+                              i: { x: [0.833], y: [1] },
+                              o: { x: [0.167], y: [0] },
+                              t: 0,
+                              s: [1, 1, 1, 1],
+                            },
+                            {
+                              t: 149,
+                              s: [
+                                0.769999980927, 0.680000007153, 0.889999985695, 1,
+                              ],
+                            },
+                          ],
+                          ix: 4,
+                        },
+                        o: { a: 0, k: 100, ix: 5 },
+                        r: 1,
+                        bm: 0,
+                        nm: "填充 1",
+                        mn: "ADBE Vector Graphic - Fill",
+                        hd: false,
+                      },
+                      {
+                        ty: "tr",
+                        p: { a: 0, k: [472.605, -2.23], ix: 2 },
+                        a: { a: 0, k: [0, 0], ix: 1 },
+                        s: { a: 0, k: [100, 100], ix: 3 },
+                        r: { a: 0, k: 0, ix: 6 },
+                        o: { a: 0, k: 100, ix: 7 },
+                        sk: { a: 0, k: 0, ix: 4 },
+                        sa: { a: 0, k: 0, ix: 5 },
+                        nm: "Transform",
+                      },
+                    ],
+                    nm: "椭圆 1",
+                    np: 2,
+                    cix: 2,
+                    bm: 0,
+                    ix: 3,
+                    mn: "ADBE Vector Group",
+                    hd: false,
+                  },
+                  {
+                    ty: "tr",
+                    p: { a: 0, k: [-173.832, -108.902], ix: 2 },
+                    a: { a: 0, k: [0, 0], ix: 1 },
+                    s: { a: 0, k: [100, 100], ix: 3 },
+                    r: { a: 0, k: 0, ix: 6 },
+                    o: { a: 0, k: 100, ix: 7 },
+                    sk: { a: 0, k: 0, ix: 4 },
+                    sa: { a: 0, k: 0, ix: 5 },
+                    nm: "Transform",
+                  },
+                ],
+                nm: "椭圆 1",
+                np: 3,
+                cix: 2,
+                bm: 0,
+                ix: 1,
+                mn: "ADBE Vector Group",
+                hd: false,
+              },
+            ],
+            ip: -11,
+            op: 940,
+            st: 0,
+            bm: 0,
+          },
+          {
+            ddd: 0,
+            ind: 6,
+            ty: 4,
+            nm: "形状图层 11",
+            sr: 1,
+            ks: {
+              o: {
+                a: 1,
+                k: [
+                  {
+                    i: { x: [0.833], y: [0.833] },
+                    o: { x: [0.167], y: [0.167] },
+                    t: 0,
+                    s: [0],
+                  },
+                  { t: 57, s: [100] },
+                ],
+                ix: 11,
+              },
+              r: {
+                a: 1,
+                k: [
+                  {
+                    i: { x: [0.833], y: [0.833] },
+                    o: { x: [0.167], y: [0.167] },
+                    t: 0,
+                    s: [0],
+                  },
+                  {
+                    i: { x: [0.833], y: [1] },
+                    o: { x: [0.167], y: [0] },
+                    t: 151,
+                    s: [120],
+                  },
+                  { t: 302, s: [120] },
+                ],
+                ix: 10,
+              },
+              p: { a: 0, k: [400, 400, 0], ix: 2 },
+              a: { a: 0, k: [62.471, -110.018, 0], ix: 1 },
+              s: {
+                a: 1,
+                k: [
+                  {
+                    i: { x: [0.833, 0.833, 0.833], y: [0.833, 0.833, 1] },
+                    o: { x: [0.167, 0.167, 0.167], y: [0.167, 0.167, 0] },
+                    t: 0,
+                    s: [76, 76, 100],
+                  },
+                  {
+                    i: { x: [0.833, 0.833, 0.833], y: [0.833, 0.833, 1] },
+                    o: { x: [0.167, 0.167, 0.167], y: [0.167, 0.167, 0] },
+                    t: 151,
+                    s: [100, 100, 100],
+                  },
+                  { t: 302, s: [124, 124, 100] },
+                ],
+                ix: 6,
+              },
+            },
+            ao: 0,
+            shapes: [
+              {
+                ty: "gr",
+                it: [
+                  {
+                    d: 1,
+                    ty: "el",
+                    s: {
+                      a: 1,
+                      k: [
+                        {
+                          i: { x: [0.833, 0.833], y: [0.833, 0.833] },
+                          o: { x: [0.167, 0.167], y: [0.167, 0.167] },
+                          t: 151,
+                          s: [40, 40],
+                        },
+                        { t: 302, s: [24, 24] },
+                      ],
+                      ix: 2,
+                    },
+                    p: { a: 0, k: [0, 0], ix: 3 },
+                    nm: "椭圆路径 1",
+                    mn: "ADBE Vector Shape - Ellipse",
+                    hd: false,
+                  },
+                  {
+                    ty: "fl",
+                    c: { a: 0, k: [1, 1, 1, 1], ix: 4 },
+                    o: { a: 0, k: 100, ix: 5 },
+                    r: 1,
+                    bm: 0,
+                    nm: "填充 1",
+                    mn: "ADBE Vector Graphic - Fill",
+                    hd: false,
+                  },
+                  {
+                    ty: "gr",
+                    it: [
+                      {
+                        d: 1,
+                        ty: "el",
+                        s: {
+                          a: 1,
+                          k: [
+                            {
+                              i: { x: [0.833, 0.833], y: [0.833, 0.833] },
+                              o: { x: [0.167, 0.167], y: [0.167, 0.167] },
+                              t: 151,
+                              s: [40, 40],
+                            },
+                            { t: 302, s: [24, 24] },
+                          ],
+                          ix: 2,
+                        },
+                        p: { a: 0, k: [0, 0], ix: 3 },
+                        nm: "椭圆路径 1",
+                        mn: "ADBE Vector Shape - Ellipse",
+                        hd: false,
+                      },
+                      {
+                        ty: "fl",
+                        c: { a: 0, k: [1, 1, 1, 1], ix: 4 },
+                        o: { a: 0, k: 100, ix: 5 },
+                        r: 1,
+                        bm: 0,
+                        nm: "填充 1",
+                        mn: "ADBE Vector Graphic - Fill",
+                        hd: false,
+                      },
+                      {
+                        ty: "tr",
+                        p: { a: 0, k: [472.605, -2.23], ix: 2 },
+                        a: { a: 0, k: [0, 0], ix: 1 },
+                        s: { a: 0, k: [100, 100], ix: 3 },
+                        r: { a: 0, k: 0, ix: 6 },
+                        o: { a: 0, k: 100, ix: 7 },
+                        sk: { a: 0, k: 0, ix: 4 },
+                        sa: { a: 0, k: 0, ix: 5 },
+                        nm: "Transform",
+                      },
+                    ],
+                    nm: "椭圆 1",
+                    np: 2,
+                    cix: 2,
+                    bm: 0,
+                    ix: 3,
+                    mn: "ADBE Vector Group",
+                    hd: false,
+                  },
+                  {
+                    ty: "tr",
+                    p: { a: 0, k: [-173.832, -108.902], ix: 2 },
+                    a: { a: 0, k: [0, 0], ix: 1 },
+                    s: { a: 0, k: [100, 100], ix: 3 },
+                    r: { a: 0, k: 0, ix: 6 },
+                    o: { a: 0, k: 100, ix: 7 },
+                    sk: { a: 0, k: 0, ix: 4 },
+                    sa: { a: 0, k: 0, ix: 5 },
+                    nm: "Transform",
+                  },
+                ],
+                nm: "椭圆 1",
+                np: 3,
+                cix: 2,
+                bm: 0,
+                ix: 1,
+                mn: "ADBE Vector Group",
+                hd: false,
+              },
+            ],
+            ip: -9,
+            op: 1091,
+            st: 151,
+            bm: 0,
+          },
+          {
+            ddd: 0,
+            ind: 7,
+            ty: 4,
+            nm: "“环一/环”轮廓 3",
+            sr: 1,
+            ks: {
+              o: {
+                a: 1,
+                k: [
+                  {
+                    i: { x: [0.833], y: [0.833] },
+                    o: { x: [0.167], y: [0.167] },
+                    t: 0,
+                    s: [0],
+                  },
+                  { t: 54, s: [100] },
+                ],
+                ix: 11,
+              },
+              r: { a: 0, k: 0, ix: 10 },
+              p: {
+                a: 1,
+                k: [
+                  {
+                    i: { x: 0.833, y: 0.833 },
+                    o: { x: 0.167, y: 0.167 },
+                    t: 0,
+                    s: [400, 400, 0],
+                    to: [0, 0, 0],
+                    ti: [0, 0, 0],
+                  },
+                  { t: 151, s: [400, 400, 0] },
+                ],
+                ix: 2,
+              },
+              a: { a: 0, k: [253, 253, 0], ix: 1 },
+              s: {
+                a: 1,
+                k: [
+                  {
+                    i: { x: [0.833, 0.833, 0.833], y: [0.833, 0.833, 1] },
+                    o: { x: [0.167, 0.167, 0.167], y: [0.167, 0.167, 0] },
+                    t: 0,
+                    s: [75, 75, 100],
+                  },
+                  {
+                    i: { x: [0.833, 0.833, 0.833], y: [0.833, 0.833, 1] },
+                    o: { x: [0.167, 0.167, 0.167], y: [0.167, 0.167, 0] },
+                    t: 151,
+                    s: [100, 100, 100],
+                  },
+                  { t: 302, s: [124, 124, 100] },
+                ],
+                ix: 6,
+              },
+            },
+            ao: 0,
+            shapes: [
+              {
+                ty: "gr",
+                it: [
+                  {
+                    ind: 0,
+                    ty: "sh",
+                    ix: 1,
+                    ks: {
+                      a: 0,
+                      k: {
+                        i: [
+                          [-131.444, 0],
+                          [0, 131.444],
+                          [131.444, 0],
+                          [0, -131.444],
+                        ],
+                        o: [
+                          [131.444, 0],
+                          [0, -131.444],
+                          [-131.444, 0],
+                          [0, 131.444],
+                        ],
+                        v: [
+                          [0, 238],
+                          [238, 0],
+                          [0, -238],
+                          [-238, 0],
+                        ],
+                        c: true,
+                      },
+                      ix: 2,
+                    },
+                    nm: "Path 1",
+                    mn: "ADBE Vector Shape - Group",
+                    hd: false,
+                  },
+                  {
+                    ty: "st",
+                    c: {
+                      a: 1,
+                      k: [
+                        {
+                          i: { x: [0.833], y: [1] },
+                          o: { x: [0.167], y: [0] },
+                          t: 151,
+                          s: [0.980000019073, 0.990000009537, 0.990000009537, 1],
+                        },
+                        {
+                          t: 302,
+                          s: [0.769999980927, 0.670000016689, 0.889999985695, 1],
+                        },
+                      ],
+                      ix: 3,
+                    },
+                    o: { a: 0, k: 100, ix: 4 },
+                    w: {
+                      a: 1,
+                      k: [
+                        {
+                          i: { x: [0.833], y: [0.833] },
+                          o: { x: [0.167], y: [0.167] },
+                          t: 151,
+                          s: [6],
+                        },
+                        { t: 302, s: [4] },
+                      ],
+                      ix: 5,
+                    },
+                    lc: 1,
+                    lj: 1,
+                    ml: 10,
+                    bm: 0,
+                    nm: "描边 1",
+                    mn: "ADBE Vector Graphic - Stroke",
+                    hd: false,
+                  },
+                  {
+                    ty: "tr",
+                    p: { a: 0, k: [253, 253], ix: 2 },
+                    a: { a: 0, k: [0, 0], ix: 1 },
+                    s: { a: 0, k: [100, 100], ix: 3 },
+                    r: { a: 0, k: 0, ix: 6 },
+                    o: { a: 0, k: 100, ix: 7 },
+                    sk: { a: 0, k: 0, ix: 4 },
+                    sa: { a: 0, k: 0, ix: 5 },
+                    nm: "Transform",
+                  },
+                ],
+                nm: "组 1",
+                np: 2,
+                cix: 2,
+                bm: 0,
+                ix: 1,
+                mn: "ADBE Vector Group",
+                hd: false,
+              },
+            ],
+            ip: -6,
+            op: 1091,
+            st: 151,
+            bm: 0,
+          },
+          {
+            ddd: 0,
+            ind: 8,
+            ty: 4,
+            nm: "“环一/环”轮廓 2",
+            sr: 1,
+            ks: {
+              o: { a: 0, k: 100, ix: 11 },
+              r: { a: 0, k: 0, ix: 10 },
+              p: { a: 0, k: [400, 400, 0], ix: 2 },
+              a: { a: 0, k: [253, 253, 0], ix: 1 },
+              s: {
+                a: 1,
+                k: [
+                  {
+                    i: { x: [0.833, 0.833, 0.833], y: [0.833, 0.833, 1] },
+                    o: { x: [0.167, 0.167, 0.167], y: [0.167, 0.167, 0] },
+                    t: 0,
+                    s: [100, 100, 100],
+                  },
+                  { t: 151, s: [124, 124, 100] },
+                ],
+                ix: 6,
+              },
+            },
+            ao: 0,
+            shapes: [
+              {
+                ty: "gr",
+                it: [
+                  {
+                    ind: 0,
+                    ty: "sh",
+                    ix: 1,
+                    ks: {
+                      a: 0,
+                      k: {
+                        i: [
+                          [-131.444, 0],
+                          [0, 131.444],
+                          [131.444, 0],
+                          [0, -131.444],
+                        ],
+                        o: [
+                          [131.444, 0],
+                          [0, -131.444],
+                          [-131.444, 0],
+                          [0, 131.444],
+                        ],
+                        v: [
+                          [0, 238],
+                          [238, 0],
+                          [0, -238],
+                          [-238, 0],
+                        ],
+                        c: true,
+                      },
+                      ix: 2,
+                    },
+                    nm: "Path 1",
+                    mn: "ADBE Vector Shape - Group",
+                    hd: false,
+                  },
+                  {
+                    ty: "st",
+                    c: {
+                      a: 1,
+                      k: [
+                        {
+                          i: { x: [0.833], y: [1] },
+                          o: { x: [0.167], y: [0] },
+                          t: 0,
+                          s: [0.980000019073, 0.990000009537, 0.990000009537, 1],
+                        },
+                        {
+                          i: { x: [0.833], y: [1] },
+                          o: { x: [0.167], y: [0] },
+                          t: 149,
+                          s: [0.769999980927, 0.680000007153, 0.899999976158, 1],
+                        },
+                        {
+                          t: 151,
+                          s: [0.769999980927, 0.670000016689, 0.889999985695, 1],
+                        },
+                      ],
+                      ix: 3,
+                    },
+                    o: { a: 0, k: 100, ix: 4 },
+                    w: {
+                      a: 1,
+                      k: [
+                        {
+                          i: { x: [0.833], y: [0.833] },
+                          o: { x: [0.167], y: [0.167] },
+                          t: 0,
+                          s: [6],
+                        },
+                        { t: 151, s: [4] },
+                      ],
+                      ix: 5,
+                    },
+                    lc: 1,
+                    lj: 1,
+                    ml: 10,
+                    bm: 0,
+                    nm: "描边 1",
+                    mn: "ADBE Vector Graphic - Stroke",
+                    hd: false,
+                  },
+                  {
+                    ty: "tr",
+                    p: { a: 0, k: [253, 253], ix: 2 },
+                    a: { a: 0, k: [0, 0], ix: 1 },
+                    s: { a: 0, k: [100, 100], ix: 3 },
+                    r: { a: 0, k: 0, ix: 6 },
+                    o: { a: 0, k: 100, ix: 7 },
+                    sk: { a: 0, k: 0, ix: 4 },
+                    sa: { a: 0, k: 0, ix: 5 },
+                    nm: "Transform",
+                  },
+                ],
+                nm: "组 1",
+                np: 2,
+                cix: 2,
+                bm: 0,
+                ix: 1,
+                mn: "ADBE Vector Group",
+                hd: false,
+              },
+            ],
+            ip: 0,
+            op: 940,
+            st: 0,
+            bm: 0,
+          },
+          {
+            ddd: 0,
+            ind: 9,
+            ty: 4,
+            nm: "“环二/环”轮廓 2",
+            sr: 1,
+            ks: {
+              o: { a: 0, k: 100, ix: 11 },
+              r: { a: 0, k: 0, ix: 10 },
+              p: { a: 0, k: [400, 400, 0], ix: 2 },
+              a: { a: 0, k: [298, 298, 0], ix: 1 },
+              s: {
+                a: 1,
+                k: [
+                  {
+                    i: { x: [0.833, 0.833, 0.833], y: [0.833, 0.833, 1] },
+                    o: { x: [0.167, 0.167, 0.167], y: [0.167, 0.167, 0] },
+                    t: 0,
+                    s: [100, 100, 100],
+                  },
+                  { t: 149, s: [118, 118, 100] },
+                ],
+                ix: 6,
+              },
+            },
+            ao: 0,
+            shapes: [
+              {
+                ty: "gr",
+                it: [
+                  {
+                    ind: 0,
+                    ty: "sh",
+                    ix: 1,
+                    ks: {
+                      a: 0,
+                      k: {
+                        i: [
+                          [-163.476, 0],
+                          [0, 163.476],
+                          [163.476, 0],
+                          [0, -163.476],
+                        ],
+                        o: [
+                          [163.476, 0],
+                          [0, -163.476],
+                          [-163.476, 0],
+                          [0, 163.476],
+                        ],
+                        v: [
+                          [0, 296],
+                          [296, 0],
+                          [0, -296],
+                          [-296, 0],
+                        ],
+                        c: true,
+                      },
+                      ix: 2,
+                    },
+                    nm: "Path 1",
+                    mn: "ADBE Vector Shape - Group",
+                    hd: false,
+                  },
+                  {
+                    ty: "st",
+                    c: {
+                      a: 1,
+                      k: [
+                        {
+                          i: { x: [0.833], y: [1] },
+                          o: { x: [0.167], y: [0] },
+                          t: 0,
+                          s: [0.769999980927, 0.670000016689, 0.889999985695, 1],
+                        },
+                        {
+                          t: 151,
+                          s: [0.670000016689, 0.52999997139, 0.870000004768, 1],
+                        },
+                      ],
+                      ix: 3,
+                    },
+                    o: { a: 0, k: 100, ix: 4 },
+                    w: {
+                      a: 1,
+                      k: [
+                        {
+                          i: { x: [0.833], y: [0.833] },
+                          o: { x: [0.167], y: [0.167] },
+                          t: 2,
+                          s: [4],
+                        },
+                        { t: 149, s: [2] },
+                      ],
+                      ix: 5,
+                    },
+                    lc: 1,
+                    lj: 1,
+                    ml: 10,
+                    bm: 0,
+                    nm: "描边 1",
+                    mn: "ADBE Vector Graphic - Stroke",
+                    hd: false,
+                  },
+                  {
+                    ty: "tr",
+                    p: { a: 0, k: [298, 298], ix: 2 },
+                    a: { a: 0, k: [0, 0], ix: 1 },
+                    s: { a: 0, k: [100, 100], ix: 3 },
+                    r: { a: 0, k: 0, ix: 6 },
+                    o: { a: 0, k: 100, ix: 7 },
+                    sk: { a: 0, k: 0, ix: 4 },
+                    sa: { a: 0, k: 0, ix: 5 },
+                    nm: "Transform",
+                  },
+                ],
+                nm: "组 1",
+                np: 2,
+                cix: 2,
+                bm: 0,
+                ix: 1,
+                mn: "ADBE Vector Group",
+                hd: false,
+              },
+            ],
+            ip: 0,
+            op: 940,
+            st: 0,
+            bm: 0,
+          },
+          {
+            ddd: 0,
+            ind: 10,
+            ty: 4,
+            nm: "“环三/环”轮廓 2",
+            sr: 1,
+            ks: {
+              o: {
+                a: 1,
+                k: [
+                  {
+                    i: { x: [0.833], y: [0.833] },
+                    o: { x: [0.167], y: [0.167] },
+                    t: 0,
+                    s: [100],
+                  },
+                  { t: 72, s: [0] },
+                ],
+                ix: 11,
+              },
+              r: { a: 0, k: 0, ix: 10 },
+              p: { a: 0, k: [400.5, 400.5, 0], ix: 2 },
+              a: { a: 0, k: [349.5, 349.5, 0], ix: 1 },
+              s: {
+                a: 1,
+                k: [
+                  {
+                    i: { x: [0.833, 0.833, 0.833], y: [0.833, 0.833, 1] },
+                    o: { x: [0.167, 0.167, 0.167], y: [0.167, 0.167, 0] },
+                    t: 0,
+                    s: [100, 100, 100],
+                  },
+                  { t: 151, s: [113, 113, 100] },
+                ],
+                ix: 6,
+              },
+            },
+            ao: 0,
+            shapes: [
+              {
+                ty: "gr",
+                it: [
+                  {
+                    ind: 0,
+                    ty: "sh",
+                    ix: 1,
+                    ks: {
+                      a: 0,
+                      k: {
+                        i: [
+                          [-192.195, 0],
+                          [0, 192.195],
+                          [192.195, 0],
+                          [0, -192.195],
+                        ],
+                        o: [
+                          [192.195, 0],
+                          [0, -192.195],
+                          [-192.195, 0],
+                          [0, 192.195],
+                        ],
+                        v: [
+                          [0, 348],
+                          [348, 0],
+                          [0, -348],
+                          [-348, 0],
+                        ],
+                        c: true,
+                      },
+                      ix: 2,
+                    },
+                    nm: "Path 1",
+                    mn: "ADBE Vector Shape - Group",
+                    hd: false,
+                  },
+                  {
+                    ty: "st",
+                    c: {
+                      a: 0,
+                      k: [0.768627464771, 0.309803932905, 0.670588254929, 1],
+                      ix: 3,
+                    },
+                    o: { a: 0, k: 100, ix: 4 },
+                    w: {
+                      a: 1,
+                      k: [
+                        {
+                          i: { x: [0.833], y: [0.833] },
+                          o: { x: [0.167], y: [0.167] },
+                          t: 2,
+                          s: [2],
+                        },
+                        { t: 151, s: [0] },
+                      ],
+                      ix: 5,
+                    },
+                    lc: 1,
+                    lj: 1,
+                    ml: 10,
+                    bm: 0,
+                    nm: "描边 1",
+                    mn: "ADBE Vector Graphic - Stroke",
+                    hd: false,
+                  },
+                  {
+                    ty: "tr",
+                    p: { a: 0, k: [349, 349], ix: 2 },
+                    a: { a: 0, k: [0, 0], ix: 1 },
+                    s: { a: 0, k: [100, 100], ix: 3 },
+                    r: { a: 0, k: 0, ix: 6 },
+                    o: { a: 0, k: 100, ix: 7 },
+                    sk: { a: 0, k: 0, ix: 4 },
+                    sa: { a: 0, k: 0, ix: 5 },
+                    nm: "Transform",
+                  },
+                ],
+                nm: "组 1",
+                np: 2,
+                cix: 2,
+                bm: 0,
+                ix: 1,
+                mn: "ADBE Vector Group",
+                hd: false,
+              },
+            ],
+            ip: -1,
+            op: 942,
+            st: 2,
+            bm: 0,
+          },
+        ],
+      },
+    ],
+    layers: [
+      {
+        ddd: 0,
+        ind: 1,
+        ty: 0,
+        nm: "Lottie_Main_Comp",
+        refId: "comp_0",
+        sr: 1,
+        ks: {
+          o: { a: 0, k: 100, ix: 11 },
+          r: { a: 0, k: 0, ix: 10 },
+          p: { a: 0, k: [400, 400, 0], ix: 2 },
+          a: { a: 0, k: [400, 400, 0], ix: 1 },
+          s: { a: 0, k: [100, 100, 100], ix: 6 },
+        },
+        ao: 0,
+        w: 800,
+        h: 800,
+        ip: 0,
+        op: 151,
+        st: 0,
+        bm: 0,
+      },
+    ],
+    markers: [],
+  };
+
+  console.log('el', element, animation.v);
+
+  lottie.loadAnimation({
+    container: element, // the dom element that will contain the animation
+    renderer: 'svg',
+    loop: true,
+    autoplay: true,
+    animationData: animation // the path to the animation json
+  });
+
+  lottie.setSpeed(2.5);
+
+  </script>`;
+
   return (
-    <img src="https://ipfs.near.social/ipfs/bafkreideycaiegqdtadmktj2ljarutjwqnkoaun6vjjetne2qnoe7jstbq" />
+    <iframe
+      style={{
+        width: width,
+        height: height,
+      }}
+      srcDoc={source}
+    />
   );
 };
 
@@ -296,7 +1772,7 @@ return (
           alignItems: "center",
         }}
       >
-        {!props.reward && <LoadingReward />}
+        {!props.reward && <LoadingReward width={196} height={196} />}
         {props.reward?.kind === "near" && (
           <NearReward amount={props.reward.amount} />
         )}
