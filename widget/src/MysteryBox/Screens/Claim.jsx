@@ -45,6 +45,7 @@ const SliderWrapper = styled.div`
   align-items: center;
 
   flex-basis: 60%;
+  width: 320px;
 `;
 
 const SingleBoxWrapper = styled.div`
@@ -52,17 +53,17 @@ const SingleBoxWrapper = styled.div`
   justify-content: space-between;
   align-items: center;
   height: 100%;
-  max-width: 280px;
+  flex-basis: 80%;
 
   display: ${(props) => (props.active ? "flex" : "none")};
 `;
 
 const levitation = styled.keyframes`
   from {
-    transform: translateY(-12px) rotate(-3deg);
+    transform: translateY(0px) rotate(0deg);
   }
   to {
-    transform: translateY(12px) rotate(3deg);
+    transform: translateY(24px) rotate(6deg);
   }
 `;
 
@@ -71,13 +72,10 @@ const BoxImageWrapper = styled.div`
   animation-iteration-count: ${(props) => (props.animate ? "infinite" : "0")};
   animation-name: ${levitation};
   animation-timing-function: ease;
-  animation-direction: alternate-reverse;
+  animation-direction: alternate;
   text-align: center;
 
-  img {
-    object-fit: cover;
-    max-width: 75%;
-  }
+  flex-basis: 50%;
 
   svg {
     position: absolute;
@@ -88,15 +86,23 @@ const BoxImageWrapper = styled.div`
   }
 `;
 
-const BoxImage = styled.img``;
+const BoxImage = styled.img`
+  width: 75%;
+  object-fit: cover;
+`;
+
+const BoxTitleWrapper = styled.div`
+  flex-basis: 10%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
 
 const BoxTitle = styled.div`
   background: rgba(14, 18, 30, 0.6);
   border-radius: 50px;
   padding: 0.25em 3em;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 
   font-size: 14px;
   line-height: 20px;
@@ -181,6 +187,15 @@ const BoxLockedTitle = styled.p`
   text-transform: uppercase;
   margin: 0;
   padding: 0;
+`;
+
+const BoxBottomWrapper = styled.div`
+  flex-basis: 12%;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 `;
 
 const ClaimButton = styled.div`
@@ -380,7 +395,9 @@ const NonClaimedBoxComponent = ({ box }) => {
 
   return (
     <>
-      <BoxTitle>{rarity} box</BoxTitle>
+      <BoxTitleWrapper>
+        <BoxTitle>{rarity} box</BoxTitle>
+      </BoxTitleWrapper>
       <BoxRewardWrapper>
         <BoxRewardAmounts>
           {amounts.map((text) => (
@@ -396,7 +413,9 @@ const NonClaimedBoxComponent = ({ box }) => {
       <BoxImageWrapper animate>
         <BoxImage src={image} />
       </BoxImageWrapper>
-      <ClaimButton onClick={onClick}>Claim</ClaimButton>
+      <BoxBottomWrapper>
+        <ClaimButton onClick={onClick}>Claim</ClaimButton>
+      </BoxBottomWrapper>
     </>
   );
 };
@@ -426,13 +445,17 @@ const LockedBoxComponent = ({ box }) => {
 
   return (
     <>
-      <BoxTitle>{rarity} box</BoxTitle>
+      <BoxTitleWrapper>
+        <BoxTitle>{rarity} box</BoxTitle>
+      </BoxTitleWrapper>
       <BoxRewardWrapper />
       <BoxImageWrapper>
         <BoxImage src={image} />
         <LockIcon />
       </BoxImageWrapper>
-      <BoxLockedTitle>Rewards out of stock</BoxLockedTitle>
+      <BoxBottomWrapper>
+        <BoxLockedTitle>Rewards out of stock</BoxLockedTitle>
+      </BoxBottomWrapper>
     </>
   );
 };
@@ -460,14 +483,18 @@ const OpenedBoxComponent = ({ box }) => {
 
   return (
     <>
-      <BoxTitle>{rarity} box</BoxTitle>
+      <BoxTitleWrapper>
+        <BoxTitle>{rarity} box</BoxTitle>
+      </BoxTitleWrapper>
       <BoxRewardWrapper>
         <OpenedBoxRewardTitle>{text}</OpenedBoxRewardTitle>
       </BoxRewardWrapper>
       <BoxImageWrapper>
         <BoxImage src={image} />
       </BoxImageWrapper>
-      <ClaimedButton>Claimed</ClaimedButton>
+      <BoxBottomWrapper>
+        <ClaimedButton>Claimed</ClaimedButton>
+      </BoxBottomWrapper>
     </>
   );
 };
@@ -492,39 +519,42 @@ const Svg = styled.svg`
   ${(props) =>
     !props.disabled
       ? `filter: drop-shadow(0px 0px 4px rgba(43, 204, 193, 0.5));`
-      : ``}
+      : `filter: none;`}
 `;
 
 const RightArrow = ({ onClick, disabled }) => (
   <Svg
-    viewBox="0 0 25.345 42"
+    viewBox="0 0 35 58"
     disabled={disabled}
     onClick={onClick}
     xmlns="http://www.w3.org/2000/svg"
   >
-    <path
-      fill-rule="evenodd"
-      clip-rule="evenodd"
-      d="M.398 3.585 3.983 0l17.395 17.394.015-.014 3.585 3.585-.015.014.014.015-3.585 3.585-.014-.014L3.984 41.959.399 38.374 17.793 20.98.399 3.585Z"
-      fill={disabled ? "#818B94" : "#fff"}
-    />
+    <g xmlns="http://www.w3.org/2000/svg">
+      <path
+        fill-rule="evenodd"
+        clip-rule="evenodd"
+        d="M0.550369 4.94975L5.50011 0L29.521 24.0209L29.542 24L34.4917 28.9497L34.4708 28.9707L34.4915 28.9914L29.5417 33.9411L29.521 33.9204L5.50032 57.9411L0.550575 52.9914L24.5713 28.9707L0.550369 4.94975Z"
+        fill={disabled ? "#818B94" : "#fff"}
+      />
+    </g>
   </Svg>
 );
 
 const LeftArrow = ({ onClick, disabled }) => (
   <Svg
-    viewBox="0 0 25.345 42"
+    viewBox="0 0 35 58"
+    xmlns="http://www.w3.org/2000/svg"
     disabled={disabled}
     onClick={onClick}
-    xmlns="http://www.w3.org/2000/svg"
-    transform="rotate(180)"
   >
-    <path
-      fill-rule="evenodd"
-      clip-rule="evenodd"
-      d="M.398 3.585 3.983 0l17.395 17.394.015-.014 3.585 3.585-.015.014.014.015-3.585 3.585-.014-.014L3.984 41.959.399 38.374 17.793 20.98.399 3.585Z"
-      fill={disabled ? "#818B94" : "#fff"}
-    />
+    <g xmlns="http://www.w3.org/2000/svg" transform="matrix(-1 0 0 -1 35 58)">
+      <path
+        fill-rule="evenodd"
+        clip-rule="evenodd"
+        d="M0.550369 4.94975L5.50011 0L29.521 24.0209L29.542 24L34.4917 28.9497L34.4708 28.9707L34.4915 28.9914L29.5417 33.9411L29.521 33.9204L5.50032 57.9411L0.550575 52.9914L24.5713 28.9707L0.550369 4.94975Z"
+        fill={disabled ? "#818B94" : "#fff"}
+      />
+    </g>
   </Svg>
 );
 
@@ -555,7 +585,7 @@ return (
         </SliderWrapper>
 
         <MintedBoxText>
-          <span>{props.total_supply}</span> minted boxes
+          <span>{props.totalSupply}</span> minted boxes
         </MintedBoxText>
 
         <WrapperSocial>
