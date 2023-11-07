@@ -12,8 +12,9 @@ State.init({
   [createRewardsKey("rare")]: [],
   [createRewardsKey("epic")]: [],
   [createRewardsKey("legendary")]: [],
-  total_supply: "0",
-  lastClaimedBox: null,
+  totalSupply: "0",
+  lastClaimedBoxReward: null,
+  lastClaimedBoxRarity: null,
 });
 
 // TODO: view spec to make sure it's appropriate contract
@@ -78,8 +79,8 @@ const fetchUserBoxes = (contract_id, account_id) => {
     account_id: account_id,
     pagination: {
       page: 1,
-      size: 20
-    }
+      size: 20,
+    },
   });
 
   if (boxes === undefined) throw `No boxes returned :(`;
@@ -98,12 +99,12 @@ const fetchUserBoxes = (contract_id, account_id) => {
 };
 
 const fetchTotalSupply = (contract_id) => {
-  const total_supply = Near.view(contract_id, "total_supply", {});
+  const totalSupply = Near.view(contract_id, "total_supply", {});
 
-  if (total_supply === undefined) throw `No supply returned :(`;
+  if (totalSupply === undefined) throw `No supply returned :(`;
 
   State.update({
-    total_supply,
+    totalSupply,
   });
 };
 
@@ -155,12 +156,14 @@ const fetchClaimTransactionResult = (hash, account_id) => {
 
     State.update({
       showClaimAnimationScreen: true,
-      lastClaimedBox: {
-        id: result[0],
-        rarity: result[1],
-        reward: result[2],
-      },
+      lastClaimedBoxRarity: result[1],
     });
+
+    setTimeout(() => {
+      State.update({
+        lastClaimedBoxReward: result[2],
+      });
+    }, 2_000);
   } catch (error) {
     console.warn(`Caught error during fetch claim tx result`, error);
 
@@ -217,8 +220,8 @@ if (state.showClaimAnimationScreen === true) {
     <Widget
       src={`${widget_owner_id}/widget/MysteryBox.Screens.ClaimAnimation`}
       props={{
-        reward: state.lastClaimedBox?.reward,
-        rarity: state.lastClaimedBox?.rarity,
+        reward: state.lastClaimedBoxReward,
+        rarity: state.lastClaimedBoxRarity,
         onBack,
       }}
     />
@@ -296,7 +299,7 @@ return (
     props={{
       onClaim,
       boxes,
-      total_supply: state.total_supply,
+      totalSupply: state.totalSupply,
     }}
   />
 );
