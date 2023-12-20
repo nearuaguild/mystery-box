@@ -479,6 +479,8 @@ const OpenedBoxComponent = ({ box }) => {
     const { name } = Near.view(reward.contract_id, "nft_metadata");
 
     text = `${name} nft`;
+  } else if (reward.kind === "nothing") {
+    text = 'Better luck next time';
   }
 
   return (
