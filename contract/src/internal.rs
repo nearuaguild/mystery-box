@@ -178,11 +178,32 @@ impl Contract {
             last += pool.availability().clone();
         };
 
-        let reward = random_pool.take_reward_from_pool();
+        let probability = self
+            .probability_by_rarity
+            .get(&box_data.rarity)
+            .unwrap_or(Probability::ONE);
 
-        box_data.status = BoxStatus::Claimed { reward };
+        let threshold = probability.calculate_threshold();
 
-        self.pools.insert(&random_pool.id, &random_pool);
+        let random = random_number as u8;
+
+        let is_rewarded = threshold == u8::MAX || (threshold != u8::MIN && random < threshold);
+
+        match is_rewarded {
+            true => {
+                let reward = random_pool.take_reward_from_pool();
+
+                box_data.status = BoxStatus::Claimed {
+                    reward: Some(reward),
+                };
+
+                self.pools.insert(&random_pool.id, &random_pool);
+            }
+            false => {
+                box_data.status = BoxStatus::Claimed { reward: None };
+            }
+        }
+
         self.boxes.insert(&box_data.id, &box_data);
 
         random_pool.id

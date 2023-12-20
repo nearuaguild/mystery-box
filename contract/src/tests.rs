@@ -1,7 +1,7 @@
 #![allow(unused)]
 #[cfg(test)]
 use crate::json::{JsonBoxStatus, JsonPoolRewards, JsonReward};
-use crate::types::BoxRarity;
+use crate::types::{BoxRarity, Probability};
 use crate::{Contract, Pool, Reward};
 use near_sdk::json_types::{U128, U64};
 use near_sdk::test_utils::VMContextBuilder;
@@ -33,6 +33,7 @@ fn setup() -> (Contract, VMContextBuilder) {
     let mut context = VMContextBuilder::new();
 
     context.predecessor_account_id(owner());
+    context.account_balance(100 * ONE_NEAR);
 
     testing_env!(context.build());
 
@@ -59,6 +60,42 @@ fn test_ownership() {
 
     // should panic since the predecessor is "owner" that no more has ownership
     contract.set_owner(user2());
+}
+
+#[test]
+#[should_panic(expected = "ERR_FORBIDDEN")]
+fn test_set_probability_with_regular_user_panic() {
+    let (mut contract, mut context) = setup();
+
+    testing_env!(context.predecessor_account_id(user1()).build());
+
+    contract.set_probability(BoxRarity::Epic, Probability::ZERO);
+}
+
+#[should_panic]
+#[test]
+fn test_set_probability_with_zero_denominator_panic() {
+    let (mut contract, _) = setup();
+
+    let probability = Probability {
+        numerator: 5,
+        denominator: 0,
+    };
+
+    contract.set_probability(BoxRarity::Epic, probability);
+}
+
+#[should_panic]
+#[test]
+fn test_set_probability_bigger_than_one_panic() {
+    let (mut contract, _) = setup();
+
+    let probability = Probability {
+        numerator: 5,
+        denominator: 2,
+    };
+
+    contract.set_probability(BoxRarity::Epic, probability);
 }
 
 #[test]
@@ -557,6 +594,36 @@ fn test_claim_box_status() {
 }
 
 #[test]
+fn test_claim_box_with_zero_probability() {
+    let (mut contract, mut context) = setup();
+
+    testing_env!(context.attached_deposit(3 * ONE_NEAR).build());
+
+    contract.set_probability(BoxRarity::Rare, Probability::ZERO);
+    contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), U64(2));
+    contract.mint(user1(), BoxRarity::Rare);
+
+    testing_env!(context
+        .attached_deposit(1)
+        .predecessor_account_id(user1())
+        .build());
+
+    // promises aren't called
+    contract.claim(1);
+
+    let boxes = contract.boxes_for_owner(user1(), None);
+
+    let box_data = boxes.get(0).unwrap();
+
+    assert_eq!(
+        box_data.status,
+        JsonBoxStatus::Claimed {
+            reward: JsonReward::Nothing
+        }
+    );
+}
+
+#[test]
 fn test_claim_decreases_reward_availability() {
     let (mut contract, mut context) = setup();
 
@@ -661,10 +728,9 @@ fn test_claim_for_multiple_pools_succeeds() {
 
     testing_env!(context.attached_deposit(50 * ONE_NEAR).build());
 
-    contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), U64(20));
-    contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR / 2), U64(25));
-    contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR / 4), U64(35));
-    contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR / 10), U64(45));
+    contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), U64(10));
+    contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR / 2), U64(10));
+    contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR / 4), U64(12));
 
     contract.mint(user1(), BoxRarity::Rare);
 

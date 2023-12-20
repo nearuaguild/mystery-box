@@ -60,20 +60,20 @@ impl Pool {
         }
     }
 
-    pub fn take_reward_from_pool(&mut self) -> Option<Reward> {
+    pub fn take_reward_from_pool(&mut self) -> Reward {
         match self.kind {
             PoolKind::Near(ref mut pool) => {
                 let amount = pool.decrease_available().unwrap();
 
-                Some(Reward::Near { amount })
+                Reward::Near { amount }
             }
             PoolKind::NonFungibleToken(ref mut pool) => {
                 let token_id = pool.take_first_token().unwrap();
 
-                Some(Reward::NonFungibleToken {
+                Reward::NonFungibleToken {
                     contract_id: pool.contract_id.clone(),
                     token_id,
-                })
+                }
             }
         }
     }

@@ -100,3 +100,72 @@ impl From<BoxData> for JsonBox {
         }
     }
 }
+
+#[derive(BorshDeserialize, BorshSerialize, Clone, Debug, Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde", rename_all = "snake_case")]
+pub struct Probability {
+    pub numerator: u8,
+    pub denominator: u8,
+}
+
+impl Probability {
+    pub const ZERO: Probability = Probability {
+        numerator: 0,
+        denominator: 1,
+    };
+
+    pub const ONE: Probability = Probability {
+        numerator: 1,
+        denominator: 1,
+    };
+
+    pub fn assert_valid(&self) {
+        require!(self.denominator != 0, "Denominator can't be zero");
+
+        require!(
+            self.denominator >= self.numerator,
+            "Denominator must be bigger than or equal to numerator"
+        );
+    }
+
+    pub fn calculate_threshold(&self) -> u8 {
+        ((u8::MAX as u16) * (self.numerator as u16) / (self.denominator as u16)) as u8
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::Probability;
+
+    #[test]
+    fn test_probability_threshold() {
+        let probability = Probability::ONE;
+
+        assert_eq!(probability.calculate_threshold(), 255);
+
+        let probability = Probability::ZERO;
+
+        assert_eq!(probability.calculate_threshold(), 0);
+
+        let probability = Probability {
+            numerator: 234,
+            denominator: 255,
+        };
+
+        assert_eq!(probability.calculate_threshold(), 234);
+
+        let probability = Probability {
+            numerator: 2,
+            denominator: 3,
+        };
+
+        assert_eq!(probability.calculate_threshold(), 170);
+
+        let probability = Probability {
+            numerator: 1,
+            denominator: 2,
+        };
+
+        assert_eq!(probability.calculate_threshold(), 127);
+    }
+}

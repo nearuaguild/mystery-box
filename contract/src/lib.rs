@@ -36,6 +36,8 @@ enum StorageKey {
     BoxesPerOwner,
     ///
     WhitelistedNftContracts,
+    ///
+    ProbabilityByRarity,
 }
 
 #[near_bindgen]
@@ -50,6 +52,7 @@ pub struct Contract {
     boxes: LookupMap<BoxId, BoxData>,
     boxes_per_owner: LookupMap<AccountId, HashSet<BoxId>>,
     whitelisted_nft_contracts: LookupSet<AccountId>,
+    probability_by_rarity: LookupMap<BoxRarity, Probability>,
 }
 
 #[near_bindgen]
@@ -68,7 +71,16 @@ impl Contract {
             next_box_id: 1,
             boxes: LookupMap::new(StorageKey::Boxes),
             boxes_per_owner: LookupMap::new(StorageKey::BoxesPerOwner),
+            probability_by_rarity: LookupMap::new(StorageKey::ProbabilityByRarity),
         }
+    }
+
+    pub fn set_probability(&mut self, rarity: BoxRarity, probability: Probability) {
+        self.assert_only_owner();
+
+        probability.assert_valid();
+
+        self.probability_by_rarity.insert(&rarity, &probability);
     }
 
     pub fn set_owner(&mut self, new_owner_id: AccountId) {
