@@ -539,30 +539,6 @@ fn test_claim_box_status() {
         .predecessor_account_id(user1())
         .build());
 
-    println!(
-        "rare pools: {:?}",
-        contract
-            .pool_ids_by_rarity
-            .get(&BoxRarity::Rare)
-            .unwrap_or_default()
-    );
-
-    println!(
-        "pools: {:?}",
-        contract
-            .pool_ids_by_rarity
-            .get(&BoxRarity::Rare)
-            .unwrap_or_default()
-            .iter()
-            .filter_map(|pool_id| {
-                let pool = contract.pools.get(pool_id).unwrap();
-
-                // leave only non-empty pools
-                (!pool.is_empty()).then_some(pool)
-            })
-            .collect::<Vec<Pool>>()
-    );
-
     // promises aren't called
     contract.claim(1);
 
@@ -643,8 +619,6 @@ fn test_claim_near_reward_succeeds() {
 
     contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), U64(2));
     contract.mint(user1(), BoxRarity::Rare);
-
-    println!("box: {:?}", contract.boxes.get(&1).unwrap());
 
     testing_env!(context
         .attached_deposit(1)
