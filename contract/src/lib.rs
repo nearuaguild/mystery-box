@@ -119,7 +119,37 @@ impl Contract {
         }
     }
 
-    // TODO: add mint_many function (ensure <10 boxes are being created at time)
+    #[payable]
+    pub fn mint_many(&mut self, rarity: BoxRarity, accounts: Vec<AccountId>) -> Vec<BoxId> {
+        self.assert_only_owner();
+
+        require!(accounts.len() != 0, "accounts can't be empty");
+
+        let storage_used_before = env::storage_usage();
+
+        let box_ids = accounts
+            .iter()
+            .map(|account_id| {
+                let box_data = self.internal_mint(account_id.clone(), rarity.clone());
+
+                box_data.id
+            })
+            .collect::<Vec<BoxId>>();
+
+        let storage_used_after = env::storage_usage();
+
+        let storage_deposit =
+            env::storage_byte_cost() * (storage_used_after - storage_used_before) as u128;
+
+        assert!(
+            env::attached_deposit() >= storage_deposit,
+            "Deposited amount must be bigger than {} yocto",
+            storage_deposit
+        );
+
+        box_ids
+    }
+
     #[payable]
     pub fn mint(&mut self, account_id: AccountId, rarity: BoxRarity) -> BoxId {
         self.assert_only_owner();

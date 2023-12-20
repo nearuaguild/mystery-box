@@ -341,6 +341,25 @@ fn test_mint_succeeds() {
 }
 
 #[test]
+fn test_mint_many_succeeds() {
+    let (mut contract, mut context) = setup();
+
+    testing_env!(context.attached_deposit(ONE_NEAR).build());
+
+    contract.mint_many(BoxRarity::Rare, vec![user1(), user2()]);
+}
+
+#[should_panic]
+#[test]
+fn test_mint_many_without_accounts_panic() {
+    let (mut contract, mut context) = setup();
+
+    testing_env!(context.attached_deposit(ONE_NEAR).build());
+
+    contract.mint_many(BoxRarity::Rare, vec![]);
+}
+
+#[test]
 fn test_total_supply_default() {
     let (mut contract, mut context) = setup();
 
@@ -361,6 +380,10 @@ fn test_total_supply_increases() {
     contract.mint(user2(), BoxRarity::Epic);
 
     assert_eq!(contract.total_supply(), U128(3));
+
+    contract.mint_many(BoxRarity::Legendary, vec![user1(), user2()]);
+
+    assert_eq!(contract.total_supply(), U128(5));
 }
 
 #[test]
@@ -385,6 +408,11 @@ fn test_supply_for_owner_increases() {
 
     assert_eq!(contract.supply_for_owner(user1()), U128(2));
     assert_eq!(contract.supply_for_owner(user2()), U128(1));
+
+    contract.mint_many(BoxRarity::Legendary, vec![user1(), user2(), user1()]);
+
+    assert_eq!(contract.supply_for_owner(user1()), U128(4));
+    assert_eq!(contract.supply_for_owner(user2()), U128(2));
 }
 
 #[test]
