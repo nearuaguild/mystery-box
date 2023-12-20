@@ -18,7 +18,7 @@ pub use crate::pools::*;
 pub use crate::types::*;
 
 mod callbacks;
-mod enumeraion;
+mod enumeration;
 mod internal;
 mod json;
 mod pools;
