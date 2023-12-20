@@ -1,3 +1,4 @@
+#![allow(unused)]
 #[cfg(test)]
 use crate::json::{JsonBoxStatus, JsonPoolRewards, JsonReward};
 use crate::types::BoxRarity;
