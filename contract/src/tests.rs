@@ -232,7 +232,8 @@ fn test_available_near_rewards_data() {
         reward,
         JsonPoolRewards::Near {
             amount: U128(ONE_NEAR),
-            available: 5
+            available: 5,
+            total: 5
         }
     );
 }
@@ -364,7 +365,8 @@ fn test_available_nft_rewards_data_for_same_contract() {
         reward,
         JsonPoolRewards::NonFungibleToken {
             contract_id: nft(),
-            token_ids: vec!["some_token".to_string(), "some_token_2".to_string()]
+            token_ids: vec!["some_token".to_string(), "some_token_2".to_string()],
+            total: 2
         }
     );
 }
@@ -651,7 +653,8 @@ fn test_claim_decreases_reward_availability() {
         reward,
         JsonPoolRewards::Near {
             amount: ONE_NEAR.into(),
-            available: 1
+            available: 1,
+            total: 2
         }
     );
 }

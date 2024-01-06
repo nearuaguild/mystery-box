@@ -170,10 +170,12 @@ impl Into<JsonPoolRewards> for Pool {
             PoolKind::Near(ref pool) => JsonPoolRewards::Near {
                 amount: pool.amount.to_owned().into(),
                 available: pool.available.clone(),
+                total: pool.capacity.clone(),
             },
             PoolKind::NonFungibleToken(ref pool) => JsonPoolRewards::NonFungibleToken {
                 contract_id: pool.contract_id.clone(),
                 token_ids: pool.available_tokens.clone().into_iter().collect(),
+                total: pool.tokens.len() as u64,
             },
         }
     }

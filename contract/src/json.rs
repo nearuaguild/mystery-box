@@ -12,10 +12,12 @@ pub enum JsonPoolRewards {
     Near {
         amount: U128,
         available: Capacity,
+        total: Capacity,
     },
     NonFungibleToken {
         contract_id: AccountId,
         token_ids: Vec<TokenId>,
+        total: Capacity,
     },
 }
 
