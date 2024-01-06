@@ -381,6 +381,23 @@ fn test_mint_succeeds() {
 }
 
 #[test]
+fn test_delete_boxes_succeeds() {
+    let (mut contract, mut context) = setup();
+
+    testing_env!(context.attached_deposit(ONE_NEAR).build());
+
+    contract.mint(user1(), BoxRarity::Epic);
+    contract.mint(user1(), BoxRarity::Rare);
+
+    assert_eq!(contract.supply_for_owner(user1()), U128(2));
+
+    contract.delete_boxes(vec![1]);
+
+    assert_eq!(contract.supply_for_owner(user1()), U128(1));
+    assert!(contract.boxes.get(&1).is_none());
+}
+
+#[test]
 fn test_mint_many_succeeds() {
     let (mut contract, mut context) = setup();
 

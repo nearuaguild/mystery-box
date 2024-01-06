@@ -195,6 +195,31 @@ impl Contract {
     }
 
     #[payable]
+    pub fn delete_boxes(&mut self, ids: Vec<BoxId>) {
+        self.assert_only_owner();
+
+        ids.iter().for_each(|box_data| {
+            let box_data = self.boxes.remove(box_data).unwrap();
+
+            require!(
+                box_data.status == BoxStatus::NonClaimed,
+                format!("Box {} already claimed", box_data.id)
+            );
+
+            let mut boxes_per_owner = self
+                .boxes_per_owner
+                .get(&box_data.owner_id)
+                .unwrap_or_default();
+
+            // should never panic
+            require!(boxes_per_owner.remove(&box_data.id));
+
+            self.boxes_per_owner
+                .insert(&box_data.owner_id, &boxes_per_owner);
+        });
+    }
+
+    #[payable]
     pub fn claim(&mut self, box_id: BoxId) -> Promise {
         assert_one_yocto();
 
