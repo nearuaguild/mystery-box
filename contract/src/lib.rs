@@ -159,6 +159,11 @@ impl Contract {
             storage_deposit
         );
 
+        let refund = env::attached_deposit() - storage_deposit;
+        if refund > 1 {
+            Promise::new(env::predecessor_account_id()).transfer(refund);
+        }
+
         box_ids
     }
 
@@ -180,6 +185,11 @@ impl Contract {
             "Deposited amount must be bigger than {} yocto",
             storage_deposit
         );
+
+        let refund = env::attached_deposit() - storage_deposit;
+        if refund > 1 {
+            Promise::new(env::predecessor_account_id()).transfer(refund);
+        }
 
         box_data.id
     }
