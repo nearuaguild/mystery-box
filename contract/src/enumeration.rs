@@ -52,4 +52,25 @@ impl Contract {
             .map(|pool| pool.into())
             .collect()
     }
+
+    pub fn rewards(
+        &self,
+        rarity: BoxRarity,
+        pagination: Option<Pagination>,
+    ) -> Vec<JsonPoolRewards> {
+        let pagination = pagination.unwrap_or_default();
+
+        pagination.assert_valid();
+
+        self.pool_ids_by_rarity
+            .get(&rarity)
+            .unwrap_or_default()
+            .iter()
+            .map(|pool_id| self.pools.get(pool_id))
+            .flatten()
+            .take(pagination.take())
+            .skip(pagination.skip())
+            .map(|pool| pool.into())
+            .collect()
+    }
 }
