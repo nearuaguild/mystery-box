@@ -1,11 +1,11 @@
-console.log("ClaimAnimation.props", props);
+console.log('ClaimAnimation.props', props);
 
 const font = fetch(
-  "https://fonts.googleapis.com/css2?family=Lilita+One:wght@400&display=swap"
+  'https://fonts.googleapis.com/css2?family=Lilita+One:wght@400&display=swap'
 ).body;
 
 const font2 = fetch(
-  "https://fonts.googleapis.com/css2?family=Kodchasan:wght@700&display=swap"
+  'https://fonts.googleapis.com/css2?family=Kodchasan:wght@700&display=swap'
 ).body;
 
 if (!font || !font2) {
@@ -56,21 +56,21 @@ const RewardBoundary = styled.div`
   border-radius: 30px;
 
   ${(props) => {
-    if (props.rarity === "rare")
+    if (props.rarity === 'rare')
       return `
             border: 4px solid #4e70c9;
             box-shadow: 0 0 40px rgba(78, 112, 201, 0.4),
             inset 0 0 40px rgba(78, 112, 201, 0.4);
     `;
 
-    if (props.rarity === "epic")
+    if (props.rarity === 'epic')
       return `
             border: 4px solid #8357AD;
             box-shadow: 0 0 40px rgba(131, 87, 173, 0.4),
             inset 0 0 40px rgba(131, 87, 173, 0.4);
     `;
 
-    if (props.rarity === "legendary")
+    if (props.rarity === 'legendary')
       return `
             border: 4px solid #D99B38;
             box-shadow: 0 0 40px rgba(217, 155, 56, 0.4),
@@ -123,7 +123,7 @@ const PrimaryText = styled.div`
   font-size: 18px;
   line-height: 24px;
 
-  font-family: "Kodchasan", sans-serif;
+  font-family: 'Kodchasan', sans-serif;
   font-weight: 700;
   letter-spacing: 0em;
   text-align: center;
@@ -149,7 +149,7 @@ const WhiteButton = styled.div`
   line-height: 1;
   padding: 0.5em 2em;
 
-  font-family: "Kodchasan", sans-serif;
+  font-family: 'Kodchasan', sans-serif;
   font-weight: 700;
   letter-spacing: 0em;
   text-align: center;
@@ -174,7 +174,7 @@ const NearRewardIcon = (props) => {
     >
       <mask
         id="a"
-        style={{ maskType: "luminance" }}
+        style={{ maskType: 'luminance' }}
         maskUnits="userSpaceOnUse"
         x="0"
         y="0"
@@ -191,7 +191,7 @@ const NearRewardIcon = (props) => {
 };
 
 const onClick = () => {
-  console.log("ClaimAnimation", "Clicked button to go back");
+  console.log('ClaimAnimation', 'Clicked button to go back');
 
   return props.onBack();
 };
@@ -1692,21 +1692,24 @@ const NearReward = ({ amount }) => {
 };
 
 const getMediaUrlForToken = (contract_id, token_id) => {
-  const metadata = Near.view(contract_id, "nft_metadata");
-  const token = Near.view(contract_id, "nft_token", { token_id });
+  const metadata = Near.view(contract_id, 'nft_metadata');
+  const token = Near.view(contract_id, 'nft_token', { token_id });
 
   if (!metadata || !token) return null;
 
-  if (!metadata.base_uri || !token.metadata?.media) return undefined;
+  if (!token.metadata?.media) return undefined;
 
-  const url = new URL(metadata.base_uri);
-  url.pathname = token.metadata.media;
+  if (!metadata.base_uri) return token.metadata?.media;
 
-  return url.toString();
+  const url = metadata.base_uri + '/' + token.metadata.media;
+
+  return url;
 };
 
 const NonFungibleTokenReward = ({ contract_id, token_id }) => {
   const url = getMediaUrlForToken(contract_id, token_id);
+
+  console.log(`Loading NFT image from ${url}`);
 
   return (
     <RewardBoundary rarity={props.rarity}>
@@ -1730,21 +1733,21 @@ const ContentWrapperComponent = ({ rarity, children }) => {
   const backgrounds = {
     rare: {
       portrait:
-        "https://ipfs.near.social/ipfs/bafkreigdlbicksoqijiekfytogvz4cmykpbx2fdmpz5ghiqki2ou4dig2u",
+        'https://ipfs.near.social/ipfs/bafkreigdlbicksoqijiekfytogvz4cmykpbx2fdmpz5ghiqki2ou4dig2u',
       landscape:
-        "https://ipfs.near.social/ipfs/bafkreibyfjqfivipdlavmjet2jdfvywkto2vi7ooi2eli6e4u3iprbwtoi",
+        'https://ipfs.near.social/ipfs/bafkreibyfjqfivipdlavmjet2jdfvywkto2vi7ooi2eli6e4u3iprbwtoi',
     },
     epic: {
       portrait:
-        "https://ipfs.near.social/ipfs/bafkreie32u3ab2ml5sqyu6oipo63h4mnbkytplqgcigqy4o5zxvznw4lwi",
+        'https://ipfs.near.social/ipfs/bafkreie32u3ab2ml5sqyu6oipo63h4mnbkytplqgcigqy4o5zxvznw4lwi',
       landscape:
-        "https://ipfs.near.social/ipfs/bafkreihbthqvggathcry43suj6capp3es6bvhao4e7r73jmqipxvhedske",
+        'https://ipfs.near.social/ipfs/bafkreihbthqvggathcry43suj6capp3es6bvhao4e7r73jmqipxvhedske',
     },
     legendary: {
       portrait:
-        "https://ipfs.near.social/ipfs/bafkreidyj6fpphpuzve22lkyukqxicqr7sph5hjac4efakyzlzacmbfgbe",
+        'https://ipfs.near.social/ipfs/bafkreidyj6fpphpuzve22lkyukqxicqr7sph5hjac4efakyzlzacmbfgbe',
       landscape:
-        "https://ipfs.near.social/ipfs/bafkreicxafpy4qeqqh6ww6qkblvy3wc35jcddznjovtk2wbgmv6qamkyna",
+        'https://ipfs.near.social/ipfs/bafkreicxafpy4qeqqh6ww6qkblvy3wc35jcddznjovtk2wbgmv6qamkyna',
     },
   };
 
@@ -1765,24 +1768,24 @@ return (
     <ContentWrapperComponent rarity={props.rarity}>
       <div
         style={{
-          flexBasis: "55%",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
+          flexBasis: '55%',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
         }}
       >
         {!props.reward && <LoadingReward width={196} height={196} />}
-        {props.reward?.kind === "near" && (
+        {props.reward?.kind === 'near' && (
           <NearReward amount={props.reward.amount} />
         )}
-        {props.reward?.kind === "non_fungible_token" && (
+        {props.reward?.kind === 'non_fungible_token' && (
           <NonFungibleTokenReward
             contract_id={props.reward.contract_id}
             token_id={props.reward.token_id}
           />
         )}
-        {props.reward?.kind === "nothing" && <NothingReward />}
+        {props.reward?.kind === 'nothing' && <NothingReward />}
       </div>
       <WhiteButton onClick={onClick}>Back</WhiteButton>
     </ContentWrapperComponent>

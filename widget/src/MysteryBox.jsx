@@ -1,5 +1,5 @@
-const widget_owner_id = "nearukraineguild.near";
-const rpc_endpoint = "https://rpc.mainnet.near.org";
+const widget_owner_id = "denbite.testnet";
+const rpc_endpoint = "https://rpc.testnet.near.org";
 
 const account_id = context.accountId;
 const contract_id = props.contract_id;
@@ -275,9 +275,9 @@ const redirectToVerification = () => {
 };
 
 const onClaim = (box_id) => {
-  if (!isVerified) {
-    return redirectToVerification();
-  }
+  // if (!isVerified) {
+  //   return redirectToVerification();
+  // }
 
   const gas = Big(100e12).toString(); // 100 TGas
 
