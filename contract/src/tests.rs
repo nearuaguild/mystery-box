@@ -37,7 +37,7 @@ fn setup() -> (Contract, VMContextBuilder) {
     let mut context = VMContextBuilder::new();
 
     context.predecessor_account_id(owner());
-    context.account_balance(100 * ONE_NEAR);
+    context.account_balance(50 * ONE_NEAR);
 
     testing_env!(context.build());
 
