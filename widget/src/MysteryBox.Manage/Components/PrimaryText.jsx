@@ -1,8 +1,10 @@
 const PrimaryText = styled.p`
   @media (min-width: 512px) {
     font-size: 28px;
+    width: 80%;
   }
 
+  width: 90%;
   font-size: 20px;
 
   font-family: 'Kodchasan', sans-serif;

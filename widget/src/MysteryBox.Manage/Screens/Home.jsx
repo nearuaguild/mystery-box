@@ -146,55 +146,6 @@ const MenuFooterRow = styled.div`
   flex-grow: 1;
 `;
 
-const WrapperMenuButton = styled.div`
-  flex-basis: 50%;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const MenuButton = styled.button`
-  height: 75%;
-  width: 90%;
-
-  border: 0;
-  border-radius: 10px;
-
-  background: #638caf;
-
-  &:disabled {
-    background: #334d64;
-
-    a {
-      color: #000000;
-    }
-  }
-`;
-
-const MenuLink = styled.a`
-  height: 100%;
-  width: 100%;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  font-family: 'Kodchasan', sans-serif;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0em;
-  text-align: center;
-
-  color: #ffffff;
-
-  &:hover {
-    text-decoration: none;
-  }
-`;
-
-console.log('render');
-
 const previousActiveContract = () => {
   if (state.active === 0) return;
 
@@ -205,6 +156,16 @@ const nextActiveContract = () => {
   if (state.active === props.contracts.length - 1) return;
 
   State.update({ active: state.active + 1 });
+};
+
+const createLinkToPage = (page) => {
+  return linkHref({
+    widgetSrc: 'denbite.testnet/widget/MysteryBox.Manage',
+    params: {
+      contract_id: props.contracts[state.active],
+      page,
+    },
+  });
 };
 
 return (
@@ -223,90 +184,52 @@ return (
         <MenuContent></MenuContent>
         <MenuFooter>
           <MenuFooterRow>
-            <WrapperMenuButton>
-              <MenuButton>
-                <MenuLink
-                  href={linkHref({
-                    widgetSrc: 'denbite.testnet/widget/MysteryBox.Manage',
-                    params: {
-                      contract_id: props.contracts[state.active],
-                      page: 'AddNearReward',
-                    },
-                  })}
-                >
-                  Add NEAR Reward
-                </MenuLink>
-              </MenuButton>
-            </WrapperMenuButton>
-            <WrapperMenuButton>
-              <MenuButton>
-                <MenuLink
-                  href={linkHref({
-                    widgetSrc: 'denbite.testnet/widget/MysteryBox.Manage',
-                    params: {
-                      contract_id: props.contracts[state.active],
-                      page: 'AddNftReward',
-                    },
-                  })}
-                >
-                  Add NFT Reward
-                </MenuLink>
-              </MenuButton>
-            </WrapperMenuButton>
+            <Widget
+              src={`denbite.testnet/widget/MysteryBox.Manage.Components.MenuButton`}
+              props={{
+                text: 'Add NEAR reward',
+                href: createLinkToPage('AddNearReward'),
+              }}
+            />
+            <Widget
+              src={`denbite.testnet/widget/MysteryBox.Manage.Components.MenuButton`}
+              props={{
+                text: 'Add NFT reward',
+                href: createLinkToPage('AddNftReward'),
+              }}
+            />
           </MenuFooterRow>
           <MenuFooterRow>
-            <WrapperMenuButton>
-              <MenuButton>
-                <MenuLink
-                  href={linkHref({
-                    widgetSrc: 'denbite.testnet/widget/MysteryBox.Manage',
-                    params: {
-                      contract_id: props.contracts[state.active],
-                      page: 'MintBox',
-                    },
-                  })}
-                >
-                  Mint BOX
-                </MenuLink>
-              </MenuButton>
-            </WrapperMenuButton>
-            <WrapperMenuButton>
-              <MenuButton>
-                <MenuLink
-                  href={linkHref({
-                    widgetSrc: 'denbite.testnet/widget/MysteryBox.Manage',
-                    params: {
-                      contract_id: props.contracts[state.active],
-                      page: 'ListRewards',
-                    },
-                  })}
-                >
-                  List Rewards
-                </MenuLink>
-              </MenuButton>
-            </WrapperMenuButton>
+            <Widget
+              src={`denbite.testnet/widget/MysteryBox.Manage.Components.MenuButton`}
+              props={{
+                text: 'Mint BOX',
+                href: createLinkToPage('MintBox'),
+              }}
+            />
+            <Widget
+              src={`denbite.testnet/widget/MysteryBox.Manage.Components.MenuButton`}
+              props={{
+                text: 'List Rewards',
+                href: createLinkToPage('ListRewards'),
+              }}
+            />
           </MenuFooterRow>
           <MenuFooterRow>
-            <WrapperMenuButton>
-              <MenuButton>
-                <MenuLink
-                  href={linkHref({
-                    widgetSrc: 'denbite.testnet/widget/MysteryBox.Manage',
-                    params: {
-                      contract_id: props.contracts[state.active],
-                      page: 'ListUserBoxes',
-                    },
-                  })}
-                >
-                  List User Boxes
-                </MenuLink>
-              </MenuButton>
-            </WrapperMenuButton>
-            <WrapperMenuButton>
-              <MenuButton disabled>
-                <MenuLink>Statistics</MenuLink>
-              </MenuButton>
-            </WrapperMenuButton>
+            <Widget
+              src={`denbite.testnet/widget/MysteryBox.Manage.Components.MenuButton`}
+              props={{
+                text: 'List User Boxes',
+                href: createLinkToPage('ListUserBoxes'),
+              }}
+            />
+            <Widget
+              src={`denbite.testnet/widget/MysteryBox.Manage.Components.MenuButton`}
+              props={{
+                disabled: true,
+                text: 'Statistics',
+              }}
+            />
           </MenuFooterRow>
         </MenuFooter>
       </WrapperMenu>

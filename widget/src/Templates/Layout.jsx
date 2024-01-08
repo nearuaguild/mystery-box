@@ -1,5 +1,3 @@
-console.log('props', props);
-
 const font = fetch(
   'https://fonts.googleapis.com/css2?family=Kodchasan:wght@300;400;500;700&display=swap'
 ).body;

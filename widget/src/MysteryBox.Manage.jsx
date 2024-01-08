@@ -11,6 +11,10 @@ if (!Layout) {
   return <p>Loading modules...</p>;
 }
 
+const { href: linkHref } = VM.require('denbite.testnet/widget/core.lib.url');
+
+linkHref || (linkHref = () => {});
+
 const KnownPages = [
   'AddNearReward',
   'AddNftReward',
@@ -31,12 +35,7 @@ function Page() {
     case 'Home': {
       /** @todo fetch a list of contract addresses */
 
-      const contracts = [
-        'dev-1704385829482-11602291972789',
-        '2711.mystery_box.testnet',
-        'blabla.mystery_box.testnet',
-        '1999.mystery_box.testnet',
-      ];
+      const contracts = ['dev-1704730152235-47432425806790'];
 
       if (contracts.length === 0) {
         return (
@@ -79,15 +78,9 @@ function Page() {
       );
     }
     case 'AddNftReward': {
-      /** @todo fetch actual trusted list of NFT contract addresses */
-      const contracts = [
-        'nft-brief.gro.testnet',
-        'paras-token-v2.testnet',
-        'nft.helpua.testnet',
-        'nft2.helpua.testnet',
-      ];
+      const contracts = Near.view(props.contract_id, 'trusted_nft_contracts');
 
-      const tokens = contracts
+      const tokens = (contracts || [])
         .map((contract) => {
           const metadata = Near.view(contract, 'nft_metadata');
 
@@ -145,12 +138,27 @@ function Page() {
 
       if (rewards.length === 0)
         return (
-          <Widget
-            src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryText`}
-            props={{
-              text: 'No rewards have been added so far',
-            }}
-          />
+          <>
+            <Widget
+              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryText`}
+              props={{
+                text: 'No rewards have been added so far',
+              }}
+            />
+            <Widget
+              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
+              props={{
+                text: 'Add first NEAR reward',
+                href: linkHref({
+                  widgetSrc: 'denbite.testnet/widget/MysteryBox.Manage',
+                  params: {
+                    contract_id: props.contract_id,
+                    page: 'AddNearReward',
+                  },
+                }),
+              }}
+            />
+          </>
         );
 
       return (
@@ -165,29 +173,50 @@ function Page() {
     }
     case 'ListUserBoxes': {
       /** @todo fetch addresses from backend */
-      const addresses = ['denbite.testnet', 'test_web4.testnet'];
+      const addresses = Near.view(props.contract_id, 'users', {
+        pagination: {
+          page: 1,
+          size: 50,
+        },
+      });
 
-      const accounts = addresses.map((address) => {
+      const accounts = (addresses || []).map((address) => {
         return {
           account_id: address,
-          boxes: Near.view(props.contract_id, 'boxes_for_owner', {
-            account_id: address,
-            pagination: {
-              page: 1,
-              size: 40,
-            },
-          }),
+          boxes:
+            Near.view(props.contract_id, 'boxes_for_owner', {
+              account_id: address,
+              pagination: {
+                page: 1,
+                size: 40,
+              },
+            }) || [],
         };
       });
 
       if (accounts.length === 0)
         return (
-          <Widget
-            src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryText`}
-            props={{
-              text: 'No boxes have been minted so far',
-            }}
-          />
+          <>
+            <Widget
+              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryText`}
+              props={{
+                text: 'No boxes have been minted so far',
+              }}
+            />
+            <Widget
+              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
+              props={{
+                text: 'Mint first Mystery Box',
+                href: linkHref({
+                  widgetSrc: 'denbite.testnet/widget/MysteryBox.Manage',
+                  params: {
+                    contract_id: props.contract_id,
+                    page: 'MintBox',
+                  },
+                }),
+              }}
+            />
+          </>
         );
 
       return (

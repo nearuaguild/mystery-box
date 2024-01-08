@@ -365,10 +365,12 @@ const submitTransactionToMintBoxes = () => {
         .flat();
 
       const total = accounts.reduce((prev, curr) => {
-        return prev + 800 + 20 * curr.length;
+        return prev + 2520 + 40 * curr.length;
       }, 0);
 
-      const totalNum = Big(640).plus(total).mul(Big(10).pow(18));
+      console.log('total', total);
+
+      const totalNum = Big(680).plus(total).mul(Big(10).pow(18));
 
       return {
         contractName: props.contract_id,

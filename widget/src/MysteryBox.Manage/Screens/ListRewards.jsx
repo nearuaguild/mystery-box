@@ -164,6 +164,8 @@ const TableCell = styled.div`
 
   text-align: center;
 
+  height: 100%;
+
   font-family: 'Kodchasan', sans-serif;
   font-size: 11px;
   font-weight: 500;
@@ -176,34 +178,11 @@ const TableCell = styled.div`
   align-items: center;
 `;
 
-const TextCell = styled.input`
-  font-family: 'Kodchasan', sans-serif;
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0em;
-  text-align: center;
-  color: #2bccc2;
-  width: 110px;
-  height: 21px;
+const TextCell = styled.div`
+  overflow: hidden;
+  text-overflow: ellipsis;
 
-  background: #18243280;
-  border: 0;
-  border-radius: 50px;
-`;
-
-const NumberCell = styled.input`
-  font-family: 'Kodchasan', sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0em;
-  text-align: center;
-  color: #2bccc2;
   width: 80px;
-  height: 21px;
-
-  background: #18243280;
-  border: 0;
-  border-radius: 50px;
 `;
 
 const WrapperPoolButtons = styled.div`
@@ -262,7 +241,7 @@ const getTitleForReward = (reward) => {
     case 'non_fungible_token': {
       const metadata = Near.view(reward.contract_id, 'nft_metadata');
 
-      return metadata.name;
+      return metadata?.name;
     }
     default:
       return '';
@@ -350,15 +329,7 @@ return (
                   >
                     <RarityButton rarity={reward.rarity} />
                   </div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'center',
-                      flexBasis: '80px',
-                    }}
-                  >
-                    {getTitleForReward(reward)}
-                  </div>
+                  <TextCell>{getTitleForReward(reward)}</TextCell>
                 </TableCell>
                 <TableCell key={1}>{getTotalForReward(reward)}</TableCell>
                 <TableCell key={2}>{getAvailableForReward(reward)}</TableCell>
