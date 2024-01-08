@@ -174,8 +174,9 @@ impl Contract {
 
         assert!(
             env::attached_deposit() >= storage_deposit,
-            "Deposited amount must be bigger than {} yocto",
-            storage_deposit
+            "Deposited amount must be bigger than {} yocto, you attached {} yocto",
+            storage_deposit,
+            env::attached_deposit()
         );
 
         let refund = env::attached_deposit() - storage_deposit;
