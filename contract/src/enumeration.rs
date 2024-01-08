@@ -77,4 +77,16 @@ impl Contract {
     pub fn trusted_nft_contracts(&self) -> Vec<AccountId> {
         self.trusted_nft_contracts.to_vec()
     }
+
+    pub fn users(&self, pagination: Option<Pagination>) -> Vec<AccountId> {
+        let pagination = pagination.unwrap_or_default();
+
+        pagination.assert_valid();
+
+        self.users
+            .iter()
+            .take(pagination.take())
+            .skip(pagination.skip())
+            .collect()
+    }
 }

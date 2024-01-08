@@ -38,6 +38,8 @@ enum StorageKey {
     TrustedNftContracts,
     ///
     ProbabilityByRarity,
+    ///
+    Users,
 }
 
 #[near_bindgen]
@@ -53,6 +55,7 @@ pub struct Contract {
     boxes_per_owner: LookupMap<AccountId, HashSet<BoxId>>,
     trusted_nft_contracts: UnorderedSet<AccountId>,
     probability_by_rarity: LookupMap<BoxRarity, Probability>,
+    users: UnorderedSet<AccountId>,
 }
 
 #[near_bindgen]
@@ -79,6 +82,7 @@ impl Contract {
             boxes: LookupMap::new(StorageKey::Boxes),
             boxes_per_owner: LookupMap::new(StorageKey::BoxesPerOwner),
             probability_by_rarity: LookupMap::new(StorageKey::ProbabilityByRarity),
+            users: UnorderedSet::new(StorageKey::Users),
         }
     }
 

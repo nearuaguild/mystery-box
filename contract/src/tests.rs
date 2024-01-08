@@ -21,6 +21,10 @@ fn user2() -> AccountId {
     AccountId::from_str("user2").unwrap()
 }
 
+fn user3() -> AccountId {
+    AccountId::from_str("user3").unwrap()
+}
+
 fn nft() -> AccountId {
     AccountId::from_str("nft_contract").unwrap()
 }
@@ -817,4 +821,32 @@ fn test_untrust_nft_contract_with_non_existed_value_panic() {
     let (mut contract, mut context) = setup();
 
     contract.untrust_nft_contract(nft3());
+}
+
+#[test]
+fn test_users_default() {
+    let (mut contract, mut context) = setup();
+
+    assert_eq!(contract.users(None).len(), 0);
+}
+
+#[test]
+fn test_users_increases() {
+    let (mut contract, mut context) = setup();
+
+    testing_env!(context.attached_deposit(ONE_NEAR).build());
+
+    contract.mint(user1(), BoxRarity::Rare);
+
+    assert_eq!(contract.users(None).len(), 1);
+
+    contract.mint(user1(), BoxRarity::Rare);
+    contract.mint(user2(), BoxRarity::Epic);
+
+    assert_eq!(contract.users(None).len(), 2);
+
+    contract.mint_many(BoxRarity::Legendary, vec![user1(), user2(), user3()]);
+
+    assert_eq!(contract.users(None).len(), 3);
+    assert_eq!(contract.users(None), vec![user1(), user2(), user3()]);
 }

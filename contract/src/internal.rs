@@ -127,6 +127,7 @@ impl Contract {
 
         self.boxes_per_owner
             .insert(&box_data.owner_id, &boxes_per_owner);
+        self.users.insert(&box_data.owner_id);
 
         box_data
     }
