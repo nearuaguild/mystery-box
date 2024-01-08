@@ -738,11 +738,11 @@ fn test_claim_nft_reward_succeeds() {
 fn test_claim_for_multiple_pools_succeeds() {
     let (mut contract, mut context) = setup();
 
-    testing_env!(context.attached_deposit(50 * ONE_NEAR).build());
+    testing_env!(context.attached_deposit(2 * ONE_NEAR).build());
 
-    contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), U64(10));
-    contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR / 2), U64(10));
-    contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR / 4), U64(12));
+    contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), U64(1));
+    contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR / 2), U64(2));
+    contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR / 4), U64(4));
 
     contract.mint(user1(), BoxRarity::Rare);
 
