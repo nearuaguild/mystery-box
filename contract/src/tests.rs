@@ -29,6 +29,10 @@ fn nft2() -> AccountId {
     AccountId::from_str("nft_contract_2").unwrap()
 }
 
+fn nft3() -> AccountId {
+    AccountId::from_str("nft_contract_3").unwrap()
+}
+
 fn setup() -> (Contract, VMContextBuilder) {
     let mut context = VMContextBuilder::new();
 
@@ -37,7 +41,9 @@ fn setup() -> (Contract, VMContextBuilder) {
 
     testing_env!(context.build());
 
-    let contract = Contract::new();
+    let trusted_nft_contracts = vec![nft(), nft2()];
+
+    let contract = Contract::new(Some(trusted_nft_contracts));
 
     (contract, context)
 }
@@ -140,8 +146,6 @@ fn test_add_nft_pool_succeeds() {
 
     testing_env!(context.build());
 
-    contract.whitelist_nft_contract(nft());
-
     testing_env!(context.predecessor_account_id(nft()).build());
     contract.nft_on_transfer(
         owner(),
@@ -156,8 +160,6 @@ fn test_add_multiple_nft_pool_succeeds() {
     let (mut contract, mut context) = setup();
 
     testing_env!(context.build());
-
-    contract.whitelist_nft_contract(nft());
 
     testing_env!(context.predecessor_account_id(nft()).build());
     contract.nft_on_transfer(
@@ -174,12 +176,12 @@ fn test_add_multiple_nft_pool_succeeds() {
     );
 }
 
-#[should_panic(expected = "ERR_NOT_WHITELISTED")]
+#[should_panic(expected = "ERR_NFT_CONTRACT_NOT_TRUSTED")]
 #[test]
 fn test_add_non_whitelisted_nft_pool_with_panic() {
     let (mut contract, mut context) = setup();
 
-    testing_env!(context.predecessor_account_id(nft()).build());
+    testing_env!(context.predecessor_account_id(nft3()).build());
 
     contract.nft_on_transfer(
         owner(),
@@ -244,9 +246,6 @@ fn test_available_nft_rewards_amount_for_different_contracts() {
 
     testing_env!(context.build());
 
-    contract.whitelist_nft_contract(nft());
-    contract.whitelist_nft_contract(nft2());
-
     testing_env!(context.predecessor_account_id(nft()).build());
     contract.nft_on_transfer(
         owner(),
@@ -276,8 +275,6 @@ fn test_available_nft_rewards_amount_for_same_contract() {
 
     testing_env!(context.build());
 
-    contract.whitelist_nft_contract(nft());
-
     testing_env!(context.predecessor_account_id(nft()).build());
     contract.nft_on_transfer(
         owner(),
@@ -306,8 +303,6 @@ fn test_available_nft_rewards_amount_for_same_contract_and_different_rarity() {
     let (mut contract, mut context) = setup();
 
     testing_env!(context.build());
-
-    contract.whitelist_nft_contract(nft());
 
     testing_env!(context.predecessor_account_id(nft()).build());
     contract.nft_on_transfer(
@@ -339,8 +334,6 @@ fn test_available_nft_rewards_data_for_same_contract() {
     let (mut contract, mut context) = setup();
 
     testing_env!(context.build());
-
-    contract.whitelist_nft_contract(nft());
 
     testing_env!(context.predecessor_account_id(nft()).build());
 
@@ -722,7 +715,6 @@ fn test_claim_nft_reward_succeeds() {
 
     testing_env!(context.attached_deposit(ONE_NEAR).build());
 
-    contract.whitelist_nft_contract(nft());
     contract.mint(user1(), BoxRarity::Rare);
 
     // add NFT token as reward
@@ -777,4 +769,52 @@ fn test_transfer_reward_callback_by_someone_with_panic() {
     let (mut contract, mut context) = setup();
 
     contract.transfer_reward_callback(user1(), 1, 1, Reward::Near { amount: ONE_NEAR });
+}
+
+#[test]
+fn test_default_trusted_nft_contract_set_succeeds() {
+    let (mut contract, mut context) = setup();
+
+    contract.trusted_nft_contracts.contains(&nft());
+    contract.trusted_nft_contracts.contains(&nft2());
+}
+
+#[should_panic(expected = "ERR_FORBIDDEN")]
+#[test]
+fn test_trust_nft_contract_with_regular_user_panic() {
+    let (mut contract, mut context) = setup();
+
+    testing_env!(context.predecessor_account_id(user1()).build());
+
+    contract.trust_nft_contract(nft3());
+}
+
+#[test]
+fn test_trust_nft_contract_succeeds() {
+    let (mut contract, mut context) = setup();
+
+    contract.trust_nft_contract(nft3());
+}
+
+#[test]
+fn test_untrust_nft_contract_succeeds() {
+    let (mut contract, mut context) = setup();
+
+    contract.untrust_nft_contract(nft());
+}
+
+#[should_panic]
+#[test]
+fn test_trust_nft_contract_with_existed_value_panic() {
+    let (mut contract, mut context) = setup();
+
+    contract.trust_nft_contract(nft());
+}
+
+#[should_panic]
+#[test]
+fn test_untrust_nft_contract_with_non_existed_value_panic() {
+    let (mut contract, mut context) = setup();
+
+    contract.untrust_nft_contract(nft3());
 }

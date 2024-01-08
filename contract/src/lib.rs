@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use near_sdk::assert_one_yocto;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::{LookupMap, LookupSet};
+use near_sdk::collections::{LookupMap, UnorderedSet};
 use near_sdk::serde_json::{self, Value};
 use near_sdk::{
     env,
@@ -35,7 +35,7 @@ enum StorageKey {
     Boxes,
     BoxesPerOwner,
     ///
-    WhitelistedNftContracts,
+    TrustedNftContracts,
     ///
     ProbabilityByRarity,
 }
@@ -51,22 +51,29 @@ pub struct Contract {
     next_box_id: BoxId,
     boxes: LookupMap<BoxId, BoxData>,
     boxes_per_owner: LookupMap<AccountId, HashSet<BoxId>>,
-    whitelisted_nft_contracts: LookupSet<AccountId>,
+    trusted_nft_contracts: UnorderedSet<AccountId>,
     probability_by_rarity: LookupMap<BoxRarity, Probability>,
 }
 
 #[near_bindgen]
 impl Contract {
     #[init]
-    pub fn new() -> Self {
+    pub fn new(default_trusted_nft_contract: Option<Vec<AccountId>>) -> Self {
         let owner_id = env::predecessor_account_id();
+        let default_trusted_nft_contract = default_trusted_nft_contract.unwrap_or_default();
+
+        let mut trusted_nft_contracts = UnorderedSet::new(StorageKey::TrustedNftContracts);
+
+        default_trusted_nft_contract.iter().for_each(|contract_id| {
+            trusted_nft_contracts.insert(contract_id);
+        });
 
         Self {
             next_pool_id: 1,
             pools: LookupMap::new(StorageKey::Pools),
             pool_ids_by_rarity: LookupMap::new(StorageKey::PoolsByRarity),
             nft_pool_by_key: LookupMap::new(StorageKey::NftPoolByKey),
-            whitelisted_nft_contracts: LookupSet::new(StorageKey::WhitelistedNftContracts),
+            trusted_nft_contracts,
             owner_id: owner_id.clone(),
             next_box_id: 1,
             boxes: LookupMap::new(StorageKey::Boxes),
@@ -90,10 +97,22 @@ impl Contract {
         self.owner_id = new_owner_id;
     }
 
-    pub fn whitelist_nft_contract(&mut self, nft_contract: AccountId) {
+    pub fn trust_nft_contract(&mut self, contract_id: AccountId) {
         self.assert_only_owner();
 
-        self.whitelisted_nft_contracts.insert(&nft_contract);
+        require!(
+            self.trusted_nft_contracts.insert(&contract_id),
+            "Provided contract is already in the set"
+        );
+    }
+
+    pub fn untrust_nft_contract(&mut self, contract_id: AccountId) {
+        self.assert_only_owner();
+
+        require!(
+            self.trusted_nft_contracts.remove(&contract_id),
+            "Provided contract wasn't trusted before"
+        );
     }
 
     #[payable]
@@ -247,8 +266,8 @@ impl Contract {
 
         // we're required to ensure that the predecessor account is whitelisted, since the function is public
         require!(
-            self.whitelisted_nft_contracts.contains(&nft_account_id),
-            "ERR_NOT_WHITELISTED",
+            self.trusted_nft_contracts.contains(&nft_account_id),
+            "ERR_NFT_CONTRACT_NOT_TRUSTED",
         );
 
         require!(self.owner_id == previous_owner_id, "ERR_FORBIDDEN");

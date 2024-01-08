@@ -73,4 +73,8 @@ impl Contract {
             .map(|pool| pool.into())
             .collect()
     }
+
+    pub fn trusted_nft_contracts(&self) -> Vec<AccountId> {
+        self.trusted_nft_contracts.to_vec()
+    }
 }

@@ -81,7 +81,7 @@ near call mystery_box.testnet add_near_reward '{"rarity": "epic", "amount": "100
 ### Add NFT reward
 
 ```sh
-near call mystery_box.testnet whitelist_nft_contract '{"nft_contract": "some_nft_contract.testnet"}' --accountId some_account.testnet
+near call mystery_box.testnet trust_nft_contract '{"contract_id": "some_nft_contract.testnet"}' --accountId some_account.testnet
 near call some_nft_contract.testnet nft_transfer_call '{"token_id": "5", "receiver_id": "mystery_box.testnet", "msg": "epic"}' --accountId some_account.testnet --depositYocto 1
 ```
 
