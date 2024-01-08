@@ -19,16 +19,18 @@ enum Network {
     Testnet,
 }
 
-fn get_network_by_account(account_id: &AccountId) -> Network {
-    if account_id.to_string().ends_with(".near") {
-        return Network::Mainnet;
-    }
+impl From<AccountId> for Network {
+    fn from(account_id: AccountId) -> Self {
+        if account_id.to_string().ends_with(".near") {
+            return Network::Mainnet;
+        }
 
-    return Network::Testnet;
+        return Network::Testnet;
+    }
 }
 
 pub(crate) fn get_registry_iah_contract() -> AccountId {
-    let network = get_network_by_account(&env::current_account_id());
+    let network = Network::from(env::current_account_id());
 
     match network {
         Network::Mainnet => AccountId::from_str("registry.i-am-human.near").unwrap(),
@@ -37,7 +39,7 @@ pub(crate) fn get_registry_iah_contract() -> AccountId {
 }
 
 pub(crate) fn get_issuer_iah_contract() -> AccountId {
-    let network = get_network_by_account(&env::current_account_id());
+    let network = Network::from(env::current_account_id());
 
     match network {
         Network::Mainnet => AccountId::from_str("fractal.i-am-human.near").unwrap(),
