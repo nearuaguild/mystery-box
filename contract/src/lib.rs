@@ -61,15 +61,20 @@ pub struct Contract {
 #[near_bindgen]
 impl Contract {
     #[init]
-    pub fn new(default_trusted_nft_contract: Option<Vec<AccountId>>) -> Self {
-        let owner_id = env::predecessor_account_id();
-        let default_trusted_nft_contract = default_trusted_nft_contract.unwrap_or_default();
+    pub fn new(
+        default_trusted_nft_contracts: Option<Vec<AccountId>>,
+        owner_id: Option<AccountId>,
+    ) -> Self {
+        let owner_id = owner_id.unwrap_or(env::predecessor_account_id());
+        let default_trusted_nft_contracts = default_trusted_nft_contracts.unwrap_or_default();
 
         let mut trusted_nft_contracts = UnorderedSet::new(StorageKey::TrustedNftContracts);
 
-        default_trusted_nft_contract.iter().for_each(|contract_id| {
-            trusted_nft_contracts.insert(contract_id);
-        });
+        default_trusted_nft_contracts
+            .iter()
+            .for_each(|contract_id| {
+                trusted_nft_contracts.insert(contract_id);
+            });
 
         Self {
             next_pool_id: 1,

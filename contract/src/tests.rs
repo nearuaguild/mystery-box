@@ -47,7 +47,7 @@ fn setup() -> (Contract, VMContextBuilder) {
 
     let trusted_nft_contracts = vec![nft(), nft2()];
 
-    let contract = Contract::new(Some(trusted_nft_contracts));
+    let contract = Contract::new(Some(trusted_nft_contracts), None);
 
     (contract, context)
 }
