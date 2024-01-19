@@ -48,7 +48,7 @@ const Header = styled.div`
 `;
 
 const Empty = styled.div`
-  flex-basis: 96px;
+  flex: 1;
 `;
 
 const Content = styled.div`
@@ -75,21 +75,45 @@ const Logo = styled.img`
   height: 72%;
 `;
 
-function Layout({ children, page, contract_id }) {
+const HeaderLogo = styled.div`
+  flex: 1;
+
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+`;
+
+const HeaderButton = styled.div`
+  flex: 1;
+
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+function Layout({ children, contract_id, active_home_button }) {
   return (
     <Container>
       <Header>
-        <Logo
-          src="https://ipfs.near.social/ipfs/bafkreicrgaxj2jf7wxdiddoqowdnajpixa7vjusr2pi6oy2khitslxsjiu"
-          alt="Mystery Box Logo"
-        />
-        <Widget
-          src="denbite.testnet/widget/MysteryBox.Manage.Components.HomeButton"
-          props={{
-            contract_id: contract_id,
-            active: !['Home', 'SignIn'].includes(page),
-          }}
-        />
+        <HeaderLogo>
+          <Logo
+            src="https://ipfs.near.social/ipfs/bafkreicrgaxj2jf7wxdiddoqowdnajpixa7vjusr2pi6oy2khitslxsjiu"
+            alt="Mystery Box Logo"
+          />
+        </HeaderLogo>
+        <HeaderButton>
+          <Widget
+            src="denbite.testnet/widget/MysteryBox.Manage.Components.HomeButton"
+            props={{
+              contract_id: contract_id,
+              active: active_home_button,
+            }}
+          />
+        </HeaderButton>
         <Empty />
       </Header>
       <Content>{children}</Content>

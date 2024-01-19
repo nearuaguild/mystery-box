@@ -28,7 +28,7 @@ const SocialButton = styled.button`
 return (
   <WrapperSocial>
     <SocialButton>
-      <Link to="https://twitter.com/nearuaguild">
+      <SocialLink href="https://twitter.com/nearuaguild" target="_blank">
         <svg
           width={17.143}
           height={16}
@@ -42,10 +42,13 @@ return (
             fill="#fff"
           />
         </svg>
-      </Link>
+      </SocialLink>
     </SocialButton>
     <SocialButton>
-      <Link to="https://near.org/near/widget/ProfilePage?accountId=nearukraineguild.near">
+      <SocialLink
+        href="/near/widget/ProfilePage?accountId=nearukraineguild.near"
+        target="_blank"
+      >
         <svg
           width={16}
           height={16}
@@ -59,10 +62,10 @@ return (
             fill="#EBEFEC"
           />
         </svg>
-      </Link>
+      </SocialLink>
     </SocialButton>
     <SocialButton>
-      <Link to="https://t.me/nearprotocolua">
+      <SocialLink href="https://t.me/nearprotocolua" target="_blank">
         <svg
           width={18.462}
           height={16}
@@ -76,7 +79,7 @@ return (
             fill="#fff"
           />
         </svg>
-      </Link>
+      </SocialLink>
     </SocialButton>
   </WrapperSocial>
 );

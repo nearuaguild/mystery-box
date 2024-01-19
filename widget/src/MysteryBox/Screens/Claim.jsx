@@ -291,7 +291,7 @@ const Logo = styled.img`
   height: 55px;
 `;
 
-const MintedBoxText = styled.p`
+const BottomText = styled.p`
   margin: 0;
 
   color: white;
@@ -302,10 +302,6 @@ const MintedBoxText = styled.p`
   letter-spacing: 0em;
   text-align: center;
   text-transform: uppercase;
-
-  span {
-    color: #2bccc2;
-  }
 `;
 
 const WrapperSocial = styled.div`
@@ -479,7 +475,7 @@ const OpenedBoxComponent = ({ box }) => {
     const { name } = Near.view(reward.contract_id, 'nft_metadata');
 
     text = `${name} nft`;
-  } else if (reward.kind === "nothing") {
+  } else if (reward.kind === 'nothing') {
     text = 'Better luck next time';
   }
 
@@ -560,6 +556,10 @@ const LeftArrow = ({ onClick, disabled }) => (
   </Svg>
 );
 
+const available = (props.boxes || []).filter(
+  (box) => box.status.kind === 'non_claimed' && box.rewards.length > 0
+).length;
+
 return (
   <>
     <Wrapper>
@@ -586,9 +586,15 @@ return (
           />
         </SliderWrapper>
 
-        <MintedBoxText>
-          <span>{props.totalSupply}</span> minted boxes
-        </MintedBoxText>
+        <BottomText>
+          <span style={{ color: '#2bccc2' }}>{props.totalSupply}</span>
+          minted boxes
+          <br />
+          <span style={{ color: available > 0 ? '#FFD951' : '#2bccc2' }}>
+            {available}
+          </span>
+          box{available === 1 ? '' : 'es'} available
+        </BottomText>
 
         <WrapperSocial>
           <SocialText>Follow us</SocialText>

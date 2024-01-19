@@ -12,6 +12,11 @@ const PrimaryText = styled.p`
   text-align: center;
   color: #ffffff;
   text-transform: uppercase;
+
+  padding: 0;
+  margin: 0;
+
+  white-space: pre-line;
 `;
 
 return <PrimaryText>{props.text}</PrimaryText>;

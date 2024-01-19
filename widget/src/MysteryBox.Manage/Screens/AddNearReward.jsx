@@ -223,7 +223,7 @@ const submitTransactionToAddPools = () => {
     const total = Big(pool.capacity).mul(amount);
 
     return {
-      contractName: props.contract_id,
+      contractName: props.contract?.contract_id,
       methodName: 'add_near_reward',
       args: {
         rarity: pool.rarity,
@@ -247,10 +247,13 @@ return (
       }}
     />
     <WrapperMenu>
-      <MenuHeader>
-        <MenuTitle>Contract Name</MenuTitle>
-        <MenuSubtitle>{props.contract_id}</MenuSubtitle>
-      </MenuHeader>
+        <Widget
+          src="denbite.testnet/widget/MysteryBox.Manage.Components.MenuHeader"
+          props={{
+            title: props.contract?.title,
+            subtitle: props.contract?.contract_id,
+          }}
+        />
       <MenuContent>
         {pools.map((pool) => (
           <WrapperTable key={`pool_unique_key_${pool.id}`}>

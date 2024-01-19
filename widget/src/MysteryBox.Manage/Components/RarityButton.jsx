@@ -33,9 +33,12 @@ const InnerRarityButton = styled.div`
 const onClick = props.onClick || (() => {});
 const active = props.active;
 const rarity = props.rarity;
+const tooltip = props.tooltip;
 
 return (
-  <RarityButton active={active} disabled={active} onClick={onClick}>
-    <InnerRarityButton rarity={rarity} />
-  </RarityButton>
+  <OverlayTrigger placement="top" overlay={<Tooltip>{tooltip}</Tooltip>}>
+    <RarityButton active={active} disabled={active} onClick={onClick}>
+      <InnerRarityButton rarity={rarity} />
+    </RarityButton>
+  </OverlayTrigger>
 );

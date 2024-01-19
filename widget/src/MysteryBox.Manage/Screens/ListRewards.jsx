@@ -14,7 +14,7 @@ const WrapperMenu = styled.div`
   justify-content: space-around;
   align-items: center;
 
-  flex-basis: 70%;
+  flex-basis: 80%;
 
   width: 40%;
 
@@ -95,7 +95,7 @@ const TableScrollContainer = styled.div`
   }
 
   @media (max-width: 512px) {
-    flex-basis: 240px;
+    flex-basis: 200px;
   }
 
   overflow-x: hidden;
@@ -287,10 +287,13 @@ return (
       }}
     />
     <WrapperMenu>
-      <MenuHeader>
-        <MenuTitle>Contract Name</MenuTitle>
-        <MenuSubtitle>{props.contract_id}</MenuSubtitle>
-      </MenuHeader>
+      <Widget
+        src="denbite.testnet/widget/MysteryBox.Manage.Components.MenuHeader"
+        props={{
+          title: props.contract?.title,
+          subtitle: props.contract?.contract_id,
+        }}
+      />
       <MenuContent>
         <WrapperPoolButtons>
           <PoolButton

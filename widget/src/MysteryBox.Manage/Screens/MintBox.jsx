@@ -142,38 +142,6 @@ const TableContainer = styled.div`
   border-radius: 10px;
 `;
 
-const WrapperRarityButton = styled.div`
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 0;
-
-  ${(props) => (props.active ? 'border: 1px solid #8DBFEA;' : 'border: 0;')}
-
-  background: #202f3f;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  &:hover {
-    cursor: pointer;
-  }
-`;
-
-const RarityButton = styled.div`
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 0;
-
-  ${(props) => {
-    if (props.rarity === 'rare') return `background: #1EA3AF;`;
-    if (props.rarity === 'epic') return `background: #B263C3;`;
-    if (props.rarity === 'legendary') return `background: #FBC70F;`;
-  }}
-`;
-
 const HeaderRow = styled.div`
   display: flex;
   justify-content: space-between;
@@ -360,7 +328,9 @@ const submitTransactionToMintBoxes = () => {
     ([rarity, partialAccounts]) => {
       const accounts = partialAccounts
         .map((partialAccount) =>
-          Array(parseInt(partialAccount.amount)).fill(partialAccount.address)
+          Array(parseInt(partialAccount.amount)).fill(
+            partialAccount.address.replaceAll(' ', '')
+          )
         )
         .flat();
 
@@ -373,7 +343,7 @@ const submitTransactionToMintBoxes = () => {
       const totalNum = Big(680).plus(total).mul(Big(10).pow(18));
 
       return {
-        contractName: props.contract_id,
+        contractName: props.contract?.contract_id,
         methodName: 'mint_many',
         args: {
           rarity,
@@ -397,10 +367,13 @@ return (
       }}
     />
     <WrapperMenu>
-      <MenuHeader>
-        <MenuTitle>Contract Name</MenuTitle>
-        <MenuSubtitle>{props.contract_id}</MenuSubtitle>
-      </MenuHeader>
+      <Widget
+        src="denbite.testnet/widget/MysteryBox.Manage.Components.MenuHeader"
+        props={{
+          title: props.contract?.title,
+          subtitle: props.contract?.contract_id,
+        }}
+      />
       <MenuContent>
         {accounts.map((account) => (
           <WrapperTable key={`account_unique_key_${account.id}`}>
@@ -418,33 +391,39 @@ return (
               </HeaderRow>
               <TableRow>
                 <TableCell>
-                  <WrapperRarityButton
-                    active={account.rarity === 'rare'}
-                    disabled={account.rarity === 'rare'}
-                    onClick={() => {
-                      updadeAccount(account.id, 'rarity', 'rare');
+                  <Widget
+                    src={`denbite.testnet/widget/MysteryBox.Manage.Components.RarityButton`}
+                    props={{
+                      rarity: 'rare',
+                      active: account.rarity === 'rare',
+                      tooltip: 'Rare',
+                      onClick: () => {
+                        updadeAccount(account.id, 'rarity', 'rare');
+                      },
                     }}
-                  >
-                    <RarityButton rarity="rare" />
-                  </WrapperRarityButton>
-                  <WrapperRarityButton
-                    active={account.rarity === 'epic'}
-                    disabled={account.rarity === 'epic'}
-                    onClick={() => {
-                      updadeAccount(account.id, 'rarity', 'epic');
+                  />
+                  <Widget
+                    src={`denbite.testnet/widget/MysteryBox.Manage.Components.RarityButton`}
+                    props={{
+                      rarity: 'epic',
+                      active: account.rarity === 'epic',
+                      tooltip: 'Epic',
+                      onClick: () => {
+                        updadeAccount(account.id, 'rarity', 'epic');
+                      },
                     }}
-                  >
-                    <RarityButton rarity="epic" />
-                  </WrapperRarityButton>
-                  <WrapperRarityButton
-                    active={account.rarity === 'legendary'}
-                    disabled={account.rarity === 'legendary'}
-                    onClick={() => {
-                      updadeAccount(account.id, 'rarity', 'legendary');
+                  />
+                  <Widget
+                    src={`denbite.testnet/widget/MysteryBox.Manage.Components.RarityButton`}
+                    props={{
+                      rarity: 'legendary',
+                      active: account.rarity === 'legendary',
+                      tooltip: 'Legendary',
+                      onClick: () => {
+                        updadeAccount(account.id, 'rarity', 'legendary');
+                      },
                     }}
-                  >
-                    <RarityButton rarity="legendary" />
-                  </WrapperRarityButton>
+                  />
                 </TableCell>
                 <TableCell>
                   <TextCell

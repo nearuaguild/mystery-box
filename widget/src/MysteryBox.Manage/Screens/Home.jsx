@@ -2,11 +2,13 @@ const { href: linkHref } = VM.require('denbite.testnet/widget/core.lib.url');
 
 linkHref || (linkHref = () => {});
 
-const defaultContractExist =
-  props.defaultContract && props.contracts.includes(props.defaultContract);
-const defaultActiveIndex = defaultContractExist
-  ? props.contracts.indexOf(props.defaultContract)
-  : 0;
+const defaultContractIndex = props.defaultContractId
+  ? (props.contracts || []).findIndex(
+      (contract) => contract.contract_id === props.defaultContractId
+    )
+  : -1;
+const defaultActiveIndex =
+  defaultContractIndex !== -1 ? defaultContractIndex : 0;
 
 console.log('defaultActiveIndex', defaultActiveIndex);
 
@@ -82,17 +84,6 @@ const LeftArrow = ({ onClick, disabled }) => (
   </Svg>
 );
 
-const Title = styled.p`
-  font-family: 'Kodchasan', sans-serif;
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: 0em;
-  text-align: center;
-  color: #ffffff;
-  text-transform: uppercase;
-  margin: 0;
-`;
-
 const WrapperMenu = styled.div`
   background: rgba(24, 36, 50, 1);
   border: 0;
@@ -103,35 +94,12 @@ const WrapperMenu = styled.div`
   justify-content: space-evenly;
   align-items: center;
 
-  flex-basis: 80%;
+  width: 80%;
 
   height: 100%;
   padding: 8px;
 `;
 
-const MenuTitle = styled.p`
-  font-family: 'Kodchasan', sans-serif;
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: 0em;
-  text-align: center;
-  color: #ffffff;
-  margin: 0;
-`;
-
-const MenuSubtitle = styled.p`
-  font-family: 'Kodchasan', sans-serif;
-  font-size: 14px;
-  font-weight: 400;
-  letter-spacing: 0em;
-  text-align: center;
-  color: rgba(43, 204, 194, 1);
-  margin: 0;
-`;
-
-const MenuHeader = styled.div`
-  flex-basis: 20%;
-`;
 const MenuContent = styled.div`
   flex-basis: 25%;
 `;
@@ -146,6 +114,24 @@ const MenuFooterRow = styled.div`
   flex-grow: 1;
 `;
 
+const Bottom = styled.div`
+  display: flex;
+  flex-direction: row;
+
+  justify-content: space-between;
+  align-items: center;
+
+  width: 500px;
+
+  @media (max-width: 678px) {
+    flex-direction: column;
+
+    height: 84px;
+
+    justify-content: space-around;
+  }
+`;
+
 const previousActiveContract = () => {
   if (state.active === 0) return;
 
@@ -158,11 +144,13 @@ const nextActiveContract = () => {
   State.update({ active: state.active + 1 });
 };
 
+const contract = props.contracts[state.active];
+
 const createLinkToPage = (page) => {
   return linkHref({
     widgetSrc: 'denbite.testnet/widget/MysteryBox.Manage',
     params: {
-      contract_id: props.contracts[state.active],
+      contract_id: contract.contract_id,
       page,
     },
   });
@@ -170,17 +158,25 @@ const createLinkToPage = (page) => {
 
 return (
   <>
-    <Title>Contracts</Title>
+    <Widget
+      src="denbite.testnet/widget/MysteryBox.Manage.Components.Title"
+      props={{
+        text: 'Contracts',
+      }}
+    />
     <SliderWrapper>
       <LeftArrow
         disabled={state.active === 0}
         onClick={previousActiveContract}
       />
       <WrapperMenu>
-        <MenuHeader>
-          <MenuTitle>Contract Name</MenuTitle>
-          <MenuSubtitle>{props.contracts[state.active]}</MenuSubtitle>
-        </MenuHeader>
+        <Widget
+          src="denbite.testnet/widget/MysteryBox.Manage.Components.MenuHeader"
+          props={{
+            title: contract.title,
+            subtitle: contract.contract_id,
+          }}
+        />
         <MenuContent></MenuContent>
         <MenuFooter>
           <MenuFooterRow>
@@ -238,12 +234,32 @@ return (
         onClick={nextActiveContract}
       />
     </SliderWrapper>
-    <Widget
-      src={`denbite.testnet/widget/MysteryBox.Manage.Components.SubmitButton`}
-      props={{
-        text: 'Create new contract',
-        onClick: () => {},
-      }}
-    />
+    <Bottom>
+      <Widget
+        src={`denbite.testnet/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
+        props={{
+          text: 'Create another contract',
+          href: linkHref({
+            widgetSrc: 'denbite.testnet/widget/MysteryBox.Manage',
+            params: {
+              page: 'DeployContract',
+            },
+          }),
+        }}
+      />
+      <Widget
+        src={`denbite.testnet/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
+        props={{
+          text: 'View Claiming Page',
+          href: linkHref({
+            widgetSrc: 'denbite.testnet/widget/MysteryBox',
+            params: {
+              contract_id: contract.contract_id,
+            },
+          }),
+          target: '_blank',
+        }}
+      />
+    </Bottom>
   </>
 );

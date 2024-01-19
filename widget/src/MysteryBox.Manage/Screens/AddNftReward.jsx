@@ -288,38 +288,6 @@ const RarityPickerMenu = styled.div`
   flex-basis: 100px;
 `;
 
-const WrapperRarityButton = styled.div`
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 0;
-
-  ${(props) => (props.active ? 'border: 1px solid #8DBFEA;' : 'border: 0;')}
-
-  background: #182432;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  &:hover {
-    cursor: pointer;
-  }
-`;
-
-const RarityButton = styled.div`
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 0;
-
-  ${(props) => {
-    if (props.rarity === 'rare') return `background: #1EA3AF;`;
-    if (props.rarity === 'epic') return `background: #B263C3;`;
-    if (props.rarity === 'legendary') return `background: #FBC70F;`;
-  }}
-`;
-
 const rarities = state.rarities || [];
 
 console.log('rarities', rarities);
@@ -406,7 +374,7 @@ const submitTransactionToAddNftRewards = () => {
         contractName: rarity.contract,
         methodName: 'nft_transfer_call',
         args: {
-          receiver_id: props.contract_id,
+          receiver_id: props.contract?.contract_id,
           token_id: rarity.token_id,
           msg: rarity.value,
         },
@@ -425,8 +393,8 @@ return (
       <LeftArrow disabled={state.active === 0} onClick={previousActiveToken} />
       <WrapperMenu>
         <MenuHeader>
-          <MenuTitle>Contract Name</MenuTitle>
-          <MenuSubtitle>{props.contract_id}</MenuSubtitle>
+          <MenuTitle>{props.contract?.title}</MenuTitle>
+          <MenuSubtitle>{props.contract?.contract_id}</MenuSubtitle>
         </MenuHeader>
         <MenuContent>
           <WrapperNftPreview url={getMediaUrlForToken(token)}>
@@ -463,37 +431,43 @@ return (
             </Svg>
             <RarityText>Set NFT Rarity</RarityText>
             <RarityPickerMenu>
-              <WrapperRarityButton
-                active={rarity === 'rare'}
-                disabled={rarity === 'rare'}
-                onClick={() => {
-                  updateRarity(token.contract, token.token.token_id, 'rare');
+              <Widget
+                src="denbite.testnet/widget/MysteryBox.Manage.Components.RarityButton"
+                props={{
+                  rarity: 'rare',
+                  active: rarity === 'rare',
+                  onClick: () => {
+                    updateRarity(token.contract, token.token.token_id, 'rare');
+                  },
+                  tooltip: 'Rare',
                 }}
-              >
-                <RarityButton rarity="rare" />
-              </WrapperRarityButton>
-              <WrapperRarityButton
-                active={rarity === 'epic'}
-                disabled={rarity === 'epic'}
-                onClick={() => {
-                  updateRarity(token.contract, token.token.token_id, 'epic');
+              />
+              <Widget
+                src="denbite.testnet/widget/MysteryBox.Manage.Components.RarityButton"
+                props={{
+                  rarity: 'epic',
+                  active: rarity === 'epic',
+                  onClick: () => {
+                    updateRarity(token.contract, token.token.token_id, 'epic');
+                  },
+                  tooltip: 'Epic',
                 }}
-              >
-                <RarityButton rarity="epic" />
-              </WrapperRarityButton>
-              <WrapperRarityButton
-                active={rarity === 'legendary'}
-                disabled={rarity === 'legendary'}
-                onClick={() => {
-                  updateRarity(
-                    token.contract,
-                    token.token.token_id,
-                    'legendary'
-                  );
+              />
+              <Widget
+                src="denbite.testnet/widget/MysteryBox.Manage.Components.RarityButton"
+                props={{
+                  rarity: 'legendary',
+                  active: rarity === 'legendary',
+                  onClick: () => {
+                    updateRarity(
+                      token.contract,
+                      token.token.token_id,
+                      'legendary'
+                    );
+                  },
+                  tooltip: 'Legendary',
                 }}
-              >
-                <RarityButton rarity="legendary" />
-              </WrapperRarityButton>
+              />
             </RarityPickerMenu>
           </RarityPicker>
         </MenuFooter>

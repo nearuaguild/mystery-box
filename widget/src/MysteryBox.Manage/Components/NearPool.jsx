@@ -92,6 +92,7 @@ return (
             rarity: 'rare',
             active: pool.rarity === 'rare',
             onClick: updateRarity('rare'),
+            tooltip: 'Rare',
           }}
         />
         <Widget
@@ -100,6 +101,7 @@ return (
             rarity: 'epic',
             active: pool.rarity === 'epic',
             onClick: updateRarity('epic'),
+            tooltip: 'Epic',
           }}
         />
         <Widget
@@ -108,6 +110,7 @@ return (
             rarity: 'legendary',
             active: pool.rarity === 'legendary',
             onClick: updateRarity('legendary'),
+            tooltip: 'Legendary',
           }}
         />
       </TableCell>
