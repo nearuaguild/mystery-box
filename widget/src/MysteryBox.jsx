@@ -275,9 +275,9 @@ const redirectToVerification = () => {
 };
 
 const onClaim = (box_id) => {
-  // if (!isVerified) {
-  //   return redirectToVerification();
-  // }
+  if (!isVerified) {
+    return redirectToVerification();
+  }
 
   const gas = Big(100e12).toString(); // 100 TGas
 
