@@ -2,7 +2,7 @@ use std::collections::BTreeSet;
 
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::require;
-use near_sdk::{AccountId, Balance};
+use near_sdk::{AccountId, NearToken};
 
 use crate::*;
 
@@ -17,7 +17,7 @@ impl Pool {
     pub fn create_near_pool(
         id: PoolId,
         rarity: BoxRarity,
-        amount: Balance,
+        amount: NearToken,
         capacity: Capacity,
     ) -> Self {
         let near_pool = NearPoolKind::new(amount, capacity);
@@ -103,13 +103,13 @@ enum PoolKind {
 
 #[derive(BorshDeserialize, BorshSerialize, Clone, Debug)]
 pub struct NearPoolKind {
-    pub amount: Balance,
+    pub amount: NearToken,
     pub capacity: Capacity,
     pub available: Capacity,
 }
 
 impl NearPoolKind {
-    pub fn new(amount: Balance, capacity: Capacity) -> Self {
+    pub fn new(amount: NearToken, capacity: Capacity) -> Self {
         Self {
             amount,
             capacity,
@@ -117,7 +117,7 @@ impl NearPoolKind {
         }
     }
 
-    pub fn decrease_available(&mut self) -> Option<Balance> {
+    pub fn decrease_available(&mut self) -> Option<NearToken> {
         require!(self.available > 0, "ERR_POOL_NOT_AVAILABLE");
 
         self.available -= 1;
@@ -168,7 +168,7 @@ impl Into<JsonPoolRewards> for Pool {
     fn into(self) -> JsonPoolRewards {
         match self.kind {
             PoolKind::Near(ref pool) => JsonPoolRewards::Near {
-                amount: pool.amount.to_owned().into(),
+                amount: pool.amount.to_owned().as_near(),
                 available: pool.available.clone(),
                 total: pool.capacity.clone(),
             },

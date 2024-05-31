@@ -2,13 +2,13 @@ use std::collections::HashSet;
 
 use near_sdk::assert_one_yocto;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::{LookupMap, UnorderedSet};
+use near_sdk::store::{LookupMap, UnorderedSet};
 use near_sdk::serde_json::{self, Value};
 use near_sdk::{
     env,
     json_types::{U128, U64},
     log, near_bindgen, require, AccountId, BorshStorageKey, Gas, PanicOnDefault, Promise,
-    PromiseOrValue, PromiseResult, ONE_NEAR,
+    PromiseOrValue, PromiseResult,
 };
 
 use crate::callbacks::*;
@@ -24,6 +24,7 @@ mod json;
 mod pools;
 mod types;
 
+const ONE_NEAR: u128 = 10_u128.pow(24);
 const MINIMAL_NEAR_REWARD: u128 = ONE_NEAR / 10; // 0.1N
 
 #[derive(BorshStorageKey, BorshSerialize)]

@@ -10,7 +10,7 @@ use near_sdk::{
 #[serde(crate = "near_sdk::serde", tag = "kind", rename_all = "snake_case")]
 pub enum JsonPoolRewards {
     Near {
-        amount: U128,
+        amount: u128,
         available: Capacity,
         total: Capacity,
     },

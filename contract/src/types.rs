@@ -2,14 +2,14 @@ use std::fmt::{Display, Formatter, Result};
 
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::serde::{Deserialize, Serialize};
-use near_sdk::{AccountId, Balance};
+use near_sdk::{AccountId, NearToken};
 
 use crate::*;
 
 pub type TokenId = String;
 
 #[derive(
-    BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug, PartialEq, Copy,
+    BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug, PartialEq, Copy, PartialOrd, Eq, Ord
 )]
 #[serde(crate = "near_sdk::serde", rename_all = "snake_case")]
 pub enum BoxRarity {
@@ -51,7 +51,7 @@ pub type Capacity = u64;
 #[serde(crate = "near_sdk::serde", rename_all = "snake_case")]
 pub enum Reward {
     Near {
-        amount: Balance,
+        amount: NearToken,
     },
     NonFungibleToken {
         contract_id: AccountId,
@@ -166,6 +166,6 @@ mod tests {
             denominator: 2,
         };
 
-        assert_eq!(probability.calculate_threshold(), 127);
+        assert_eq!(probability.calculate_threshold(), 127)
     }
 }

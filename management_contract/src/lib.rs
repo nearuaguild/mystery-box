@@ -1,12 +1,12 @@
 use std::collections::HashSet;
 
-use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::LookupMap;
+use near_sdk::borsh::{BorshDeserialize, BorshSerialize};
+use near_sdk::store::LookupMap;
 use near_sdk::json_types::U128;
 use near_sdk::serde::Serialize;
 use near_sdk::serde_json::{self};
 use near_sdk::{
-    env, log, near_bindgen, require, AccountId, Balance, BorshStorageKey, Gas, PanicOnDefault,
+    env, log, near_bindgen, require, AccountId, NearToken, BorshStorageKey, Gas, PanicOnDefault,
     Promise, PromiseResult,
 };
 
@@ -107,7 +107,7 @@ impl Contract {
         U128(self.internal_contract_byte_cost())
     }
 
-    fn internal_contract_byte_cost(&self) -> Balance {
+    fn internal_contract_byte_cost(&self) -> NearToken {
         let contract_bytes = CONTRACT.len() as u128;
 
         env::storage_byte_cost() * contract_bytes
@@ -191,7 +191,7 @@ impl Contract {
     pub fn deploy_mystery_box_contract_callback(
         &mut self,
         contract_id: AccountId,
-        deposited_amount: Balance,
+        deposited_amount: NearToken,
         owner_id: AccountId,
     ) -> Option<AccountId> {
         // https://docs.rs/near-sdk/latest/near_sdk/env/fn.promise_results_count.html
