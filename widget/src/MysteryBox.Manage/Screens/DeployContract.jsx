@@ -1,3 +1,5 @@
+const widget_owner_id = "untidy-scarecrow.testnet";
+
 console.log('props', props);
 
 State.init({
@@ -154,7 +156,7 @@ const submitTransactionToDeployContract = () => {
 return (
   <>
     <Widget
-      src="denbite.testnet/widget/MysteryBox.Manage.Components.Title"
+      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.Title`}
       props={{
         text: 'Deploy Contract',
       }}
@@ -188,7 +190,7 @@ return (
       </MenuContent>
     </WrapperMenu>
     <Widget
-      src={`denbite.testnet/widget/MysteryBox.Manage.Components.SubmitButton`}
+      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.SubmitButton`}
       props={{
         text: 'Deploy',
         disabled: shouldSubmitButtonBeDisabled,

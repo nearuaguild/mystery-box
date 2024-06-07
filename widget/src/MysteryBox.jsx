@@ -1,4 +1,4 @@
-const widget_owner_id = "denbite.testnet";
+const widget_owner_id = "untidy-scarecrow.testnet";
 const rpc_endpoint = "https://rpc.testnet.near.org";
 
 const account_id = context.accountId;

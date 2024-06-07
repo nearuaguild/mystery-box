@@ -1,40 +1,16 @@
-use std::fmt::{Display, Formatter, Result};
 
+use crate::contract::json::JsonBox;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::serde::{Deserialize, Serialize};
-use near_sdk::{AccountId, Balance};
+use near_sdk::{require, AccountId, Balance};
 
-use crate::*;
+use super::enums::{BoxRarity, BoxStatus};
 
 pub type TokenId = String;
 
-#[derive(
-    BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug, PartialEq, Copy,
-)]
-#[serde(crate = "near_sdk::serde", rename_all = "snake_case")]
-pub enum BoxRarity {
-    Rare,
-    Epic,
-    Legendary,
-}
-
-impl Display for BoxRarity {
-    fn fmt(&self, f: &mut Formatter) -> Result {
-        match self {
-            BoxRarity::Rare => write!(f, "rare"),
-            BoxRarity::Epic => write!(f, "epic"),
-            BoxRarity::Legendary => write!(f, "legendary"),
-        }
-    }
-}
-
-#[derive(BorshDeserialize, BorshSerialize, Clone, Debug, PartialEq)]
-pub enum BoxStatus {
-    Claimed { reward: Option<Reward> },
-    NonClaimed,
-}
-
 pub type BoxId = u128;
+
+pub type QuestTitle = String;
 
 #[derive(BorshDeserialize, BorshSerialize, Debug)]
 pub struct BoxData {
@@ -44,6 +20,7 @@ pub struct BoxData {
     pub owner_id: AccountId,
 }
 
+pub type QuestId = u64;
 pub type PoolId = u32;
 pub type Capacity = u64;
 
@@ -135,7 +112,7 @@ impl Probability {
 
 #[cfg(test)]
 mod tests {
-    use crate::Probability;
+    use crate::contract::types::Probability;
 
     #[test]
     fn test_probability_threshold() {

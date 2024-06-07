@@ -1,6 +1,12 @@
-use crate::*;
+use crate::contract::enums::BoxStatus;
+use crate::contract::pools::Pool;
+use crate::contract::types::{BoxData, BoxId, Capacity, PoolId, Probability, TokenId};
+use near_sdk::{env, require, AccountId};
 
 use std::str::FromStr;
+
+use super::enums::{BoxRarity, Network};
+use super::Contract;
 
 fn get_random_number(shift_amount: usize) -> u64 {
     let mut seed = env::random_seed();
@@ -12,21 +18,6 @@ fn get_random_number(shift_amount: usize) -> u64 {
     arr.copy_from_slice(&seed[..8]);
 
     u64::from_le_bytes(arr)
-}
-
-enum Network {
-    Mainnet,
-    Testnet,
-}
-
-impl From<AccountId> for Network {
-    fn from(account_id: AccountId) -> Self {
-        if account_id.to_string().ends_with(".near") {
-            return Network::Mainnet;
-        }
-
-        return Network::Testnet;
-    }
 }
 
 pub(crate) fn get_registry_iah_contract() -> AccountId {

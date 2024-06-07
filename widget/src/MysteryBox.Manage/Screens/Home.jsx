@@ -1,4 +1,6 @@
-const { href: linkHref } = VM.require('denbite.testnet/widget/core.lib.url');
+const widget_owner_id = "untidy-scarecrow.testnet";
+
+const { href: linkHref } = VM.require(`${widget_owner_id}/widget/core.lib.url`);
 
 linkHref || (linkHref = () => {});
 
@@ -148,7 +150,7 @@ const contract = props.contracts[state.active];
 
 const createLinkToPage = (page) => {
   return linkHref({
-    widgetSrc: 'denbite.testnet/widget/MysteryBox.Manage',
+    widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
     params: {
       contract_id: contract.contract_id,
       page,
@@ -159,9 +161,9 @@ const createLinkToPage = (page) => {
 return (
   <>
     <Widget
-      src="denbite.testnet/widget/MysteryBox.Manage.Components.Title"
+      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.Title`}
       props={{
-        text: 'Contracts',
+        text: 'Contracts ololo',
       }}
     />
     <SliderWrapper>
@@ -171,7 +173,7 @@ return (
       />
       <WrapperMenu>
         <Widget
-          src="denbite.testnet/widget/MysteryBox.Manage.Components.MenuHeader"
+          src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuHeader`}
           props={{
             title: contract.title,
             subtitle: contract.contract_id,
@@ -181,14 +183,14 @@ return (
         <MenuFooter>
           <MenuFooterRow>
             <Widget
-              src={`denbite.testnet/widget/MysteryBox.Manage.Components.MenuButton`}
+              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuButton`}
               props={{
                 text: 'Add NEAR reward',
                 href: createLinkToPage('AddNearReward'),
               }}
             />
             <Widget
-              src={`denbite.testnet/widget/MysteryBox.Manage.Components.MenuButton`}
+              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuButton`}
               props={{
                 text: 'Add NFT reward',
                 href: createLinkToPage('AddNftReward'),
@@ -197,14 +199,14 @@ return (
           </MenuFooterRow>
           <MenuFooterRow>
             <Widget
-              src={`denbite.testnet/widget/MysteryBox.Manage.Components.MenuButton`}
+              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuButton`}
               props={{
                 text: 'Mint BOX',
                 href: createLinkToPage('MintBox'),
               }}
             />
             <Widget
-              src={`denbite.testnet/widget/MysteryBox.Manage.Components.MenuButton`}
+              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuButton`}
               props={{
                 text: 'List Rewards',
                 href: createLinkToPage('ListRewards'),
@@ -213,14 +215,14 @@ return (
           </MenuFooterRow>
           <MenuFooterRow>
             <Widget
-              src={`denbite.testnet/widget/MysteryBox.Manage.Components.MenuButton`}
+              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuButton`}
               props={{
                 text: 'List User Boxes',
                 href: createLinkToPage('ListUserBoxes'),
               }}
             />
             <Widget
-              src={`denbite.testnet/widget/MysteryBox.Manage.Components.MenuButton`}
+              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuButton`}
               props={{
                 disabled: true,
                 text: 'Statistics',
@@ -236,11 +238,11 @@ return (
     </SliderWrapper>
     <Bottom>
       <Widget
-        src={`denbite.testnet/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
+        src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
         props={{
           text: 'Create another contract',
           href: linkHref({
-            widgetSrc: 'denbite.testnet/widget/MysteryBox.Manage',
+            widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
             params: {
               page: 'DeployContract',
             },
@@ -248,11 +250,11 @@ return (
         }}
       />
       <Widget
-        src={`denbite.testnet/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
+        src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
         props={{
           text: 'View Claiming Page',
           href: linkHref({
-            widgetSrc: 'denbite.testnet/widget/MysteryBox',
+            widgetSrc: `${widget_owner_id}/widget/MysteryBox`,
             params: {
               contract_id: contract.contract_id,
             },

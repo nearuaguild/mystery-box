@@ -1,3 +1,5 @@
+const widget_owner_id = "untidy-scarecrow.testnet";
+
 console.log('props', props);
 
 const isValidAccount = (account) => {
@@ -361,14 +363,14 @@ const submitTransactionToMintBoxes = () => {
 return (
   <>
     <Widget
-      src="denbite.testnet/widget/MysteryBox.Manage.Components.Title"
+      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.Title`}
       props={{
         text: 'Mint Box',
       }}
     />
     <WrapperMenu>
       <Widget
-        src="denbite.testnet/widget/MysteryBox.Manage.Components.MenuHeader"
+        src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuHeader`}
         props={{
           title: props.contract?.title,
           subtitle: props.contract?.contract_id,
@@ -378,7 +380,7 @@ return (
         {accounts.map((account) => (
           <WrapperTable key={`account_unique_key_${account.id}`}>
             <Widget
-              src="denbite.testnet/widget/MysteryBox.Manage.Components.DeleteButton"
+              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.DeleteButton`}
               props={{
                 onClick: () => deleteAccount(account.id),
               }}
@@ -392,7 +394,7 @@ return (
               <TableRow>
                 <TableCell>
                   <Widget
-                    src={`denbite.testnet/widget/MysteryBox.Manage.Components.RarityButton`}
+                    src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.RarityButton`}
                     props={{
                       rarity: 'rare',
                       active: account.rarity === 'rare',
@@ -403,7 +405,7 @@ return (
                     }}
                   />
                   <Widget
-                    src={`denbite.testnet/widget/MysteryBox.Manage.Components.RarityButton`}
+                    src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.RarityButton`}
                     props={{
                       rarity: 'epic',
                       active: account.rarity === 'epic',
@@ -414,7 +416,7 @@ return (
                     }}
                   />
                   <Widget
-                    src={`denbite.testnet/widget/MysteryBox.Manage.Components.RarityButton`}
+                    src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.RarityButton`}
                     props={{
                       rarity: 'legendary',
                       active: account.rarity === 'legendary',
@@ -455,7 +457,7 @@ return (
       </MenuContent>
     </WrapperMenu>
     <Widget
-      src={`denbite.testnet/widget/MysteryBox.Manage.Components.SubmitButton`}
+      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.SubmitButton`}
       props={{
         text: 'Submit',
         disabled: shouldSubmitButtonBeDisabled,

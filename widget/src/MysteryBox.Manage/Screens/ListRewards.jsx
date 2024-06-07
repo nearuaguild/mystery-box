@@ -1,3 +1,5 @@
+const widget_owner_id = "untidy-scarecrow.testnet";
+
 console.log('props', props);
 
 State.init({
@@ -281,14 +283,14 @@ const rewards = (props.rewards || []).filter(
 return (
   <>
     <Widget
-      src="denbite.testnet/widget/MysteryBox.Manage.Components.Title"
+      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.Title`}
       props={{
         text: 'List Rewards',
       }}
     />
     <WrapperMenu>
       <Widget
-        src="denbite.testnet/widget/MysteryBox.Manage.Components.MenuHeader"
+        src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuHeader`}
         props={{
           title: props.contract?.title,
           subtitle: props.contract?.contract_id,

@@ -1,14 +1,17 @@
-use crate::*;
+use near_sdk::{env, log, near_bindgen, require, serde_json, AccountId, Gas, Promise, PromiseOrValue, PromiseResult};
+
+use super::{enums::{BoxRarity, BoxStatus}, internal, json::JsonReward, types::{BoxId, PoolId, Reward}};
+use crate::contract::{Contract, ContractExt};
 
 pub(crate) fn create_withdraw_box_reward_promise_with_verification(
     account_id: &AccountId,
     box_id: &BoxId,
     pool_id: &PoolId,
 ) -> Promise {
-    let get_iah_verification_promise = Promise::new(get_registry_iah_contract()).function_call(
+    let get_iah_verification_promise = Promise::new(internal::get_registry_iah_contract()).function_call(
         "sbt_tokens_by_owner".to_string(),
         serde_json::json!({
-            "issuer": get_issuer_iah_contract(),
+            "issuer":internal::get_issuer_iah_contract(),
             "account": account_id.clone()
         })
         .to_string()
@@ -91,7 +94,7 @@ impl Contract {
 
         let is_verified = match iah_result {
             PromiseResult::Successful(data) => {
-                let deserealize_result = serde_json::from_slice::<Value>(data.as_slice());
+                let deserealize_result = serde_json::from_slice::<serde_json::Value>(data.as_slice());
 
                 match deserealize_result {
                     Err(_) => {
@@ -106,8 +109,8 @@ impl Contract {
                             None => {
                                 log!(
                                     "Verification data not found in registry {} for issuer {}",
-                                    get_registry_iah_contract(),
-                                    get_issuer_iah_contract()
+                                    internal::get_registry_iah_contract(),
+                                    internal::get_issuer_iah_contract()
                                 );
 
                                 false
@@ -120,7 +123,7 @@ impl Contract {
             _ => {
                 log!(
                     "Something failed while getting data from IAH registry {}",
-                    get_registry_iah_contract()
+                    internal::get_registry_iah_contract()
                 );
 
                 false

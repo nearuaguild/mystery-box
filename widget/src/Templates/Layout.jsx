@@ -1,3 +1,5 @@
+const widget_owner_id = "untidy-scarecrow.testnet";
+
 const font = fetch(
   'https://fonts.googleapis.com/css2?family=Kodchasan:wght@300;400;500;700&display=swap'
 ).body;
@@ -107,7 +109,7 @@ function Layout({ children, contract_id, active_home_button }) {
         </HeaderLogo>
         <HeaderButton>
           <Widget
-            src="denbite.testnet/widget/MysteryBox.Manage.Components.HomeButton"
+            src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.HomeButton`}
             props={{
               contract_id: contract_id,
               active: active_home_button,
@@ -118,7 +120,7 @@ function Layout({ children, contract_id, active_home_button }) {
       </Header>
       <Content>{children}</Content>
       <Footer>
-        <Widget src="denbite.testnet/widget/MysteryBox.Manage.Components.Socials" />
+        <Widget src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.Socials`} />
       </Footer>
     </Container>
   );

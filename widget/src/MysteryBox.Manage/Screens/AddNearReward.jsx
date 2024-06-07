@@ -1,3 +1,5 @@
+const widget_owner_id = "untidy-scarecrow.testnet";
+
 console.log('props', props);
 
 const isValidPool = (pool) => {
@@ -241,14 +243,14 @@ const submitTransactionToAddPools = () => {
 return (
   <>
     <Widget
-      src="denbite.testnet/widget/MysteryBox.Manage.Components.Title"
+      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.Title`}
       props={{
         text: 'Add Near Reward',
       }}
     />
     <WrapperMenu>
         <Widget
-          src="denbite.testnet/widget/MysteryBox.Manage.Components.MenuHeader"
+          src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuHeader`}
           props={{
             title: props.contract?.title,
             subtitle: props.contract?.contract_id,
@@ -258,13 +260,13 @@ return (
         {pools.map((pool) => (
           <WrapperTable key={`pool_unique_key_${pool.id}`}>
             <Widget
-              src="denbite.testnet/widget/MysteryBox.Manage.Components.DeleteButton"
+              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.DeleteButton`}
               props={{
                 onClick: () => deletePool(pool.id),
               }}
             />
             <Widget
-              src="denbite.testnet/widget/MysteryBox.Manage.Components.NearPool"
+              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.NearPool`}
               props={{
                 pool: {
                   rarity: pool.rarity,
@@ -284,7 +286,7 @@ return (
       </MenuContent>
     </WrapperMenu>
     <Widget
-      src={`denbite.testnet/widget/MysteryBox.Manage.Components.SubmitButton`}
+      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.SubmitButton`}
       props={{
         text: 'Submit',
         disabled: shouldSubmitButtonBeDisabled,

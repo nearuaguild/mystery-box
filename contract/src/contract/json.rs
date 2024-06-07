@@ -1,10 +1,11 @@
-use crate::*;
 use near_sdk::{
     json_types::U128,
     require,
     serde::{Deserialize, Serialize},
     AccountId,
 };
+
+use super::{enums::{BoxRarity, BoxStatus}, types::{BoxData, BoxId, Capacity, Reward, TokenId}};
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 #[serde(crate = "near_sdk::serde", tag = "kind", rename_all = "snake_case")]

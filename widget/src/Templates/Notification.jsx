@@ -1,3 +1,5 @@
+const widget_owner_id = "untidy-scarecrow.testnet";
+
 const rpc_endpoint = 'https://rpc.testnet.near.org';
 
 State.init({
@@ -128,7 +130,7 @@ if (!showNotification) return <></>;
 return (
   <NotificationWrapper>
     <Widget
-      src="denbite.testnet/widget/MysteryBox.Manage.Components.Notification"
+      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.Notification`}
       props={{
         title: state.title,
         subtitle: state.subtitle,

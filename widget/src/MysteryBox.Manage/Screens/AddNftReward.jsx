@@ -1,3 +1,5 @@
+const widget_owner_id = "untidy-scarecrow.testnet";
+
 console.log('props', props);
 
 const tokens = props.tokens || [];
@@ -432,7 +434,7 @@ return (
             <RarityText>Set NFT Rarity</RarityText>
             <RarityPickerMenu>
               <Widget
-                src="denbite.testnet/widget/MysteryBox.Manage.Components.RarityButton"
+                src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.RarityButton`}
                 props={{
                   rarity: 'rare',
                   active: rarity === 'rare',
@@ -443,7 +445,7 @@ return (
                 }}
               />
               <Widget
-                src="denbite.testnet/widget/MysteryBox.Manage.Components.RarityButton"
+                src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.RarityButton`}
                 props={{
                   rarity: 'epic',
                   active: rarity === 'epic',
@@ -454,7 +456,7 @@ return (
                 }}
               />
               <Widget
-                src="denbite.testnet/widget/MysteryBox.Manage.Components.RarityButton"
+                src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.RarityButton`}
                 props={{
                   rarity: 'legendary',
                   active: rarity === 'legendary',
@@ -478,7 +480,7 @@ return (
       />
     </SliderWrapper>
     <Widget
-      src={`denbite.testnet/widget/MysteryBox.Manage.Components.SubmitButton`}
+      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.SubmitButton`}
       props={{
         text: 'Submit',
         disabled: shouldSubmitButtonBeDisabled,

@@ -359,7 +359,8 @@ const NonClaimedBoxComponent = ({ box }) => {
     return props.onClaim(box.id);
   };
 
-  const amounts = (box.rewards || []).map((reward) => {
+  //const amounts = (box.rewards || [])?.map((reward) => {
+  const amounts = []?.map((reward) => {
     const count = reward.available || reward.token_ids?.length;
 
     const isPlural = count > 1;
@@ -369,7 +370,8 @@ const NonClaimedBoxComponent = ({ box }) => {
     return `${count} ${title}`;
   });
 
-  const titles = (box.rewards || []).map((reward) => {
+  //const titles = (box.rewards || []).map((reward) => {
+  const titles = [].map((reward) => {
     if (reward.kind === 'near') {
       const amountInNear = Big(
         Big(reward.amount).div(1e24).toFixed(2)
@@ -396,12 +398,12 @@ const NonClaimedBoxComponent = ({ box }) => {
       </BoxTitleWrapper>
       <BoxRewardWrapper>
         <BoxRewardAmounts>
-          {amounts.map((text) => (
+          {amounts?.map((text) => (
             <BoxRewardAmount>{text}</BoxRewardAmount>
           ))}
         </BoxRewardAmounts>
         <BoxRewardTitles>
-          {titles.map((text) => (
+          {titles?.map((text) => (
             <BoxRewardTitle>{text}</BoxRewardTitle>
           ))}
         </BoxRewardTitles>
@@ -573,7 +575,7 @@ return (
             disabled={state.active === 0}
             onClick={previousActiveBox}
           />
-          {props.boxes.map((box, index) => {
+          {props.boxes?.map((box, index) => {
             return (
               <SingleBoxWrapper active={state.active === index}>
                 <BoxComponent box={box} />

@@ -1,7 +1,11 @@
-use crate::*;
+use crate::contract::quest::Quest;
+use near_sdk::json_types::U128;
+use near_sdk::AccountId;
 
-#[near_bindgen]
-impl Contract {
+use super::enums::BoxRarity;
+use super::json::{JsonBox, JsonPoolRewards, Pagination};
+
+impl Quest {
     pub fn total_supply(&self) -> U128 {
         U128(self.next_box_id - 1)
     }

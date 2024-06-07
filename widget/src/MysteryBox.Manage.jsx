@@ -33,8 +33,8 @@ const parseResultFromClaimTransactionResponse = (response) => {
   return JSON.parse(Buffer.from(responseValue, 'base64').toString());
 };
 
-const widget_owner_id = 'denbite.testnet';
-const top_contract_id = 'management2.denbite.testnet';
+const widget_owner_id = 'untidy-scarecrow.testnet';
+const top_contract_id = 'valuable-development.testnet';
 
 const account_id = context.accountId;
 
@@ -79,13 +79,13 @@ const determinePageFromProps = () => {
 const page = determinePageFromProps();
 
 // Import our modules
-const { Layout } = VM.require('denbite.testnet/widget/Templates.Layout');
+const { Layout } = VM.require(`${widget_owner_id}/widget/Templates.Layout`);
 
 if (!Layout) {
   return <p>Loading modules...</p>;
 }
 
-const { href: linkHref } = VM.require('denbite.testnet/widget/core.lib.url');
+const { href: linkHref } = VM.require(`${widget_owner_id}/widget/core.lib.url`);
 
 linkHref || (linkHref = () => {});
 
@@ -140,7 +140,7 @@ function Page({ page, account_id, contract_id }) {
               props={{
                 text: 'Create new contract',
                 href: linkHref({
-                  widgetSrc: 'denbite.testnet/widget/MysteryBox.Manage',
+                  widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
                   params: {
                     contract_id: contract_id,
                     page: 'DeployContract',
@@ -240,7 +240,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
               props={{
                 text: 'Add first NEAR reward',
                 href: linkHref({
-                  widgetSrc: 'denbite.testnet/widget/MysteryBox.Manage',
+                  widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
                   params: {
                     contract_id,
                     page: 'AddNearReward',
@@ -298,7 +298,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
               props={{
                 text: 'Mint first Mystery Box',
                 href: linkHref({
-                  widgetSrc: 'denbite.testnet/widget/MysteryBox.Manage',
+                  widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
                   params: {
                     contract_id,
                     page: 'MintBox',

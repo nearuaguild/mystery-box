@@ -1,4 +1,4 @@
-const widget_owner_id = "denbite.testnet";
+const widget_owner_id = "untidy-scarecrow.testnet";
 
 const font = fetch(
   "https://fonts.googleapis.com/css2?family=Kodchasan:wght@700&display=swap"
