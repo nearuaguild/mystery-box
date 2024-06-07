@@ -6,6 +6,7 @@ use near_sdk::{env, require, AccountId};
 use std::str::FromStr;
 
 use super::enums::{BoxRarity, Network};
+use super::quest::Quest;
 use super::Contract;
 
 fn get_random_number(shift_amount: usize) -> u64 {
@@ -38,26 +39,7 @@ pub(crate) fn get_issuer_iah_contract() -> AccountId {
     }
 }
 
-impl Contract {
-    pub(crate) fn internal_add_near_pool(
-        &mut self,
-        rarity: BoxRarity,
-        amount: u128,
-        capacity: Capacity,
-    ) {
-        let pool_id = self.next_pool_id.clone();
-
-        self.next_pool_id += 1;
-
-        let pool = Pool::create_near_pool(pool_id, rarity, amount, capacity);
-
-        self.pools.insert(&pool.id, &pool);
-
-        let mut pool_ids = self.pool_ids_by_rarity.get(&rarity).unwrap_or_default();
-        pool_ids.insert(pool_id.clone());
-        self.pool_ids_by_rarity.insert(&rarity, &pool_ids);
-    }
-
+impl Quest {
     pub(crate) fn internal_add_nft_pool(
         &mut self,
         rarity: BoxRarity,
@@ -97,30 +79,6 @@ impl Contract {
         self.pool_ids_by_rarity.insert(&rarity, &pool_ids);
 
         self.nft_pool_by_key.insert(&key, &pool.id);
-    }
-
-    pub(crate) fn internal_mint(&mut self, owner_id: AccountId, rarity: BoxRarity) -> BoxData {
-        let box_id = self.next_box_id.clone();
-
-        self.next_box_id += 1;
-
-        let box_data = BoxData::new(box_id, rarity, owner_id);
-
-        self.boxes.insert(&box_data.id, &box_data);
-
-        let mut boxes_per_owner = self
-            .boxes_per_owner
-            .get(&box_data.owner_id)
-            .unwrap_or_default();
-
-        // should never panic
-        require!(boxes_per_owner.insert(box_data.id));
-
-        self.boxes_per_owner
-            .insert(&box_data.owner_id, &boxes_per_owner);
-        self.users.insert(&box_data.owner_id);
-
-        box_data
     }
 
     pub(crate) fn internal_claim(&mut self, box_id: BoxId) -> PoolId {
@@ -219,12 +177,5 @@ impl Contract {
             pool.put_reward_to_pool(reward);
             self.pools.insert(&pool.id, &pool);
         }
-    }
-
-    pub(crate) fn assert_only_owner(&self) {
-        require!(
-            env::predecessor_account_id() == self.owner_id,
-            "ERR_FORBIDDEN"
-        );
     }
 }

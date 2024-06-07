@@ -7,53 +7,8 @@ use near_sdk::serde_json::{self, Value};
 
 const MINIMAL_NEAR_REWARD: u128 = ONE_NEAR / 10; // 0.1N
 
-impl Contract {
+impl Quest {
 
-    // pub fn set_probability(&mut self, title: &String, rarity: BoxRarity, probability: Probability) {
-    //     let mut quest = self.get_quest_by_title(&title);
-
-    //     self.assert_only_owner();
-
-    //     probability.assert_valid();
-
-    //     quest.probability_by_rarity.insert(&rarity, &probability);
-    // }
-
-    // pub fn set_owner(&mut self, title: &String, new_owner_id: AccountId) {
-    //     let mut quest = self.get_quest_by_title(&title);
-
-    //     // only owner can set another owner
-    //     self.assert_only_owner();
-
-    //     quest.owner_id = new_owner_id;
-    // }
-
-    // pub fn trust_nft_contract(&mut self, title: &String, contract_id: AccountId) {
-    //     let mut quest = self.get_quest_by_title(&title);
-
-    //     self.assert_only_owner();
-
-    //     require!(
-    //         quest.trusted_nft_contracts.insert(&contract_id),
-    //         "Provided contract is already in the set"
-    //     );
-    // }
-
-    // pub fn untrust_nft_contract(&mut self, title: &String, contract_id: AccountId) {
-    //     let mut quest = self.get_quest_by_title(&title);
-        
-    //     self.assert_only_owner();
-
-    //     require!(
-    //         quest.trusted_nft_contracts.remove(&contract_id),
-    //         "Provided contract wasn't trusted before"
-    //     );
-    // }
-
-    //#[payable]
-    pub fn add_near_reward(&mut self, quest: Quest, rarity: BoxRarity, amount: U128, capacity: U64) {
-        self.internal_add_near_pool(rarity, amount.into(), capacity.into());
-    }
 
     // #[payable]
     // pub fn mint_many(&mut self, rarity: BoxRarity, accounts: Vec<AccountId>) -> Vec<BoxId> {
