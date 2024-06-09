@@ -62,7 +62,7 @@ impl Contract {
 
         let storage_used_before = env::storage_usage();
 
-        let mut quest = self.quests.get(&quest_id).unwrap();
+        let mut quest = self.quests.get(&quest_id).expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
 
         quest.add_near_reward(rarity, amount, capacity);
 
@@ -88,25 +88,25 @@ impl Contract {
     }
 
     pub fn set_probability(&mut self, quest_id: QuestId, rarity: BoxRarity, probability: Probability) {
-        let mut quest = self.quests.get(&quest_id).unwrap();
+        let mut quest = self.quests.get(&quest_id).expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
 
         quest.set_probability(rarity, probability);
     }
 
     pub fn set_owner(&mut self, quest_id: QuestId, new_owner_id: AccountId) {
-        let mut quest = self.quests.get(&quest_id).unwrap();
+        let mut quest = self.quests.get(&quest_id).expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
 
         quest.set_owner(new_owner_id);
     }
 
     pub fn trust_nft_contract(&mut self, quest_id: QuestId, contract_id: AccountId) {
-        let mut quest = self.quests.get(&quest_id).unwrap();
+        let mut quest = self.quests.get(&quest_id).expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
 
         quest.trust_nft_contract(contract_id);
     }
 
     pub fn untrust_nft_contract(&mut self, quest_id: QuestId, contract_id: AccountId) {
-        let mut quest = self.quests.get(&quest_id).unwrap();
+        let mut quest = self.quests.get(&quest_id).expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
         
         quest.untrust_nft_contract(contract_id);
     }
@@ -114,7 +114,7 @@ impl Contract {
     #[payable]
     pub fn mint_many(&mut self, quest_id: QuestId, rarity: BoxRarity, accounts: Vec<AccountId>) -> Vec<BoxId> {
         require!(accounts.len() != 0, "accounts can't be empty");
-        let mut quest = self.quests.get(&quest_id).unwrap();
+        let mut quest = self.quests.get(&quest_id).expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
 
         let storage_used_before = env::storage_usage();
 
@@ -142,7 +142,7 @@ impl Contract {
 
     #[payable]
     pub fn mint(&mut self, quest_id: QuestId, account_id: AccountId, rarity: BoxRarity) -> BoxId {
-        let mut quest = self.quests.get(&quest_id).unwrap();
+        let mut quest = self.quests.get(&quest_id).expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
         
         let storage_used_before = env::storage_usage();
 
@@ -169,14 +169,14 @@ impl Contract {
 
     #[payable]
     pub fn delete_boxes(&mut self, quest_id: QuestId, ids: Vec<BoxId>) {
-        let mut quest = self.quests.get(&quest_id).unwrap();
+        let mut quest = self.quests.get(&quest_id).expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
 
         quest.delete_boxes(ids);
     }
 
     #[payable]
     pub fn claim(&mut self, quest_id: QuestId, box_id: BoxId) -> Promise {
-        let mut quest = self.quests.get(&quest_id).unwrap();
+        let mut quest = self.quests.get(&quest_id).expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
 
         return quest.claim(box_id);
     }
@@ -190,7 +190,7 @@ impl Contract {
             token_id: TokenId,
             msg: String,
         ) -> PromiseOrValue<bool> {
-        let mut quest = self.quests.get(&quest_id).unwrap();
+        let mut quest = self.quests.get(&quest_id).expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
 
         let storage_used_before = env::storage_usage();
         let result = quest.nft_on_transfer(sender_id, previous_owner_id, token_id, msg);

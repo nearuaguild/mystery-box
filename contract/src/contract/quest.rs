@@ -186,7 +186,7 @@ impl Quest {
 
         let pool_id = self.internal_claim(box_id);
 
-        create_withdraw_box_reward_promise_with_verification(&account_id, &box_id, &pool_id)
+        create_withdraw_box_reward_promise_with_verification(&account_id, self.id, &box_id, &pool_id)
     }
 
     pub fn nft_on_transfer(

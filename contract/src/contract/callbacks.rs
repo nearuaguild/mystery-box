@@ -1,10 +1,11 @@
 use near_sdk::{env, log, near_bindgen, require, serde_json, AccountId, Gas, Promise, PromiseOrValue, PromiseResult};
 
-use super::{enums::{BoxRarity, BoxStatus}, internal, json::JsonReward, types::{BoxId, PoolId, Reward}};
+use super::{enums::{BoxRarity, BoxStatus}, internal, json::JsonReward, types::{BoxId, PoolId, QuestId, Reward}};
 use crate::contract::{Contract, ContractExt};
 
 pub(crate) fn create_withdraw_box_reward_promise_with_verification(
     account_id: &AccountId,
+    quest_id: QuestId,
     box_id: &BoxId,
     pool_id: &PoolId,
 ) -> Promise {
@@ -23,6 +24,7 @@ pub(crate) fn create_withdraw_box_reward_promise_with_verification(
     let on_iah_verification_callback_promise = Contract::ext(env::current_account_id())
         .with_static_gas(Gas::ONE_TERA * 10)
         .check_iah_verification_and_claim_callback(
+            quest_id,
             account_id.to_owned(),
             box_id.to_owned(),
             pool_id.to_owned(),
@@ -33,24 +35,27 @@ pub(crate) fn create_withdraw_box_reward_promise_with_verification(
 
 pub(crate) fn create_withdraw_box_reward_promise(
     receiver_id: &AccountId,
+    quest_id: QuestId,
     box_id: &BoxId,
     pool_id: &PoolId,
     reward: &Reward,
 ) -> Promise {
     let transfer_promise = create_transfer_reward_promise(receiver_id, reward);
     let on_transfer_promise =
-        create_transfer_reward_callback_promise(receiver_id, box_id, pool_id, reward);
+        create_transfer_reward_callback_promise(receiver_id, quest_id, box_id, pool_id, reward);
 
     transfer_promise.then(on_transfer_promise)
 }
 
 fn create_transfer_reward_callback_promise(
     account_id: &AccountId,
+    quest_id: QuestId,
     box_id: &BoxId,
     pool_id: &PoolId,
     reward: &Reward,
 ) -> Promise {
     Contract::ext(env::current_account_id()).transfer_reward_callback(
+        quest_id,
         account_id.to_owned(),
         box_id.to_owned(),
         pool_id.to_owned(),
@@ -83,6 +88,7 @@ impl Contract {
     #[private]
     pub fn check_iah_verification_and_claim_callback(
         &mut self,
+        quest_id: QuestId,
         receiver_id: AccountId,
         box_id: BoxId,
         pool_id: PoolId,
@@ -130,13 +136,17 @@ impl Contract {
             }
         };
 
+        let mut quest = self.quests.get(&quest_id).expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
+
         if !is_verified {
-            self.internal_undo_claim(box_id, pool_id);
+            
+
+            quest.internal_undo_claim(box_id, pool_id);
 
             return PromiseOrValue::Value(None);
         };
 
-        let box_data = self.boxes.get(&box_id).expect("ERR_BOX_NOT_FOUND");
+        let box_data = quest.boxes.get(&box_id).expect("ERR_BOX_NOT_FOUND");
 
         let reward = match box_data.status {
             BoxStatus::NonClaimed => unreachable!(),
@@ -149,6 +159,7 @@ impl Contract {
             }
             Option::Some(reward) => PromiseOrValue::Promise(create_withdraw_box_reward_promise(
                 &receiver_id,
+                quest_id,
                 &box_id,
                 &pool_id,
                 &reward,
@@ -159,6 +170,7 @@ impl Contract {
     #[private]
     pub fn transfer_reward_callback(
         &mut self,
+        quest_id: QuestId,
         account_id: AccountId,
         box_id: BoxId,
         pool_id: PoolId,
@@ -169,6 +181,8 @@ impl Contract {
 
         let transfer_result = env::promise_result(0);
 
+        let mut quest = self.quests.get(&quest_id).expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
+
         match transfer_result {
             PromiseResult::Successful(_) => {
                 log!(
@@ -177,7 +191,7 @@ impl Contract {
                     account_id
                 );
 
-                let box_data = self.boxes.get(&box_id).unwrap();
+                let box_data = quest.boxes.get(&box_id).unwrap();
 
                 Some((box_data.id, box_data.rarity, reward.into()))
             }
@@ -188,7 +202,7 @@ impl Contract {
                     account_id
                 );
 
-                self.internal_undo_claim(box_id, pool_id);
+                quest.internal_undo_claim(box_id, pool_id);
 
                 None
             }
