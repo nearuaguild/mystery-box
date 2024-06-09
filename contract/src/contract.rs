@@ -64,7 +64,7 @@ impl Contract {
 
         let mut quest = self.quests.get(&quest_id).expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
 
-        quest.add_near_reward(rarity, amount, capacity);
+        quest.add_near_reward(rarity, amount, capacity.into());
 
         self.quests.insert(&quest_id, &quest);
 

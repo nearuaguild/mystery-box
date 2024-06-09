@@ -11,9 +11,11 @@ impl Quest {
     }
 
     pub fn supply_for_owner(&self, account_id: AccountId) -> U128 {
-        let boxes_per_owner_set = self.boxes_per_owner.get(&account_id).unwrap_or_default();
+        return U128(0);
+        //TODO. Fix boxes per owner
+        // let boxes_per_owner_set = self.boxes_per_owner.get(&account_id).unwrap_or_default();
 
-        U128(boxes_per_owner_set.len() as u128)
+        // U128(boxes_per_owner_set.len() as u128)
     }
 
     pub fn boxes_for_owner(
@@ -25,14 +27,17 @@ impl Quest {
 
         pagination.assert_valid();
 
-        self.boxes_per_owner
-            .get(&account_id)
-            .unwrap_or_default()
-            .iter()
-            .take(pagination.take())
-            .skip(pagination.skip())
-            .map(|box_id| self.boxes.get(box_id).unwrap().into())
-            .collect()
+        //TODO. Fix boxes per owner
+        // self.boxes_per_owner
+        //     .get(&account_id)
+        //     .unwrap_or_default()
+        //     .iter()
+        //     .take(pagination.take())
+        //     .skip(pagination.skip())
+        //     .map(|box_id| self.boxes.get(box_id).unwrap().into())
+        //     .collect()
+
+        return Vec::new();
     }
 
     pub fn available_rewards(

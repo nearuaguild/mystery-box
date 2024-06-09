@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use near_sdk::collections::{LookupMap, UnorderedSet};
-use near_sdk::json_types::{U128, U64};
+use near_sdk::json_types::U128;
 use near_sdk::{
     assert_one_yocto, env, require, AccountId, PanicOnDefault, Promise, PromiseOrValue
 };
@@ -75,7 +75,7 @@ impl Quest {
         );
     }
 
-    pub fn add_near_reward(&mut self, rarity: BoxRarity, amount: U128, capacity: U64) {
+    pub fn add_near_reward(&mut self, rarity: BoxRarity, amount: U128, capacity: u64) {
         self.assert_only_owner();
 
         let pool_id = self.next_pool_id.clone();
