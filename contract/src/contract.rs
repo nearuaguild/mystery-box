@@ -6,7 +6,7 @@ use near_sdk::json_types::{U128, U64};
 use near_sdk::{collections::LookupMap, near_bindgen, AccountId, PanicOnDefault};
 
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use types::{BoxId, Probability, QuestId, QuestTitle, TokenId};
+use types::{BoxId, Probability, QuestId, TokenId};
 
 use crate::contract::quest::Quest;
 
@@ -20,7 +20,6 @@ pub mod pools;
 pub mod types;
 pub mod enums;
 
-pub mod quest_contract_methods;
 
 const MINIMAL_NEAR_REWARD: u128 = ONE_NEAR / 10; // 0.1N
 
@@ -53,8 +52,6 @@ impl Contract {
 
     #[payable]
     pub fn add_near_reward(&mut self, quest_id: QuestId, rarity: BoxRarity, amount: U128, capacity: U64) {
-        self.assert_only_owner();
-
         assert!(
             MINIMAL_NEAR_REWARD <= amount.into(),
             "The minimal reward in Near tokens is {} yocto",
@@ -109,32 +106,19 @@ impl Contract {
     }
 
     pub fn untrust_nft_contract(&mut self, quest_id: QuestId, contract_id: AccountId) {
-        self.assert_only_owner();
-        
         let mut quest = self.quests.get(&quest_id).unwrap();
         
-        require!(
-            quest.trusted_nft_contracts.remove(&contract_id),
-            "Provided contract wasn't trusted before"
-        );
+        quest.untrust_nft_contract(contract_id);
     }
 
     #[payable]
     pub fn mint_many(&mut self, quest_id: QuestId, rarity: BoxRarity, accounts: Vec<AccountId>) -> Vec<BoxId> {
-        self.assert_only_owner();
-
         require!(accounts.len() != 0, "accounts can't be empty");
+        let mut quest = self.quests.get(&quest_id).unwrap();
 
         let storage_used_before = env::storage_usage();
 
-        let box_ids = accounts
-            .iter()
-            .map(|account_id| {
-                let box_data = self.internal_mint(account_id.clone(), rarity.clone());
-
-                box_data.id
-            })
-            .collect::<Vec<BoxId>>();
+        let box_ids = quest.mint_many(rarity, accounts);
 
         let storage_used_after = env::storage_usage();
 
@@ -158,24 +142,74 @@ impl Contract {
 
     #[payable]
     pub fn mint(&mut self, quest_id: QuestId, account_id: AccountId, rarity: BoxRarity) -> BoxId {
-        return 0;
+        let mut quest = self.quests.get(&quest_id).unwrap();
+        
+        let storage_used_before = env::storage_usage();
+
+        let box_data_id = quest.mint(account_id, rarity);
+
+        let storage_used_after = env::storage_usage();
+
+        let storage_deposit =
+            env::storage_byte_cost() * (storage_used_after - storage_used_before) as u128;
+
+        assert!(
+            env::attached_deposit() >= storage_deposit,
+            "Deposited amount must be bigger than {} yocto",
+            storage_deposit
+        );
+
+        let refund = env::attached_deposit() - storage_deposit;
+        if refund > 1 {
+            Promise::new(env::predecessor_account_id()).transfer(refund);
+        }
+
+        return box_data_id
     }
 
     #[payable]
     pub fn delete_boxes(&mut self, quest_id: QuestId, ids: Vec<BoxId>) {
+        let mut quest = self.quests.get(&quest_id).unwrap();
+
+        quest.delete_boxes(ids);
     }
 
     #[payable]
     pub fn claim(&mut self, quest_id: QuestId, box_id: BoxId) -> Promise {
+        let mut quest = self.quests.get(&quest_id).unwrap();
+
+        return quest.claim(box_id);
     }
 
+    #[payable]
     pub fn nft_on_transfer(
             &mut self,
+            quest_id: QuestId,
             #[allow(unused_variables)] sender_id: AccountId,
             previous_owner_id: AccountId,
             token_id: TokenId,
             msg: String,
         ) -> PromiseOrValue<bool> {
+        let mut quest = self.quests.get(&quest_id).unwrap();
+
+        let storage_used_before = env::storage_usage();
+        let result = quest.nft_on_transfer(sender_id, previous_owner_id, token_id, msg);
+        let storage_used_after = env::storage_usage();
+
+        let storage_deposit = env::storage_byte_cost() * (storage_used_after - storage_used_before) as u128;
+
+        assert!(
+            env::attached_deposit() >= storage_deposit,
+            "Deposited amount must be bigger than {} yocto",
+            storage_deposit
+        );
+
+        let refund = env::attached_deposit() - storage_deposit;
+        if refund > 1 {
+            Promise::new(env::predecessor_account_id()).transfer(refund);
+        }
+
+        return result;
     }
 
     // pub fn contract_byte_cost(&self) -> U128 {

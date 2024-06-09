@@ -3,17 +3,21 @@ use std::collections::HashSet;
 use near_sdk::collections::{LookupMap, UnorderedSet};
 use near_sdk::json_types::{U128, U64};
 use near_sdk::{
-    env, require, AccountId, PanicOnDefault
+    assert_one_yocto, env, require, AccountId, PanicOnDefault, Promise, PromiseOrValue
 };
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 
+use crate::contract::callbacks::create_withdraw_box_reward_promise_with_verification;
+use crate::contract::enums::BoxStatus;
 use crate::contract::trusted_contracts::get_trusted_nft_contracts;
 
 use crate::contract::types::{BoxData, BoxId, PoolId, Probability};
 
+use near_sdk::serde_json::{self, Value};
+
 use super::enums::{BoxRarity, StorageKey};
 use super::pools::Pool;
-use super::types::QuestId;
+use super::types::{QuestId, TokenId};
 
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct Quest {
@@ -71,6 +75,22 @@ impl Quest {
         );
     }
 
+    pub fn add_near_reward(&mut self, rarity: BoxRarity, amount: U128, capacity: U64) {
+        self.assert_only_owner();
+
+        let pool_id = self.next_pool_id.clone();
+
+        self.next_pool_id += 1;
+
+        let pool = Pool::create_near_pool(pool_id, rarity, amount.into(), capacity);
+
+        self.pools.insert(&pool.id, &pool);
+
+        let mut pool_ids = self.pool_ids_by_rarity.get(&rarity).unwrap_or_default();
+        pool_ids.insert(pool_id.clone());
+        self.pool_ids_by_rarity.insert(&rarity, &pool_ids);
+    }
+
     pub fn set_probability(&mut self, rarity: BoxRarity, probability: Probability) {
         probability.assert_valid();
 
@@ -95,21 +115,108 @@ impl Quest {
         );
     }
 
-    pub fn add_near_reward(&mut self, rarity: BoxRarity, amount: U128, capacity: U64) {
-        let pool_id = self.next_pool_id.clone();
-
-        self.next_pool_id += 1;
-
-        let pool = Pool::create_near_pool(pool_id, rarity, amount.into(), capacity);
-
-        self.pools.insert(&pool.id, &pool);
-
-        let mut pool_ids = self.pool_ids_by_rarity.get(&rarity).unwrap_or_default();
-        pool_ids.insert(pool_id.clone());
-        self.pool_ids_by_rarity.insert(&rarity, &pool_ids);
+    pub fn untrust_nft_contract(&mut self, contract_id: AccountId) {
+        self.assert_only_owner();
+        
+        require!(
+            self.trusted_nft_contracts.remove(&contract_id),
+            "Provided contract wasn't trusted before"
+        );
     }
 
-    pub fn internal_mint(&mut self, owner_id: AccountId, rarity: BoxRarity) -> BoxData {
+    pub fn mint_many(&mut self, rarity: BoxRarity, accounts: Vec<AccountId>) -> Vec<BoxId> {
+        self.assert_only_owner();
+
+        let box_ids = accounts
+            .iter()
+            .map(|account_id| {
+                let box_data = self.internal_mint(account_id.clone(), rarity.clone());
+
+                box_data.id
+            })
+            .collect::<Vec<BoxId>>();
+
+        return box_ids
+    }
+
+    pub fn mint(&mut self, account_id: AccountId, rarity: BoxRarity) -> BoxId {
+        self.assert_only_owner();
+
+        let box_data = self.internal_mint(account_id.clone(), rarity.clone());
+
+        return box_data.id
+    }
+
+    pub fn delete_boxes(&mut self, ids: Vec<BoxId>) {
+        self.assert_only_owner();
+
+        ids.iter().for_each(|box_data| {
+            let box_data = self.boxes.remove(box_data).unwrap();
+
+            require!(
+                box_data.status == BoxStatus::NonClaimed,
+                format!("Box {} already claimed", box_data.id)
+            );
+
+            //TODO. Handle boxes_per_owner on higher level
+            // let mut boxes_per_owner = self
+            //     .boxes_per_owner
+            //     .get(&box_data.owner_id)
+            //     .unwrap_or_default();
+
+            // // should never panic
+            // require!(boxes_per_owner.remove(&box_data.id));
+
+            // self.boxes_per_owner
+            //     .insert(&box_data.owner_id, &boxes_per_owner);
+        });
+    }
+
+    pub fn claim(&mut self, box_id: BoxId) -> Promise {
+        assert_one_yocto();
+
+        require!(self.boxes.contains_key(&box_id), "ERR_BOX_NOT_FOUND");
+
+        let account_id = env::predecessor_account_id();
+
+        //TODO. Handle boxes_per_owner
+        // let boxes_for_owner = self.boxes_per_owner.get(&account_id).unwrap_or_default();
+
+        // require!(boxes_for_owner.contains(&box_id), "ERR_ONLY_OWNER_CAN_BURN");
+
+        let pool_id = self.internal_claim(box_id);
+
+        create_withdraw_box_reward_promise_with_verification(&account_id, &box_id, &pool_id)
+    }
+
+    pub fn nft_on_transfer(
+        &mut self,
+        #[allow(unused_variables)] sender_id: AccountId,
+        previous_owner_id: AccountId,
+        token_id: TokenId,
+        msg: String,
+    ) -> PromiseOrValue<bool> {
+        let nft_account_id = env::predecessor_account_id();
+
+        // we're required to ensure that the predecessor account is whitelisted, since the function is public
+        require!(
+            self.trusted_nft_contracts.contains(&nft_account_id),
+            "ERR_NFT_CONTRACT_NOT_TRUSTED",
+        );
+
+        require!(self.owner_id == previous_owner_id, "ERR_FORBIDDEN");
+
+        let rarity =
+            serde_json::from_value::<BoxRarity>(Value::String(msg)).expect("ERR_PARSE_MSG");
+
+        // TODO: add storage management
+        self.internal_add_nft_pool(rarity, nft_account_id, token_id);
+
+        // stands for OK response
+        PromiseOrValue::Value(false)
+    }
+
+    fn internal_mint(&mut self, owner_id: AccountId, rarity: BoxRarity) -> BoxData {
         let box_id = self.next_box_id.clone();
 
         self.next_box_id += 1;
