@@ -57,5 +57,6 @@ pub enum StorageKey {
     ProbabilityByRarity,
     Users,
     Quests,
-    QuestsForOwner,
+    QuestsPerOwner,
+    QuestBoxesPerOwner,
 }

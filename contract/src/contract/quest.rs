@@ -11,7 +11,7 @@ use crate::contract::callbacks::create_withdraw_box_reward_promise_with_verifica
 use crate::contract::enums::BoxStatus;
 use crate::contract::trusted_contracts::get_trusted_nft_contracts;
 
-use crate::contract::types::{BoxData, BoxId, PoolId, Probability};
+use crate::contract::types::{QuestBoxData, BoxId, PoolId, Probability};
 
 use near_sdk::serde_json::{self, Value};
 
@@ -29,7 +29,7 @@ pub struct Quest {
     pub nft_pool_by_key: LookupMap<String, PoolId>,
     pub pool_ids_by_rarity: LookupMap<BoxRarity, HashSet<PoolId>>,
     pub next_box_id: BoxId,
-    pub boxes: LookupMap<BoxId, BoxData>,
+    pub boxes: LookupMap<BoxId, QuestBoxData>,
     //pub boxes_per_owner: LookupMap<AccountId, HashSet<BoxId>>,
     pub trusted_nft_contracts: UnorderedSet<AccountId>,
     pub probability_by_rarity: LookupMap<BoxRarity, Probability>,
@@ -132,43 +132,31 @@ impl Quest {
             .map(|account_id| {
                 let box_data = self.internal_mint(account_id.clone(), rarity.clone());
 
-                box_data.id
+                box_data.box_id
             })
             .collect::<Vec<BoxId>>();
 
         return box_ids
     }
 
-    pub fn mint(&mut self, account_id: AccountId, rarity: BoxRarity) -> BoxId {
+    pub fn mint(&mut self, account_id: AccountId, rarity: BoxRarity) -> QuestBoxData {
         self.assert_only_owner();
 
         let box_data = self.internal_mint(account_id.clone(), rarity.clone());
 
-        return box_data.id
+        return box_data
     }
 
-    pub fn delete_boxes(&mut self, ids: Vec<BoxId>) {
+    pub fn delete_boxes(&mut self, ids: &Vec<BoxId>) {
         self.assert_only_owner();
 
         ids.iter().for_each(|box_data| {
             let box_data = self.boxes.remove(box_data).unwrap();
 
             require!(
-                box_data.status == BoxStatus::NonClaimed,
-                format!("Box {} already claimed", box_data.id)
+                box_data.box_status == BoxStatus::NonClaimed,
+                format!("Box {} already claimed", box_data.box_id)
             );
-
-            //TODO. Handle boxes_per_owner on higher level
-            // let mut boxes_per_owner = self
-            //     .boxes_per_owner
-            //     .get(&box_data.owner_id)
-            //     .unwrap_or_default();
-
-            // // should never panic
-            // require!(boxes_per_owner.remove(&box_data.id));
-
-            // self.boxes_per_owner
-            //     .insert(&box_data.owner_id, &boxes_per_owner);
         });
     }
 
@@ -178,11 +166,6 @@ impl Quest {
         require!(self.boxes.contains_key(&box_id), "ERR_BOX_NOT_FOUND");
 
         let account_id = env::predecessor_account_id();
-
-        //TODO. Handle boxes_per_owner
-        // let boxes_for_owner = self.boxes_per_owner.get(&account_id).unwrap_or_default();
-
-        // require!(boxes_for_owner.contains(&box_id), "ERR_ONLY_OWNER_CAN_BURN");
 
         let pool_id = self.internal_claim(box_id);
 
@@ -209,33 +192,21 @@ impl Quest {
         let rarity =
             serde_json::from_value::<BoxRarity>(Value::String(msg)).expect("ERR_PARSE_MSG");
 
-        // TODO: add storage management
         self.internal_add_nft_pool(rarity, nft_account_id, token_id);
 
         // stands for OK response
         PromiseOrValue::Value(false)
     }
 
-    fn internal_mint(&mut self, owner_id: AccountId, rarity: BoxRarity) -> BoxData {
+    fn internal_mint(&mut self, owner_id: AccountId, rarity: BoxRarity) -> QuestBoxData {
         let box_id = self.next_box_id.clone();
 
         self.next_box_id += 1;
 
-        let box_data = BoxData::new(box_id, rarity, owner_id);
+        let box_data = QuestBoxData::new(self.id, box_id, rarity, owner_id);
 
-        self.boxes.insert(&box_data.id, &box_data);
+        self.boxes.insert(&box_data.box_id, &box_data);
 
-        //TODO. Handle boxes_per_owner on higher level
-        // let mut boxes_per_owner = self
-        //     .boxes_per_owner
-        //     .get(&box_data.owner_id)
-        //     .unwrap_or_default();
-
-        // // should never panic
-        // require!(boxes_per_owner.insert(box_data.id));
-
-        // self.boxes_per_owner
-        //     .insert(&box_data.owner_id, &boxes_per_owner);
         self.users.insert(&box_data.owner_id);
 
         box_data

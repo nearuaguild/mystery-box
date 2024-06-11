@@ -148,14 +148,14 @@ impl Contract {
 
         let box_data = quest.boxes.get(&box_id).expect("ERR_BOX_NOT_FOUND");
 
-        let reward = match box_data.status {
+        let reward = match box_data.box_status {
             BoxStatus::NonClaimed => unreachable!(),
             BoxStatus::Claimed { reward } => reward,
         };
 
         match reward {
             Option::None => {
-                PromiseOrValue::Value(Some((box_data.id, box_data.rarity, reward.into())))
+                PromiseOrValue::Value(Some((box_data.box_id, box_data.box_rarity, reward.into())))
             }
             Option::Some(reward) => PromiseOrValue::Promise(create_withdraw_box_reward_promise(
                 &receiver_id,
@@ -193,7 +193,7 @@ impl Contract {
 
                 let box_data = quest.boxes.get(&box_id).unwrap();
 
-                Some((box_data.id, box_data.rarity, reward.into()))
+                Some((box_data.box_id, box_data.box_rarity, reward.into()))
             }
             _ => {
                 log!(

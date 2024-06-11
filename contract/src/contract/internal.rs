@@ -1,13 +1,12 @@
 use crate::contract::enums::BoxStatus;
 use crate::contract::pools::Pool;
-use crate::contract::types::{BoxData, BoxId, Capacity, PoolId, Probability, TokenId};
+use crate::contract::types::{BoxId, Capacity, PoolId, Probability, TokenId};
 use near_sdk::{env, require, AccountId};
 
 use std::str::FromStr;
 
 use super::enums::{BoxRarity, Network};
 use super::quest::Quest;
-use super::Contract;
 
 fn get_random_number(shift_amount: usize) -> u64 {
     let mut seed = env::random_seed();
@@ -85,14 +84,14 @@ impl Quest {
         let mut box_data = self.boxes.get(&box_id).expect("ERR_BOX_NOT_FOUND");
 
         require!(
-            box_data.status == BoxStatus::NonClaimed,
+            box_data.box_status == BoxStatus::NonClaimed,
             "ERR_BOX_ALREADY_CLAIMED"
         );
 
         // take reward of some rarity
         let available_pools = self
             .pool_ids_by_rarity
-            .get(&box_data.rarity)
+            .get(&box_data.box_rarity)
             .unwrap_or_default()
             .iter()
             .filter_map(|pool_id| {
@@ -132,7 +131,7 @@ impl Quest {
 
         let probability = self
             .probability_by_rarity
-            .get(&box_data.rarity)
+            .get(&box_data.box_rarity)
             .unwrap_or(Probability::ONE);
 
         let threshold = probability.calculate_threshold();
@@ -145,18 +144,18 @@ impl Quest {
             true => {
                 let reward = random_pool.take_reward_from_pool();
 
-                box_data.status = BoxStatus::Claimed {
+                box_data.box_status = BoxStatus::Claimed {
                     reward: Some(reward),
                 };
 
                 self.pools.insert(&random_pool.id, &random_pool);
             }
             false => {
-                box_data.status = BoxStatus::Claimed { reward: None };
+                box_data.box_status = BoxStatus::Claimed { reward: None };
             }
         }
 
-        self.boxes.insert(&box_data.id, &box_data);
+        self.boxes.insert(&box_data.box_id, &box_data);
 
         random_pool.id
     }
@@ -165,13 +164,13 @@ impl Quest {
         let mut box_data = self.boxes.get(&box_id).expect("ERR_BOX_NOT_FOUND");
         let mut pool = self.pools.get(&pool_id).expect("ERR_POOL_NOT_FOUND");
 
-        let reward_or_nothing = match box_data.status {
+        let reward_or_nothing = match box_data.box_status {
             BoxStatus::NonClaimed => unreachable!(),
             BoxStatus::Claimed { reward } => reward.to_owned(),
         };
 
-        box_data.status = BoxStatus::NonClaimed;
-        self.boxes.insert(&box_data.id, &box_data);
+        box_data.box_status = BoxStatus::NonClaimed;
+        self.boxes.insert(&box_data.box_id, &box_data);
 
         if let Some(reward) = reward_or_nothing {
             pool.put_reward_to_pool(reward);

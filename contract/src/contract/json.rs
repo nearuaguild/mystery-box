@@ -5,7 +5,7 @@ use near_sdk::{
     AccountId,
 };
 
-use super::{enums::{BoxRarity, BoxStatus}, types::{BoxData, BoxId, Capacity, Reward, TokenId}};
+use super::{enums::{BoxRarity, BoxStatus}, types::{BoxId, Capacity, QuestBoxData, QuestId, Reward, TokenId}};
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 #[serde(crate = "near_sdk::serde", tag = "kind", rename_all = "snake_case")]
@@ -82,19 +82,21 @@ impl Into<JsonBoxStatus> for BoxStatus {
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct JsonBox {
-    pub id: BoxId,
+    pub quest_id: QuestId,
+    pub box_id: BoxId,
     pub ipfs: String,
     pub rarity: BoxRarity,
     pub status: JsonBoxStatus,
 }
 
-impl Into<JsonBox> for &BoxData {
+impl Into<JsonBox> for &QuestBoxData {
     fn into(self) -> JsonBox {
         JsonBox {
-            id: self.id.clone(),
+            quest_id: self.quest_id.clone(),
+            box_id: self.box_id.clone(),
             ipfs: self.ipfs(),
-            rarity: self.rarity.clone(),
-            status: self.status.to_owned().into(),
+            rarity: self.box_rarity.clone(),
+            status: self.box_status.to_owned().into(),
         }
     }
 }

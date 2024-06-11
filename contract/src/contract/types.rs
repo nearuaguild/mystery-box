@@ -12,11 +12,13 @@ pub type BoxId = u128;
 
 pub type QuestTitle = String;
 
-#[derive(BorshDeserialize, BorshSerialize, Debug)]
-pub struct BoxData {
-    pub id: BoxId,
-    pub rarity: BoxRarity,
-    pub status: BoxStatus,
+
+#[derive(BorshDeserialize, BorshSerialize, Debug, Clone)]
+pub struct QuestBoxData {
+    pub box_id: BoxId,
+    pub box_rarity: BoxRarity,
+    pub box_status: BoxStatus,
+    pub quest_id: QuestId,
     pub owner_id: AccountId,
 }
 
@@ -52,28 +54,30 @@ impl BoxRarity {
     }
 }
 
-impl BoxData {
-    pub fn new(id: BoxId, rarity: BoxRarity, owner_id: AccountId) -> Self {
+impl QuestBoxData {
+    pub fn new(quest_id: QuestId, box_id: BoxId, rarity: BoxRarity, owner_id: AccountId) -> Self {
         Self {
-            id,
-            rarity,
+            quest_id,
+            box_id,
+            box_rarity: rarity,
             owner_id,
-            status: BoxStatus::NonClaimed,
+            box_status: BoxStatus::NonClaimed,
         }
     }
 
     pub fn ipfs(&self) -> String {
-        self.rarity.to_media_ipfs()
+        self.box_rarity.to_media_ipfs()
     }
 }
 
-impl From<BoxData> for JsonBox {
-    fn from(value: BoxData) -> Self {
+impl From<QuestBoxData> for JsonBox {
+    fn from(value: QuestBoxData) -> Self {
         Self {
-            id: value.id,
+            quest_id: value.quest_id,
+            box_id: value.box_id,
             ipfs: value.ipfs(),
-            rarity: value.rarity,
-            status: value.status.into(),
+            rarity: value.box_rarity,
+            status: value.box_status.into(),
         }
     }
 }

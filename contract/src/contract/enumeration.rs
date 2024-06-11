@@ -3,41 +3,11 @@ use near_sdk::json_types::U128;
 use near_sdk::AccountId;
 
 use super::enums::BoxRarity;
-use super::json::{JsonBox, JsonPoolRewards, Pagination};
+use super::json::{JsonPoolRewards, Pagination};
 
 impl Quest {
     pub fn total_supply(&self) -> U128 {
         U128(self.next_box_id - 1)
-    }
-
-    pub fn supply_for_owner(&self, account_id: AccountId) -> U128 {
-        return U128(0);
-        //TODO. Fix boxes per owner
-        // let boxes_per_owner_set = self.boxes_per_owner.get(&account_id).unwrap_or_default();
-
-        // U128(boxes_per_owner_set.len() as u128)
-    }
-
-    pub fn boxes_for_owner(
-        &self,
-        account_id: AccountId,
-        pagination: Option<Pagination>,
-    ) -> Vec<JsonBox> {
-        let pagination = pagination.unwrap_or_default();
-
-        pagination.assert_valid();
-
-        //TODO. Fix boxes per owner
-        // self.boxes_per_owner
-        //     .get(&account_id)
-        //     .unwrap_or_default()
-        //     .iter()
-        //     .take(pagination.take())
-        //     .skip(pagination.skip())
-        //     .map(|box_id| self.boxes.get(box_id).unwrap().into())
-        //     .collect()
-
-        return Vec::new();
     }
 
     pub fn available_rewards(

@@ -1,12 +1,13 @@
 use std::collections::HashSet;
 
 use enums::{BoxRarity, StorageKey};
+use json::Pagination;
 use near_sdk::{env, require, Promise, PromiseOrValue, ONE_NEAR};
 use near_sdk::json_types::{U128, U64};
 use near_sdk::{collections::LookupMap, near_bindgen, AccountId, PanicOnDefault};
 
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use types::{BoxId, Probability, QuestId, TokenId};
+use types::{BoxId, Probability, QuestBoxData, QuestId, TokenId};
 
 use crate::contract::quest::Quest;
 
@@ -27,7 +28,8 @@ const MINIMAL_NEAR_REWARD: u128 = ONE_NEAR / 10; // 0.1N
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct Contract {
     quests: LookupMap<QuestId, Quest>,
-    quests_for_owner: LookupMap<AccountId, HashSet<QuestId>>,
+    quests_per_owner: LookupMap<AccountId, HashSet<QuestId>>,
+    questboxes_per_owner: LookupMap<AccountId, Vec<QuestBoxData>>
 }
 
 #[near_bindgen]
@@ -36,18 +38,43 @@ impl Contract {
     pub fn new() -> Self {
         Self {
             quests: LookupMap::new(StorageKey::Quests),
-            quests_for_owner: LookupMap::new(StorageKey::QuestsForOwner),
+            quests_per_owner: LookupMap::new(StorageKey::QuestsPerOwner),
+            questboxes_per_owner: LookupMap::new(StorageKey::QuestBoxesPerOwner)
         }
     }
 
-    pub fn contracts_for_owner(&self, account_id: AccountId) -> Vec<Quest> {
-        self.quests_for_owner
+    pub fn quests_per_owner(&self, account_id: AccountId) -> Vec<Quest> {
+        return self.quests_per_owner
             .get(&account_id)
             .unwrap_or_default()
             .iter()
             .map(|quest_id| self.quests.get(quest_id))
             .flatten()
-            .collect()
+            .collect();
+    }
+
+    pub fn questboxes_supply_per_owner(&self, account_id: AccountId) -> u128 {
+        return self.questboxes_per_owner
+            .get(&account_id)
+            .unwrap_or(Vec::new())
+            .len() as u128;
+    }
+
+    pub fn questboxes_per_owner(
+        &self,
+        account_id: AccountId,
+        pagination: Option<Pagination>,
+    ) -> Vec<QuestBoxData> {
+        let pagination = pagination.unwrap_or_default();
+
+        return self.questboxes_per_owner
+            .get(&account_id)
+            .unwrap_or(Vec::new())
+            .iter()
+            .take(pagination.take())
+            .skip(pagination.skip())
+            .map(|quest_box| self.quests.get(&quest_box.quest_id).unwrap().boxes.get(&quest_box.box_id).unwrap().into())
+            .collect();
     }
 
     #[payable]
@@ -146,7 +173,8 @@ impl Contract {
         
         let storage_used_before = env::storage_usage();
 
-        let box_data_id = quest.mint(account_id, rarity);
+        let questbox_data = quest.mint(account_id, rarity);
+        self.mint_boxes_per_owner(&questbox_data);
 
         let storage_used_after = env::storage_usage();
 
@@ -164,18 +192,53 @@ impl Contract {
             Promise::new(env::predecessor_account_id()).transfer(refund);
         }
 
-        return box_data_id
+        return questbox_data.box_id
+    }
+
+    fn mint_boxes_per_owner(&mut self, questbox_data: &QuestBoxData) {
+        let mut boxes_per_owner = self
+            .questboxes_per_owner
+            .get(&questbox_data.owner_id)
+            .unwrap_or_default();
+
+        boxes_per_owner.push(questbox_data.clone());
+
+        self.questboxes_per_owner
+            .insert(&questbox_data.owner_id, &boxes_per_owner);
     }
 
     #[payable]
     pub fn delete_boxes(&mut self, quest_id: QuestId, ids: Vec<BoxId>) {
         let mut quest = self.quests.get(&quest_id).expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
 
-        quest.delete_boxes(ids);
+        let account_id = env::predecessor_account_id();
+
+        quest.delete_boxes(&ids);
+
+        let owners_questboxes = self.questboxes_per_owner.get(&account_id).unwrap();
+
+        let retained_questboxes = owners_questboxes
+            .iter()
+            .filter(|&quest_box| 
+                !(quest_box.quest_id == quest_id && ids.iter().any(|&id| id == quest_box.box_id)))
+            .cloned()
+            .collect();
+
+        self.questboxes_per_owner
+            .insert(&account_id, &retained_questboxes);
     }
 
     #[payable]
     pub fn claim(&mut self, quest_id: QuestId, box_id: BoxId) -> Promise {
+        let account_id = env::predecessor_account_id();
+
+        let questboxes_per_owner = self.questboxes_per_owner.get(&account_id).unwrap_or_default();
+
+        require!(questboxes_per_owner
+            .iter()
+            .find(|&quest_box| quest_box.quest_id == quest_id && quest_box.box_id == box_id)
+            .is_some(), "ERR_ONLY_OWNER_CAN_BURN");
+
         let mut quest = self.quests.get(&quest_id).expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
 
         return quest.claim(box_id);
@@ -211,120 +274,4 @@ impl Contract {
 
         return result;
     }
-
-    // pub fn contract_byte_cost(&self) -> U128 {
-    //     U128(self.internal_contract_byte_cost())
-    // }
-
-    // fn internal_contract_byte_cost(&self) -> Balance {
-    //     //let contract_bytes = CONTRACT.len() as u128;
-
-    //     //TODO: calculate contract size more precisely
-    //     let contract_bytes = 1024u128;
-    //     env::storage_byte_cost() * contract_bytes
-    // }
-
-    // fn internal_register_contract(
-    //     &mut self,
-    //     owner_id: AccountId,
-    //     contract_id: AccountId,
-    //     title: String,
-    // ) {
-    //     let metadata = Quest::new(&title, &owner_id);
-
-    //     require!(
-    //         self.contracts.insert(&contract_id, &metadata).is_none(),
-    //         "ERR_CONTRACT_ALREADY_EXIST"
-    //     );
-
-    //     let mut owner_contracts = self.contracts_for_owner.get(&owner_id).unwrap_or_default();
-    //     owner_contracts.insert(contract_id.clone());
-
-    //     self.contracts_for_owner.insert(&owner_id, &owner_contracts);
-    // }
-
-    // fn internal_remove_contract(&mut self, owner_id: AccountId, contract_id: AccountId) {
-    //     self.contracts.remove(&contract_id);
-
-    //     let mut owner_contracts = self.contracts_for_owner.get(&owner_id).unwrap_or_default();
-    //     owner_contracts.remove(&contract_id);
-
-    //     self.contracts_for_owner.insert(&owner_id, &owner_contracts);
-    // }
-
-    // #[payable]
-    // pub fn deploy_mystery_box_contract(&mut self, alias: String, title: String) -> Promise {
-    //     // Assert the sub-account is valid
-    //     let current_account_id = env::current_account_id().to_string();
-    //     let contract_id: AccountId = format!("{alias}.{current_account_id}").parse().unwrap();
-    //     require!(
-    //         env::is_valid_account_id(contract_id.as_bytes()),
-    //         "ERR_INVALID_SUBACCOUNT_ALIAS"
-    //     );
-
-    //     let owner_id = env::predecessor_account_id();
-
-    //     self.internal_register_contract(owner_id.clone(), contract_id.clone(), title);
-
-    //     let attached_deposit = env::attached_deposit();
-    //     let contract_deposit = self.internal_contract_byte_cost();
-
-    //     assert!(
-    //         attached_deposit >= contract_deposit,
-    //         "Deposited amount must be bigger than {contract_deposit} yocto, you attached {attached_deposit} yocto",
-    //     );
-
-    //     let args = serde_json::to_vec(&ContractNewArguments {
-    //         owner_id: owner_id.clone(),
-    //         default_trusted_nft_contracts: get_trusted_nft_contracts(),
-    //     })
-    //     .unwrap();
-    //     let deployment_promise = Promise::new(contract_id.clone())
-    //         .create_account()
-    //         .transfer(attached_deposit)
-    //         .deploy_contract(CONTRACT.to_vec())
-    //         .function_call("new".to_owned(), args, 0, Gas::ONE_TERA * 5);
-
-    //     let callback_promise = Contract::ext(env::current_account_id())
-    //         .deploy_mystery_box_contract_callback(
-    //             contract_id.to_owned(),
-    //             attached_deposit.to_owned(),
-    //             owner_id.to_owned(),
-    //         );
-
-    //     deployment_promise.then(callback_promise)
-    // }
-
-    // #[private]
-    // pub fn deploy_mystery_box_contract_callback(
-    //     &mut self,
-    //     contract_id: AccountId,
-    //     deposited_amount: Balance,
-    //     owner_id: AccountId,
-    // ) -> Option<AccountId> {
-    //     // https://docs.rs/near-sdk/latest/near_sdk/env/fn.promise_results_count.html
-    //     require!(env::promise_results_count() == 1, "ERR_TOO_MANY_RESULTS");
-
-    //     let deployment_result = env::promise_result(0);
-
-    //     match deployment_result {
-    //         PromiseResult::Successful(_) => {
-    //             log!(format!(
-    //                 "Successfully created {contract_id} and put Mystery Contract on it"
-    //             ));
-
-    //             Some(contract_id)
-    //         }
-    //         _ => {
-    //             log!(format!(
-    //                 "Error creating {contract_id}, reverting state and returning {deposited_amount} yocto to {owner_id}"
-    //             ));
-    //             Promise::new(owner_id.clone()).transfer(deposited_amount);
-
-    //             self.internal_remove_contract(owner_id.clone(), contract_id.clone());
-
-    //             None
-    //         }
-    //     }
-    // }    
 }
