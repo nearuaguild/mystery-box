@@ -11,15 +11,16 @@ use crate::contract::callbacks::create_withdraw_box_reward_promise_with_verifica
 use crate::contract::enums::BoxStatus;
 use crate::contract::trusted_contracts::get_trusted_nft_contracts;
 
-use crate::contract::types::{QuestBoxData, BoxId, PoolId, Probability};
+use crate::contract::types::{BoxId, PoolId, Probability};
 
 use near_sdk::serde_json::{self, Value};
 
 use super::enums::{BoxRarity, StorageKey};
 use super::pools::Pool;
+use super::types::questbox_data::QuestBoxData;
 use super::types::{QuestId, TokenId};
 
-#[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
+#[derive(BorshSerialize, BorshDeserialize, PanicOnDefault)]
 pub struct Quest {
     pub id: QuestId,
     pub title: String,
@@ -30,7 +31,6 @@ pub struct Quest {
     pub pool_ids_by_rarity: LookupMap<BoxRarity, HashSet<PoolId>>,
     pub next_box_id: BoxId,
     pub boxes: LookupMap<BoxId, QuestBoxData>,
-    //pub boxes_per_owner: LookupMap<AccountId, HashSet<BoxId>>,
     pub trusted_nft_contracts: UnorderedSet<AccountId>,
     pub probability_by_rarity: LookupMap<BoxRarity, Probability>,
     pub users: UnorderedSet<AccountId>,

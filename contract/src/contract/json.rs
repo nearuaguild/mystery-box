@@ -5,7 +5,7 @@ use near_sdk::{
     AccountId,
 };
 
-use super::{enums::{BoxRarity, BoxStatus}, types::{BoxId, Capacity, QuestBoxData, QuestId, Reward, TokenId}};
+use super::{enums::{BoxRarity, BoxStatus}, types::{questbox_data::QuestBoxData, BoxId, Capacity, QuestId, Reward, TokenId}};
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 #[serde(crate = "near_sdk::serde", tag = "kind", rename_all = "snake_case")]

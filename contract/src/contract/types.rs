@@ -1,26 +1,19 @@
 
-use crate::contract::json::JsonBox;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{require, AccountId, Balance};
 
-use super::enums::{BoxRarity, BoxStatus};
+use super::enums::BoxRarity;
+
+// modules
+pub mod questbox_data;
+pub mod quest_data;
 
 pub type TokenId = String;
 
 pub type BoxId = u128;
 
 pub type QuestTitle = String;
-
-
-#[derive(BorshDeserialize, BorshSerialize, Debug, Clone)]
-pub struct QuestBoxData {
-    pub box_id: BoxId,
-    pub box_rarity: BoxRarity,
-    pub box_status: BoxStatus,
-    pub quest_id: QuestId,
-    pub owner_id: AccountId,
-}
 
 pub type QuestId = u64;
 pub type PoolId = u32;
@@ -50,34 +43,6 @@ impl BoxRarity {
             BoxRarity::Legendary => {
                 String::from("bafkreigdv4mnfrndcob64wrwbqoqce257v7bvtxp2flnyqg2onukpssyoq")
             }
-        }
-    }
-}
-
-impl QuestBoxData {
-    pub fn new(quest_id: QuestId, box_id: BoxId, rarity: BoxRarity, owner_id: AccountId) -> Self {
-        Self {
-            quest_id,
-            box_id,
-            box_rarity: rarity,
-            owner_id,
-            box_status: BoxStatus::NonClaimed,
-        }
-    }
-
-    pub fn ipfs(&self) -> String {
-        self.box_rarity.to_media_ipfs()
-    }
-}
-
-impl From<QuestBoxData> for JsonBox {
-    fn from(value: QuestBoxData) -> Self {
-        Self {
-            quest_id: value.quest_id,
-            box_id: value.box_id,
-            ipfs: value.ipfs(),
-            rarity: value.box_rarity,
-            status: value.box_status.into(),
         }
     }
 }

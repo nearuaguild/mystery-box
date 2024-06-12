@@ -1,13 +1,14 @@
-use std::collections::HashSet;
-
 use enums::{BoxRarity, StorageKey};
 use json::Pagination;
+use near_sdk::collections::{UnorderedSet, Vector};
 use near_sdk::{env, require, Promise, PromiseOrValue, ONE_NEAR};
 use near_sdk::json_types::{U128, U64};
 use near_sdk::{collections::LookupMap, near_bindgen, AccountId, PanicOnDefault};
 
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use types::{BoxId, Probability, QuestBoxData, QuestId, TokenId};
+use types::quest_data::QuestData;
+use types::questbox_data::QuestBoxData;
+use types::{BoxId, Probability, QuestId, TokenId};
 
 use crate::contract::quest::Quest;
 
@@ -28,8 +29,8 @@ const MINIMAL_NEAR_REWARD: u128 = ONE_NEAR / 10; // 0.1N
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct Contract {
     quests: LookupMap<QuestId, Quest>,
-    quests_per_owner: LookupMap<AccountId, HashSet<QuestId>>,
-    questboxes_per_owner: LookupMap<AccountId, Vec<QuestBoxData>>
+    quests_per_owner: LookupMap<AccountId, UnorderedSet<QuestId>>,
+    questboxes_per_owner: LookupMap<AccountId, Vector<QuestBoxData>>
 }
 
 #[near_bindgen]
@@ -43,21 +44,44 @@ impl Contract {
         }
     }
 
-    pub fn quests_per_owner(&self, account_id: AccountId) -> Vec<Quest> {
-        return self.quests_per_owner
-            .get(&account_id)
-            .unwrap_or_default()
+    pub fn quests_per_owner(&self, account_id: AccountId) -> Vec<QuestData> {
+        let quests_ids = self.quests_per_owner
+            .get(&account_id);
+
+        let mut result_vec = Vec::new();
+
+        if !quests_ids.is_some() {
+            return result_vec;
+        }
+
+        quests_ids
+            .unwrap()
             .iter()
-            .map(|quest_id| self.quests.get(quest_id))
-            .flatten()
-            .collect();
+            .for_each(|quest_id| {
+                let quest = self.quests.get(&quest_id);
+
+                if quest.is_some() {
+                    let quest = quest.unwrap();
+
+                    result_vec.push(
+                        QuestData::new(quest.id, quest.title, quest.owner_id)
+                    );
+                }
+            });
+
+        return result_vec;
     }
 
-    pub fn questboxes_supply_per_owner(&self, account_id: AccountId) -> u128 {
-        return self.questboxes_per_owner
-            .get(&account_id)
-            .unwrap_or(Vec::new())
-            .len() as u128;
+    pub fn questboxes_supply_per_owner(&self, account_id: AccountId) -> u64 {
+        let quest_boxes = self.questboxes_per_owner
+            .get(&account_id);
+
+        if quest_boxes.is_some()
+        {
+            return quest_boxes.unwrap().len();
+        }
+
+        return 0;
     }
 
     pub fn questboxes_per_owner(
@@ -67,13 +91,34 @@ impl Contract {
     ) -> Vec<QuestBoxData> {
         let pagination = pagination.unwrap_or_default();
 
-        return self.questboxes_per_owner
-            .get(&account_id)
-            .unwrap_or(Vec::new())
+        let questboxes_per_owner = self.questboxes_per_owner
+            .get(&account_id);
+
+        if !questboxes_per_owner.is_some() {
+            return Vec::new();
+        }
+
+        return questboxes_per_owner
+            .unwrap()
             .iter()
             .take(pagination.take())
             .skip(pagination.skip())
-            .map(|quest_box| self.quests.get(&quest_box.quest_id).unwrap().boxes.get(&quest_box.box_id).unwrap().into())
+            .filter_map(|quest_box| 
+            {
+                let quest = self.quests.get(&quest_box.quest_id);
+                
+                if !quest.is_some() {
+                    return None;
+                }
+
+                let questbox = quest.unwrap().boxes.get(&quest_box.box_id);
+                
+                if !questbox.is_some() {
+                    return None;
+                }
+                
+                return questbox
+            })
             .collect();
     }
 
@@ -199,9 +244,9 @@ impl Contract {
         let mut boxes_per_owner = self
             .questboxes_per_owner
             .get(&questbox_data.owner_id)
-            .unwrap_or_default();
+            .unwrap();
 
-        boxes_per_owner.push(questbox_data.clone());
+        boxes_per_owner.push(questbox_data);
 
         self.questboxes_per_owner
             .insert(&questbox_data.owner_id, &boxes_per_owner);
@@ -217,12 +262,20 @@ impl Contract {
 
         let owners_questboxes = self.questboxes_per_owner.get(&account_id).unwrap();
 
-        let retained_questboxes = owners_questboxes
+        let mut retained_questboxes = Vector::new(StorageKey::QuestBoxesPerOwner);
+
+        owners_questboxes
             .iter()
-            .filter(|&quest_box| 
-                !(quest_box.quest_id == quest_id && ids.iter().any(|&id| id == quest_box.box_id)))
-            .cloned()
-            .collect();
+            .for_each(|quest_box| {
+                let is_quest_matches = quest_box.quest_id == quest_id;
+                let is_box_in_removal_list = ids.contains(&quest_box.box_id);
+
+                let is_item_to_remove = is_quest_matches && is_box_in_removal_list;
+
+                if !is_item_to_remove {
+                    retained_questboxes.push(&quest_box);
+                }
+            });
 
         self.questboxes_per_owner
             .insert(&account_id, &retained_questboxes);
@@ -232,11 +285,11 @@ impl Contract {
     pub fn claim(&mut self, quest_id: QuestId, box_id: BoxId) -> Promise {
         let account_id = env::predecessor_account_id();
 
-        let questboxes_per_owner = self.questboxes_per_owner.get(&account_id).unwrap_or_default();
+        let questboxes_per_owner = self.questboxes_per_owner.get(&account_id).unwrap();
 
         require!(questboxes_per_owner
             .iter()
-            .find(|&quest_box| quest_box.quest_id == quest_id && quest_box.box_id == box_id)
+            .find(|quest_box| quest_box.quest_id == quest_id && quest_box.box_id == box_id)
             .is_some(), "ERR_ONLY_OWNER_CAN_BURN");
 
         let mut quest = self.quests.get(&quest_id).expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
