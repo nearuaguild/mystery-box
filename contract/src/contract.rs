@@ -30,7 +30,8 @@ const MINIMAL_NEAR_REWARD: u128 = ONE_NEAR / 10; // 0.1N
 pub struct Contract {
     quests: LookupMap<QuestId, Quest>,
     quests_per_owner: LookupMap<AccountId, UnorderedSet<QuestId>>,
-    questboxes_per_owner: LookupMap<AccountId, Vector<QuestBoxData>>
+    questboxes_per_owner: LookupMap<AccountId, Vector<QuestBoxData>>,
+    next_quest_id: QuestId,
 }
 
 #[near_bindgen]
@@ -40,7 +41,8 @@ impl Contract {
         Self {
             quests: LookupMap::new(StorageKey::Quests),
             quests_per_owner: LookupMap::new(StorageKey::QuestsPerOwner),
-            questboxes_per_owner: LookupMap::new(StorageKey::QuestBoxesPerOwner)
+            questboxes_per_owner: LookupMap::new(StorageKey::QuestBoxesPerOwner),
+            next_quest_id: 0,
         }
     }
 
@@ -122,6 +124,53 @@ impl Contract {
             .collect();
     }
 
+    #[payable]
+    pub fn create_quest(&mut self, title: String) {
+        assert!(
+            !title.is_empty(),
+            "Title should be specified"
+        );
+
+        let account_id = env::predecessor_account_id();
+        let storage_used_before = env::storage_usage();
+
+        let quest = Quest::new(self.next_quest_id, &title, &account_id);
+        self.next_quest_id += 1;
+        
+        self.quests.insert(&quest.id, &quest);
+        self.insert_quest_into_quests_per_owner(quest);
+
+        let storage_used_after = env::storage_usage();
+
+        let storage_deposit =
+            env::storage_byte_cost() * (storage_used_after - storage_used_before) as u128;
+
+        assert!(
+            env::attached_deposit() >= storage_deposit,
+            "Deposited amount must be equal to {} yocto",
+            storage_deposit
+        );
+
+        let refund = env::attached_deposit() - storage_deposit;
+        if refund > 1 {
+            Promise::new(env::predecessor_account_id()).transfer(refund);
+        }
+    }
+
+    fn insert_quest_into_quests_per_owner(&mut self, quest: Quest){
+        let account_id = env::predecessor_account_id();
+
+        let quests_per_owner_unwrapped = self.quests_per_owner.get(&account_id);
+        let mut quests_per_owner = UnorderedSet::new(StorageKey::QuestIdsPerOwner);
+
+        if quests_per_owner_unwrapped.is_some() {
+            quests_per_owner = quests_per_owner_unwrapped.unwrap();
+        }
+
+        quests_per_owner.insert(&quest.id);
+        self.quests_per_owner.insert(&account_id, &quests_per_owner);
+    }
+    
     #[payable]
     pub fn add_near_reward(&mut self, quest_id: QuestId, rarity: BoxRarity, amount: U128, capacity: U64) {
         assert!(

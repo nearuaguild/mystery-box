@@ -38,6 +38,7 @@ pub struct Quest {
 
 impl Quest {
     pub fn new(
+        id: QuestId,
         title: &String,
         owner_id: &AccountId,
     ) -> Self {
@@ -52,7 +53,7 @@ impl Quest {
             });
 
         Self {
-            id: 0,
+            id,
             title: title.to_string(),
             next_pool_id: 1,
             pools: LookupMap::new(StorageKey::Pools),
@@ -62,7 +63,6 @@ impl Quest {
             owner_id: owner_id.clone(),
             next_box_id: 1,
             boxes: LookupMap::new(StorageKey::Boxes),
-            //boxes_per_owner: LookupMap::new(StorageKey::BoxesPerOwner),
             probability_by_rarity: LookupMap::new(StorageKey::ProbabilityByRarity),
             users: UnorderedSet::new(StorageKey::Users),
         }

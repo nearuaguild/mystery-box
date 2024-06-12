@@ -60,4 +60,5 @@ pub enum StorageKey {
     Quests,
     QuestsPerOwner,
     QuestBoxesPerOwner,
+    QuestIdsPerOwner,
 }
