@@ -118,21 +118,6 @@ impl Quest {
         );
     }
 
-    pub fn mint_many(&mut self, rarity: BoxRarity, accounts: Vec<AccountId>) -> Vec<BoxId> {
-        self.assert_only_owner();
-
-        let box_ids = accounts
-            .iter()
-            .map(|account_id| {
-                let box_data = self.internal_mint(account_id.clone(), rarity.clone());
-
-                box_data.box_id
-            })
-            .collect::<Vec<BoxId>>();
-
-        return box_ids;
-    }
-
     pub fn mint(&mut self, box_owner_id: AccountId, rarity: BoxRarity) -> QuestBox {
         self.assert_only_owner();
 

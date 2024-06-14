@@ -133,6 +133,12 @@ impl Contract {
             .collect();
     }
 
+    pub fn questboxes_total_supply(&self, quest_id: QuestId) -> U128 {
+        let quest = self.quests.get(&quest_id).expect("Quest wasn't found");
+
+        return U128(quest.next_box_id);
+    }
+
     #[payable]
     pub fn create_quest(&mut self, title: &String) -> QuestId {
         assert!(
@@ -320,12 +326,24 @@ impl Contract {
 
     #[payable]
     pub fn mint_many(&mut self, quest_id: QuestId, rarity: BoxRarity, accounts: Vec<AccountId>) -> Vec<BoxId> {
-        require!(accounts.len() != 0, "accounts can't be empty");
+        require!(accounts.len() != 0, "Accounts can't be empty");
         let mut quest = self.quests.get(&quest_id).expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
 
         let storage_used_before = env::storage_usage();
 
-        let box_ids = quest.mint_many(rarity, accounts);
+        let mut minted_boxes_ids = Vec::new();
+
+        accounts
+            .iter()
+            .for_each(|box_owner_id| {
+                let questbox = quest.mint(box_owner_id.clone(), rarity);
+
+                self.mint_boxes_per_owner(&questbox);
+
+                minted_boxes_ids.push(questbox.box_id);
+            });
+        
+        self.quests.insert(&quest.id, &quest);
 
         let storage_used_after = env::storage_usage();
 
@@ -344,7 +362,7 @@ impl Contract {
             Promise::new(env::predecessor_account_id()).transfer(refund);
         }
 
-        box_ids
+        return minted_boxes_ids;
     }
 
     #[payable]
@@ -418,7 +436,7 @@ impl Contract {
     pub fn claim(&mut self, quest_id: QuestId, box_id: BoxId) -> Promise {
         let account_id = env::predecessor_account_id();
 
-        let questboxes_per_owner = self.questboxes_per_owner.get(&account_id).unwrap();
+        let questboxes_per_owner = self.questboxes_per_owner.get(&account_id).expect("No boxes to claim");
 
         require!(questboxes_per_owner
             .iter()
