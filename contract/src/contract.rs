@@ -3,6 +3,7 @@ use enums::{BoxRarity, StorageKey};
 use json_types::json_box::JsonBox;
 use json_types::json_pagination::Pagination;
 use json_types::json_quest::JsonQuest;
+use json_types::json_reward::JsonPoolRewards;
 use near_sdk::collections::UnorderedSet;
 use near_sdk::{env, require, Promise, PromiseOrValue, ONE_NEAR};
 use near_sdk::json_types::{U128, U64};
@@ -477,5 +478,30 @@ impl Contract {
         }
 
         return result;
+    }
+
+    pub fn available_rewards(
+        &self,
+        quest_id: QuestId,
+        rarity: BoxRarity,
+        pagination: Option<Pagination>,
+    ) -> Vec<JsonPoolRewards> {
+        let pagination = pagination.unwrap_or_default();
+
+        pagination.assert_valid();
+
+        let quest = self.quests.get(&quest_id).expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
+    
+        quest.pool_ids_by_rarity
+            .get(&rarity)
+            .unwrap_or_default()
+            .iter()
+            .map(|pool_id| quest.pools.get(pool_id))
+            .flatten()
+            .filter(|pool| !pool.is_empty())
+            .take(pagination.take())
+            .skip(pagination.skip())
+            .map(|pool| pool.into())
+            .collect()
     }
 }
