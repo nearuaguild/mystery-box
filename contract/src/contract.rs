@@ -134,7 +134,7 @@ impl Contract {
     }
 
     #[payable]
-    pub fn create_quest(&mut self, title: &String) {
+    pub fn create_quest(&mut self, title: &String) -> QuestId {
         assert!(
             !title.is_empty(),
             "Title should be specified"
@@ -148,7 +148,7 @@ impl Contract {
         self.next_quest_id += 1;
         
         self.quests.insert(&quest.id, &quest);
-        self.insert_quest_into_quests_per_owner(quest);
+        self.insert_quest_into_quests_per_owner(&quest);
 
         let storage_used_after = env::storage_usage();
 
@@ -165,9 +165,11 @@ impl Contract {
         if refund > 1 {
             Promise::new(env::predecessor_account_id()).transfer(refund);
         }
+
+        return quest.id;
     }
 
-    fn insert_quest_into_quests_per_owner(&mut self, quest: Quest){
+    fn insert_quest_into_quests_per_owner(&mut self, quest: &Quest){
         let account_id = env::predecessor_account_id();
 
         let quests_per_owner_unwrapped = self.quests_per_owner.get(&account_id);
@@ -265,6 +267,8 @@ impl Contract {
         let mut quest = self.quests.get(&quest_id).expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
 
         quest.set_probability(rarity, probability);
+
+        self.quests.insert(&quest_id, &quest);
     }
 
     pub fn set_owner(&mut self, quest_id: QuestId, new_owner_id: AccountId) {

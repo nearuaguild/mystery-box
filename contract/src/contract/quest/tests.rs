@@ -8,6 +8,7 @@ use std::str::FromStr;
 
 use crate::contract::enums::BoxRarity;
 use crate::contract::json_types::json_reward::JsonPoolRewards;
+use crate::contract::quest::test_utils::create_quest;
 use crate::contract::types::Probability;
 use crate::contract::Contract;
 
@@ -62,11 +63,8 @@ fn test_setup_succeeds() {
 #[test]
 fn test_quest_ownership() {
     let (mut contract, mut context) = setup();
-    //quest creation requires deposit
-    testing_env!(context.attached_deposit(5 * ONE_NEAR).build());
-
-    let new_quest_title = String::from("first quest");
-    contract.create_quest(&new_quest_title);
+    
+    let quest = create_quest(&mut contract, &mut context);
 
     let owner_quests = contract.quests_per_owner(owner());
     assert_eq!(owner_quests.len(), 1);
@@ -89,18 +87,15 @@ fn test_quest_ownership() {
 
     let new_owner_first_quest_unwrapped = new_owner_first_quest.unwrap();
 
-    assert_eq!(&new_owner_first_quest_unwrapped.title, &new_quest_title);
+    assert_eq!(&new_owner_first_quest_unwrapped.title, &quest.title);
 }
 
 #[test]
 #[should_panic(expected = "ERR_FORBIDDEN")]
 fn test_quest_ownership_panics() {
     let (mut contract, mut context) = setup();
-    //quest creation requires deposit
-    testing_env!(context.attached_deposit(5 * ONE_NEAR).build());
-
-    let new_quest_title = String::from("first quest");
-    contract.create_quest(&new_quest_title);
+    
+    let quest = create_quest(&mut contract, &mut context);
 
     let owner_quests = contract.quests_per_owner(owner());
     assert_eq!(owner_quests.len(), 1);
@@ -115,50 +110,57 @@ fn test_quest_ownership_panics() {
     contract.set_owner( first_quest_unwrapped.quest_id, user2());
 }
 
+#[test]
+#[should_panic(expected = "ERR_FORBIDDEN")]
+fn test_set_probability_with_regular_user_panic() {
+    let (mut contract, mut context) = setup();
 
-// #[test]
-// #[should_panic(expected = "ERR_FORBIDDEN")]
-// fn test_set_probability_with_regular_user_panic() {
-//     let (mut contract, mut context) = setup();
+    let quest = create_quest(&mut contract, &mut context);
 
-//     testing_env!(context.predecessor_account_id(user1()).build());
+    testing_env!(context.predecessor_account_id(user1()).build());
 
-//     contract.set_probability(BoxRarity::Epic, Probability::ZERO);
-// }
+    contract.set_probability(quest.id, BoxRarity::Epic, Probability::ZERO);
+}
 
-// #[should_panic]
-// #[test]
-// fn test_set_probability_with_zero_denominator_panic() {
-//     let (mut contract, _) = setup();
+#[test]
+#[should_panic(expected = "Denominator can't be zero")]
+fn test_set_probability_with_zero_denominator_panic() {
+    let (mut contract, mut context) = setup();
 
-//     let probability = Probability {
-//         numerator: 5,
-//         denominator: 0,
-//     };
+    let probability = Probability {
+        numerator: 5,
+        denominator: 0,
+    };
 
-//     contract.set_probability(BoxRarity::Epic, probability);
-// }
+    let quest = create_quest(&mut contract, &mut context);
 
-// #[should_panic]
-// #[test]
-// fn test_set_probability_bigger_than_one_panic() {
-//     let (mut contract, _) = setup();
+    contract.set_probability(quest.id, BoxRarity::Epic, probability);
+}
 
-//     let probability = Probability {
-//         numerator: 5,
-//         denominator: 2,
-//     };
+#[test]
+#[should_panic(expected = "Denominator must be bigger than or equal to numerator")]
+fn test_set_probability_bigger_than_one_panic() {
+    let (mut contract, mut context) = setup();
 
-//     contract.set_probability(BoxRarity::Epic, probability);
-// }
+    let probability = Probability {
+        numerator: 5,
+        denominator: 2,
+    };
 
-// #[test]
-// #[should_panic]
-// fn test_add_small_near_pool_with_panic() {
-//     let (mut contract, _) = setup();
+    let quest = create_quest(&mut contract, &mut context);
 
-//     contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR / 20), U64(10));
-// }
+    contract.set_probability(quest.id, BoxRarity::Epic, probability);
+}
+
+#[test]
+#[should_panic(expected = "The minimal reward in Near tokens is 100000000000000000000000 yocto")]
+fn test_add_small_near_pool_with_panic() {
+    let (mut contract, mut context) = setup();
+
+    let quest = create_quest(&mut contract, &mut context);
+
+    contract.add_near_reward(quest.id, BoxRarity::Rare, U128(ONE_NEAR / 20), U64(10));
+}
 
 // #[test]
 // fn test_add_near_pool_succeeds() {
