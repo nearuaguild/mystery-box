@@ -1,7 +1,6 @@
 use std::collections::BTreeSet;
-
 use contract::enums::BoxRarity;
-use contract::json::JsonPoolRewards;
+use contract::json_types::json_reward::JsonPoolRewards;
 use contract::types::{Capacity, PoolId, Reward, TokenId};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::require;

@@ -1,24 +1,30 @@
 use std::collections::HashSet;
 
-use near_sdk::collections::{LookupMap, UnorderedSet};
+use near_sdk::collections::{ LookupMap, UnorderedSet };
 use near_sdk::json_types::U128;
 use near_sdk::{
-    assert_one_yocto, env, require, AccountId, PanicOnDefault, Promise, PromiseOrValue
+    assert_one_yocto,
+    env,
+    require,
+    AccountId,
+    PanicOnDefault,
+    Promise,
+    PromiseOrValue,
 };
-use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
+use near_sdk::borsh::{ self, BorshDeserialize, BorshSerialize };
 
 use crate::contract::callbacks::create_withdraw_box_reward_promise_with_verification;
 use crate::contract::enums::BoxStatus;
 use crate::contract::trusted_contracts::get_trusted_nft_contracts;
 
-use crate::contract::types::{BoxId, PoolId, Probability};
+use crate::contract::types::{ BoxId, PoolId, Probability };
 
-use near_sdk::serde_json::{self, Value};
+use near_sdk::serde_json::{ self, Value };
 
-use super::enums::{BoxRarity, StorageKey};
+use super::enums::{ BoxRarity, StorageKey };
 use super::pools::Pool;
-use super::types::questbox_data::QuestBoxData;
-use super::types::{QuestId, TokenId};
+use super::questbox::QuestBox;
+use super::types::{ QuestId, TokenId };
 
 #[derive(BorshSerialize, BorshDeserialize, PanicOnDefault)]
 pub struct Quest {
@@ -30,27 +36,21 @@ pub struct Quest {
     pub nft_pool_by_key: LookupMap<String, PoolId>,
     pub pool_ids_by_rarity: LookupMap<BoxRarity, HashSet<PoolId>>,
     pub next_box_id: BoxId,
-    pub boxes: LookupMap<BoxId, QuestBoxData>,
+    pub boxes: LookupMap<BoxId, QuestBox>,
     pub trusted_nft_contracts: UnorderedSet<AccountId>,
     pub probability_by_rarity: LookupMap<BoxRarity, Probability>,
     pub users: UnorderedSet<AccountId>,
 }
 
 impl Quest {
-    pub fn new(
-        id: QuestId,
-        title: &String,
-        owner_id: &AccountId,
-    ) -> Self {
+    pub fn new(id: QuestId, title: &String, owner_id: &AccountId) -> Self {
         let default_trusted_nft_contracts = get_trusted_nft_contracts();
 
         let mut trusted_nft_contracts = UnorderedSet::new(StorageKey::TrustedNftContracts);
 
-        default_trusted_nft_contracts
-            .iter()
-            .for_each(|contract_id| {
-                trusted_nft_contracts.insert(contract_id);
-            });
+        default_trusted_nft_contracts.iter().for_each(|contract_id| {
+            trusted_nft_contracts.insert(contract_id);
+        });
 
         Self {
             id,
@@ -69,10 +69,7 @@ impl Quest {
     }
 
     fn assert_only_owner(&self) {
-        require!(
-            env::predecessor_account_id() == self.owner_id,
-            "ERR_FORBIDDEN"
-        );
+        require!(env::predecessor_account_id() == self.owner_id, "ERR_FORBIDDEN");
     }
 
     pub fn add_near_reward(&mut self, rarity: BoxRarity, amount: U128, capacity: u64) {
@@ -95,19 +92,19 @@ impl Quest {
         probability.assert_valid();
 
         self.assert_only_owner();
-    
+
         self.probability_by_rarity.insert(&rarity, &probability);
     }
 
     pub fn set_owner(&mut self, new_owner_id: AccountId) {
         // only owner can set another owner
-        self.assert_only_owner();        
+        self.assert_only_owner();
 
         self.owner_id = new_owner_id;
     }
 
     pub fn trust_nft_contract(&mut self, contract_id: AccountId) {
-        self.assert_only_owner();        
+        self.assert_only_owner();
 
         require!(
             self.trusted_nft_contracts.insert(&contract_id),
@@ -117,7 +114,7 @@ impl Quest {
 
     pub fn untrust_nft_contract(&mut self, contract_id: AccountId) {
         self.assert_only_owner();
-        
+
         require!(
             self.trusted_nft_contracts.remove(&contract_id),
             "Provided contract wasn't trusted before"
@@ -136,15 +133,15 @@ impl Quest {
             })
             .collect::<Vec<BoxId>>();
 
-        return box_ids
+        return box_ids;
     }
 
-    pub fn mint(&mut self, account_id: AccountId, rarity: BoxRarity) -> QuestBoxData {
+    pub fn mint(&mut self, box_owner_id: AccountId, rarity: BoxRarity) -> QuestBox {
         self.assert_only_owner();
 
-        let box_data = self.internal_mint(account_id.clone(), rarity.clone());
+        let box_data = self.internal_mint(box_owner_id.clone(), rarity.clone());
 
-        return box_data
+        return box_data;
     }
 
     pub fn delete_boxes(&mut self, ids: &Vec<BoxId>) {
@@ -169,7 +166,12 @@ impl Quest {
 
         let pool_id = self.internal_claim(box_id);
 
-        create_withdraw_box_reward_promise_with_verification(&account_id, self.id, &box_id, &pool_id)
+        create_withdraw_box_reward_promise_with_verification(
+            &account_id,
+            self.id,
+            &box_id,
+            &pool_id
+        )
     }
 
     pub fn nft_on_transfer(
@@ -177,20 +179,21 @@ impl Quest {
         #[allow(unused_variables)] sender_id: AccountId,
         previous_owner_id: AccountId,
         token_id: TokenId,
-        msg: String,
+        msg: String
     ) -> PromiseOrValue<bool> {
         let nft_account_id = env::predecessor_account_id();
 
         // we're required to ensure that the predecessor account is whitelisted, since the function is public
         require!(
             self.trusted_nft_contracts.contains(&nft_account_id),
-            "ERR_NFT_CONTRACT_NOT_TRUSTED",
+            "ERR_NFT_CONTRACT_NOT_TRUSTED"
         );
 
         require!(self.owner_id == previous_owner_id, "ERR_FORBIDDEN");
 
-        let rarity =
-            serde_json::from_value::<BoxRarity>(Value::String(msg)).expect("ERR_PARSE_MSG");
+        let rarity = serde_json
+            ::from_value::<BoxRarity>(Value::String(msg))
+            .expect("ERR_PARSE_MSG");
 
         self.internal_add_nft_pool(rarity, nft_account_id, token_id);
 
@@ -198,12 +201,12 @@ impl Quest {
         PromiseOrValue::Value(false)
     }
 
-    fn internal_mint(&mut self, owner_id: AccountId, rarity: BoxRarity) -> QuestBoxData {
+    fn internal_mint(&mut self, box_owner_id: AccountId, rarity: BoxRarity) -> QuestBox {
         let box_id = self.next_box_id.clone();
 
         self.next_box_id += 1;
 
-        let box_data = QuestBoxData::new(self.id, box_id, rarity, owner_id);
+        let box_data = QuestBox::new(self.id, box_id, rarity, box_owner_id);
 
         self.boxes.insert(&box_data.box_id, &box_data);
 

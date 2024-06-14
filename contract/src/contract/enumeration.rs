@@ -3,7 +3,8 @@ use near_sdk::json_types::U128;
 use near_sdk::AccountId;
 
 use super::enums::BoxRarity;
-use super::json::{JsonPoolRewards, Pagination};
+use super::json_types::json_pagination::Pagination;
+use super::json_types::json_reward::JsonPoolRewards;
 
 impl Quest {
     pub fn total_supply(&self) -> U128 {
