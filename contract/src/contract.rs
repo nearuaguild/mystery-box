@@ -3,7 +3,7 @@ use enums::{BoxRarity, StorageKey};
 use json_types::json_box::JsonBox;
 use json_types::json_pagination::Pagination;
 use json_types::json_quest::JsonQuest;
-use near_sdk::collections::{UnorderedSet, Vector};
+use near_sdk::collections::UnorderedSet;
 use near_sdk::{env, require, Promise, PromiseOrValue, ONE_NEAR};
 use near_sdk::json_types::{U128, U64};
 use near_sdk::{collections::LookupMap, near_bindgen, AccountId, PanicOnDefault};
@@ -35,7 +35,7 @@ const MINIMAL_NEAR_REWARD: u128 = ONE_NEAR / 10; // 0.1N
 pub struct Contract {
     quests: LookupMap<QuestId, Quest>,
     quests_per_owner: LookupMap<AccountId, UnorderedSet<QuestId>>,
-    questboxes_per_owner: LookupMap<AccountId, Vector<QuestBoxData>>,
+    questboxes_per_owner: LookupMap<AccountId, UnorderedSet<QuestBoxData>>,
     next_quest_id: QuestId,
 }
 
@@ -79,16 +79,16 @@ impl Contract {
         return result_vec;
     }
 
-    pub fn questboxes_supply_per_owner(&self, account_id: AccountId) -> u64 {
+    pub fn questboxes_supply_per_owner(&self, account_id: AccountId) -> U128 {
         let quest_boxes = self.questboxes_per_owner
             .get(&account_id);
 
         if quest_boxes.is_some()
         {
-            return quest_boxes.unwrap().len();
+            return U128(quest_boxes.unwrap().len().into());
         }
 
-        return 0;
+        return U128(0);
     }
 
     pub fn questboxes_per_owner(
@@ -354,6 +354,8 @@ impl Contract {
         let storage_used_before = env::storage_usage();
 
         let questbox = quest.mint(box_owner_id, rarity);
+        self.quests.insert(&quest.id, &quest);
+
         self.mint_boxes_per_owner(&questbox);
 
         let storage_used_after = env::storage_usage();
@@ -376,12 +378,17 @@ impl Contract {
     }
 
     fn mint_boxes_per_owner(&mut self, questbox: &QuestBox) {
-        let mut boxes_per_owner = self
+        let boxes_per_owner_unwrapped = self
             .questboxes_per_owner
-            .get(&questbox.owner_id)
-            .unwrap();
+            .get(&questbox.owner_id);
 
-        boxes_per_owner.push(&QuestBoxData::new(questbox.quest_id, questbox.box_id));
+        let mut boxes_per_owner = UnorderedSet::new(StorageKey::QuestBoxesPerOwner);
+
+        if boxes_per_owner_unwrapped.is_some(){
+            boxes_per_owner = boxes_per_owner_unwrapped.unwrap();
+        }
+
+        boxes_per_owner.insert(&QuestBoxData::new(questbox.quest_id, questbox.box_id));
 
         self.questboxes_per_owner
             .insert(&questbox.owner_id, &boxes_per_owner);
@@ -395,27 +402,16 @@ impl Contract {
 
         quest.delete_boxes(&ids);
 
-        let owners_questboxes = self.questboxes_per_owner.get(&account_id).unwrap();
+        let mut owners_questboxes = self.questboxes_per_owner.get(&account_id).expect("Owner doesn't have any quest boxes");
 
-        let mut retained_questboxes = Vector::new(StorageKey::QuestBoxesPerOwner);
-
-        owners_questboxes
+        ids
             .iter()
-            .for_each(|quest_box| {
-                let is_quest_matches = quest_box.quest_id == quest_id;
-                let is_box_in_removal_list = ids.contains(&quest_box.box_id);
-
-                let is_item_to_remove = is_quest_matches && is_box_in_removal_list;
-
-                if !is_item_to_remove {
-                    retained_questboxes.push(&quest_box);
-                }
+            .for_each(|&box_id| {
+                owners_questboxes.remove(&QuestBoxData::new(quest.id, box_id));
             });
 
         self.questboxes_per_owner
-            .insert(&account_id, &retained_questboxes);
-
-
+            .insert(&account_id, &owners_questboxes);
     }
 
     #[payable]

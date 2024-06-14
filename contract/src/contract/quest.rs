@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use near_sdk::collections::{ LookupMap, UnorderedSet };
-use near_sdk::json_types::U128;
+use near_sdk::json_types::{U128, U64};
 use near_sdk::{
     assert_one_yocto,
     env,
@@ -69,14 +69,14 @@ impl Quest {
         require!(env::predecessor_account_id() == self.owner_id, "ERR_FORBIDDEN");
     }
 
-    pub fn add_near_reward(&mut self, rarity: BoxRarity, amount: U128, capacity: u64) {
+    pub fn add_near_reward(&mut self, rarity: BoxRarity, amount: U128, capacity: U64) {
         self.assert_only_owner();
 
         let pool_id = self.next_pool_id.clone();
 
         self.next_pool_id += 1;
 
-        let pool = Pool::create_near_pool(pool_id, rarity, amount.into(), capacity);
+        let pool = Pool::create_near_pool(pool_id, rarity, amount.into(), capacity.into());
 
         self.pools.insert(&pool.id, &pool);
 
@@ -144,8 +144,10 @@ impl Quest {
     pub fn delete_boxes(&mut self, ids: &Vec<BoxId>) {
         self.assert_only_owner();
 
-        ids.iter().for_each(|box_data| {
-            let box_data = self.boxes.remove(box_data).unwrap();
+        ids.iter().for_each(|box_id| {
+            assert!(self.boxes.get(&box_id).is_some(), "Box {} doesn't exist", &box_id);
+
+            let box_data = self.boxes.remove(box_id).unwrap();
 
             require!(
                 box_data.box_status == BoxStatus::NonClaimed,

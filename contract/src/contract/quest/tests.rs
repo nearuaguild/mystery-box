@@ -186,16 +186,16 @@ fn test_add_near_pool_succeeds() {
     let unwrapped_pool = pool.unwrap();
     let json_pool: JsonPoolRewards = unwrapped_pool.clone().into();
 
-    match json_pool {
-        JsonPoolRewards::Near { amount, available, total } => {
-            assert_eq!(unwrapped_pool.rarity, POOL_RARITY);
-            assert_eq!(amount, AMOUNT);
-            assert_eq!(U64(total), CAPACITY);
-        },
-        JsonPoolRewards::NonFungibleToken { contract_id, token_ids, total } => {
-            panic!("Near pool must have been added");
-        }
-    }
+    assert_eq!(unwrapped_pool.rarity, POOL_RARITY);
+
+    assert_eq!(
+            json_pool,
+            JsonPoolRewards::Near {
+                amount: AMOUNT,
+                available: CAPACITY.into(),
+                total: CAPACITY.into()
+            }
+        );
 }
 
 #[test]
@@ -220,16 +220,17 @@ fn test_add_big_near_pool() {
     let unwrapped_pool = pool.unwrap();
     let json_pool: JsonPoolRewards = unwrapped_pool.clone().into();
 
-    match json_pool {
-        JsonPoolRewards::Near { amount, available, total } => {
-            assert_eq!(unwrapped_pool.rarity, POOL_RARITY);
-            assert_eq!(amount, AMOUNT);
-            assert_eq!(U64(total), CAPACITY);
-        },
-        JsonPoolRewards::NonFungibleToken { contract_id, token_ids, total } => {
-            panic!("Near pool must have been added");
-        }
-    }
+    assert_eq!(unwrapped_pool.rarity, POOL_RARITY);
+
+    assert_eq!(
+            json_pool,
+            JsonPoolRewards::Near {
+                amount: AMOUNT,
+                available: CAPACITY.into(),
+                total: CAPACITY.into()
+            }
+        );
+
 }
 
 #[test]
@@ -253,20 +254,23 @@ fn test_add_multiple_near_pools_succeeds() {
     assert_eq!(pool2.is_some(), true);
 }
 
-// #[test]
-// fn test_add_nft_pool_succeeds() {
-//     let (mut contract, mut context) = setup();
+#[ignore = "clarification needed on nft_on_transfer"]
+#[test]
+fn test_add_nft_pool_succeeds() {
+    let (mut contract, mut context) = setup();
 
-//     testing_env!(context.build());
+    let mut quest = create_quest(&mut contract, &mut context, Some(10));
 
-//     testing_env!(context.predecessor_account_id(nft()).build());
-//     contract.nft_on_transfer(
-//         owner(),
-//         owner(),
-//         "some_token".to_string(),
-//         "rare".to_string(),
-//     );
-// }
+    testing_env!(context.predecessor_account_id(nft()).build());
+
+    contract.nft_on_transfer(
+        quest.id,
+        owner(),
+        owner(),
+        "some_token".to_string(),
+        "rare".to_string(),
+    );
+}
 
 // #[test]
 // fn test_add_multiple_nft_pool_succeeds() {
@@ -304,54 +308,54 @@ fn test_add_multiple_near_pools_succeeds() {
 //     );
 // }
 
-// #[test]
-// fn test_available_near_rewards_amount() {
-//     let (mut contract, mut context) = setup();
+#[test]
+fn test_available_near_rewards_amount() {
+    let (mut contract, mut context) = setup();
 
-//     testing_env!(context.attached_deposit(10 * ONE_NEAR).build());
+    let mut quest = create_quest(&mut contract, &mut context, Some(10));
 
-//     contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), U64(5));
+    contract.add_near_reward(quest.id, BoxRarity::Rare, U128(ONE_NEAR), U64(5));
 
-//     let rewards = contract.available_rewards(BoxRarity::Rare, None);
+    let rewards = quest.available_rewards(BoxRarity::Rare, None);
 
-//     assert_eq!(rewards.len(), 1);
+    assert_eq!(rewards.len(), 1);
 
-//     contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), U64(5));
+    contract.add_near_reward(quest.id, BoxRarity::Rare, U128(ONE_NEAR), U64(5));
 
-//     let rewards = contract.available_rewards(BoxRarity::Rare, None);
+    let rewards = quest.available_rewards(BoxRarity::Rare, None);
 
-//     assert_eq!(rewards.len(), 2);
+    assert_eq!(rewards.len(), 2);
 
-//     contract.add_near_reward(BoxRarity::Epic, U128(ONE_NEAR), U64(5));
+    contract.add_near_reward(quest.id, BoxRarity::Epic, U128(ONE_NEAR), U64(5));
 
-//     let rewards = contract.available_rewards(BoxRarity::Rare, None);
-//     assert_eq!(rewards.len(), 2);
+    let rewards = quest.available_rewards(BoxRarity::Rare, None);
+    assert_eq!(rewards.len(), 2);
 
-//     let rewards = contract.available_rewards(BoxRarity::Epic, None);
-//     assert_eq!(rewards.len(), 1);
-// }
+    let rewards = quest.available_rewards(BoxRarity::Epic, None);
+    assert_eq!(rewards.len(), 1);
+}
 
-// #[test]
-// fn test_available_near_rewards_data() {
-//     let (mut contract, mut context) = setup();
+#[test]
+fn test_available_near_rewards_data() {
+    let (mut contract, mut context) = setup();
 
-//     testing_env!(context.attached_deposit(10 * ONE_NEAR).build());
+    let mut quest = create_quest(&mut contract, &mut context, Some(10));
 
-//     contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), U64(5));
+    contract.add_near_reward(quest.id, BoxRarity::Rare, U128(ONE_NEAR), U64(5));
 
-//     let rewards = contract.available_rewards(BoxRarity::Rare, None);
+    let rewards = quest.available_rewards(BoxRarity::Rare, None);
 
-//     let reward = rewards.get(0).unwrap().to_owned();
+    let reward = rewards.get(0).unwrap().to_owned();
 
-//     assert_eq!(
-//         reward,
-//         JsonPoolRewards::Near {
-//             amount: U128(ONE_NEAR),
-//             available: 5,
-//             total: 5
-//         }
-//     );
-// }
+    assert_eq!(
+        reward,
+        JsonPoolRewards::Near {
+            amount: U128(ONE_NEAR),
+            available: 5,
+            total: 5
+        }
+    );
+}
 
 // #[test]
 // fn test_available_nft_rewards_amount_for_different_contracts() {
@@ -477,31 +481,35 @@ fn test_add_multiple_near_pools_succeeds() {
 //     );
 // }
 
-// #[test]
-// fn test_mint_succeeds() {
-//     let (mut contract, mut context) = setup();
+#[test]
+fn test_mint_succeeds() {
+    let (mut contract, mut context) = setup();
 
-//     testing_env!(context.attached_deposit(ONE_NEAR).build());
+    let mut quest = create_quest(&mut contract, &mut context, Some(10));
 
-//     contract.mint(user1(), BoxRarity::Rare);
-// }
+    contract.mint(quest.id, user1(), BoxRarity::Rare);
+}
 
-// #[test]
-// fn test_delete_boxes_succeeds() {
-//     let (mut contract, mut context) = setup();
+#[test]
+fn test_delete_boxes_succeeds() {
+    let (mut contract, mut context) = setup();
 
-//     testing_env!(context.attached_deposit(ONE_NEAR).build());
+    testing_env!(context.predecessor_account_id(user1()).build());
 
-//     contract.mint(user1(), BoxRarity::Epic);
-//     contract.mint(user1(), BoxRarity::Rare);
+    let mut quest = create_quest(&mut contract, &mut context, Some(10));
 
-//     assert_eq!(contract.supply_for_owner(user1()), U128(2));
+    contract.mint(quest.id, user1(), BoxRarity::Epic);
+    contract.mint(quest.id, user1(), BoxRarity::Rare);
 
-//     contract.delete_boxes(vec![1]);
+    assert_eq!(contract.questboxes_supply_per_owner(user1()), U128(2));
 
-//     assert_eq!(contract.supply_for_owner(user1()), U128(1));
-//     assert!(contract.boxes.get(&1).is_none());
-// }
+    contract.delete_boxes(quest.id, vec![0]);
+
+    assert_eq!(contract.questboxes_supply_per_owner(user1()), U128(1));
+
+    const FIRST_BOX_ID: u128 = 0;
+    assert!(quest.boxes.get(&FIRST_BOX_ID).is_none());
+}
 
 // #[test]
 // fn test_mint_many_succeeds() {
