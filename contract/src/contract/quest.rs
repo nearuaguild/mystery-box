@@ -15,7 +15,6 @@ use near_sdk::borsh::{ self, BorshDeserialize, BorshSerialize };
 
 use crate::contract::callbacks::create_withdraw_box_reward_promise_with_verification;
 use crate::contract::enums::BoxStatus;
-use crate::contract::trusted_contracts::get_trusted_nft_contracts;
 
 use crate::contract::types::{ BoxId, PoolId, Probability };
 
@@ -43,9 +42,7 @@ pub struct Quest {
 }
 
 impl Quest {
-    pub fn new(id: QuestId, title: &String, owner_id: &AccountId) -> Self {
-        let default_trusted_nft_contracts = get_trusted_nft_contracts();
-
+    pub fn new(id: QuestId, title: &String, owner_id: &AccountId, default_trusted_nft_contracts: Vec<AccountId>) -> Self {
         let mut trusted_nft_contracts = UnorderedSet::new(StorageKey::TrustedNftContracts);
 
         default_trusted_nft_contracts.iter().for_each(|contract_id| {
@@ -96,11 +93,11 @@ impl Quest {
         self.probability_by_rarity.insert(&rarity, &probability);
     }
 
-    pub fn set_owner(&mut self, new_owner_id: AccountId) {
+    pub fn set_owner(&mut self, new_owner_id: &AccountId) {
         // only owner can set another owner
         self.assert_only_owner();
 
-        self.owner_id = new_owner_id;
+        self.owner_id = new_owner_id.clone();
     }
 
     pub fn trust_nft_contract(&mut self, contract_id: AccountId) {
@@ -216,5 +213,5 @@ impl Quest {
     }
 }
 
-// #[cfg(test)]
-// mod tests;
+#[cfg(test)]
+mod tests;

@@ -2,6 +2,7 @@ use enums::{BoxRarity, StorageKey};
 
 use json_types::json_box::JsonBox;
 use json_types::json_pagination::Pagination;
+use json_types::json_quest::JsonQuest;
 use near_sdk::collections::{UnorderedSet, Vector};
 use near_sdk::{env, require, Promise, PromiseOrValue, ONE_NEAR};
 use near_sdk::json_types::{U128, U64};
@@ -9,7 +10,7 @@ use near_sdk::{collections::LookupMap, near_bindgen, AccountId, PanicOnDefault};
 
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use questbox::QuestBox;
-use types::quest_data::QuestData;
+use trusted_contracts::get_trusted_nft_contracts;
 use types::questbox_data::QuestBoxData;
 use types::{BoxId, Probability, QuestId, TokenId};
 
@@ -50,7 +51,7 @@ impl Contract {
         }
     }
 
-    pub fn quests_per_owner(&self, account_id: AccountId) -> Vec<QuestData> {
+    pub fn quests_per_owner(&self, account_id: AccountId) -> Vec<JsonQuest> {
         let quests_ids = self.quests_per_owner
             .get(&account_id);
 
@@ -70,7 +71,7 @@ impl Contract {
                     let quest = quest.unwrap();
 
                     result_vec.push(
-                        QuestData::new(quest.id, quest.title, quest.owner_id)
+                        JsonQuest::new(quest.id, quest.title)
                     );
                 }
             });
@@ -133,7 +134,7 @@ impl Contract {
     }
 
     #[payable]
-    pub fn create_quest(&mut self, title: String) {
+    pub fn create_quest(&mut self, title: &String) {
         assert!(
             !title.is_empty(),
             "Title should be specified"
@@ -142,7 +143,8 @@ impl Contract {
         let account_id = env::predecessor_account_id();
         let storage_used_before = env::storage_usage();
 
-        let quest = Quest::new(self.next_quest_id, &title, &account_id);
+        let default_trusted_nft_contracts = get_trusted_nft_contracts();
+        let quest = Quest::new(self.next_quest_id, &title, &account_id, default_trusted_nft_contracts);
         self.next_quest_id += 1;
         
         self.quests.insert(&quest.id, &quest);
@@ -268,7 +270,36 @@ impl Contract {
     pub fn set_owner(&mut self, quest_id: QuestId, new_owner_id: AccountId) {
         let mut quest = self.quests.get(&quest_id).expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
 
-        quest.set_owner(new_owner_id);
+        quest.set_owner(&new_owner_id);
+        
+        self.quests.insert(&quest_id, &quest);
+
+        //remove from old owner
+        let current_owner_id = env::predecessor_account_id();
+        let owner_quests = self.quests_per_owner.get(&current_owner_id);
+
+        if !owner_quests.is_some(){
+            return;
+        }
+
+        let mut owners_quests_unwrapped = owner_quests.unwrap();
+
+        owners_quests_unwrapped.remove(&quest_id);
+
+        self.quests_per_owner.insert(&current_owner_id, &owners_quests_unwrapped);
+
+        //add to new owner
+        let new_owner_quests_unwrapped = self.quests_per_owner.get(&new_owner_id);
+        
+        let mut quests_per_owner = UnorderedSet::new(StorageKey::QuestIdsPerOwner);
+
+         if new_owner_quests_unwrapped.is_some() {
+            quests_per_owner = new_owner_quests_unwrapped.unwrap();
+        }
+
+        quests_per_owner.insert(&quest_id);
+        self.quests_per_owner.insert(&new_owner_id, &quests_per_owner);
+
     }
 
     pub fn trust_nft_contract(&mut self, quest_id: QuestId, contract_id: AccountId) {

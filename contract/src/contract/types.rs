@@ -7,14 +7,11 @@ use super::enums::BoxRarity;
 
 // modules
 pub mod questbox_data;
-pub mod quest_data;
+
 
 pub type TokenId = String;
-
 pub type BoxId = u128;
-
 pub type QuestTitle = String;
-
 pub type QuestId = u64;
 pub type PoolId = u32;
 pub type Capacity = u64;
