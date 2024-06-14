@@ -64,7 +64,7 @@ fn test_setup_succeeds() {
 fn test_quest_ownership() {
     let (mut contract, mut context) = setup();
     
-    let quest = create_quest(&mut contract, &mut context);
+    let quest = create_quest(&mut contract, &mut context, None);
 
     let owner_quests = contract.quests_per_owner(owner());
     assert_eq!(owner_quests.len(), 1);
@@ -95,7 +95,7 @@ fn test_quest_ownership() {
 fn test_quest_ownership_panics() {
     let (mut contract, mut context) = setup();
     
-    let quest = create_quest(&mut contract, &mut context);
+    let quest = create_quest(&mut contract, &mut context, None);
 
     let owner_quests = contract.quests_per_owner(owner());
     assert_eq!(owner_quests.len(), 1);
@@ -115,7 +115,7 @@ fn test_quest_ownership_panics() {
 fn test_set_probability_with_regular_user_panic() {
     let (mut contract, mut context) = setup();
 
-    let quest = create_quest(&mut contract, &mut context);
+    let quest = create_quest(&mut contract, &mut context, None);
 
     testing_env!(context.predecessor_account_id(user1()).build());
 
@@ -132,7 +132,7 @@ fn test_set_probability_with_zero_denominator_panic() {
         denominator: 0,
     };
 
-    let quest = create_quest(&mut contract, &mut context);
+    let quest = create_quest(&mut contract, &mut context, None);
 
     contract.set_probability(quest.id, BoxRarity::Epic, probability);
 }
@@ -147,7 +147,7 @@ fn test_set_probability_bigger_than_one_panic() {
         denominator: 2,
     };
 
-    let quest = create_quest(&mut contract, &mut context);
+    let quest = create_quest(&mut contract, &mut context, None);
 
     contract.set_probability(quest.id, BoxRarity::Epic, probability);
 }
@@ -157,38 +157,101 @@ fn test_set_probability_bigger_than_one_panic() {
 fn test_add_small_near_pool_with_panic() {
     let (mut contract, mut context) = setup();
 
-    let quest = create_quest(&mut contract, &mut context);
+    let quest = create_quest(&mut contract, &mut context, None);
 
     contract.add_near_reward(quest.id, BoxRarity::Rare, U128(ONE_NEAR / 20), U64(10));
 }
 
-// #[test]
-// fn test_add_near_pool_succeeds() {
-//     let (mut contract, mut context) = setup();
+#[test]
+fn test_add_near_pool_succeeds() {
+    let (mut contract, mut context) = setup();
 
-//     testing_env!(context.attached_deposit(5 * ONE_NEAR).build());
+    let quest = create_quest(&mut contract, &mut context, None);
 
-//     contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), U64(3));
-// }
+    const FIRST_POOL_ID:u32 = 0;
+    assert_eq!(quest.pools.get(&FIRST_POOL_ID).is_none(), true);
+    
+    const POOL_RARITY:BoxRarity = BoxRarity::Rare;
+    const AMOUNT:U128 = U128(ONE_NEAR);
+    const CAPACITY:U64 = U64(3);
 
-// #[test]
-// fn test_add_big_near_pool() {
-//     let (mut contract, mut context) = setup();
+    contract.add_near_reward(quest.id, POOL_RARITY, AMOUNT, CAPACITY);
 
-//     testing_env!(context.attached_deposit(10005 * ONE_NEAR).build());
+    let quest_modified = contract.quests.get(&quest.id).expect("Quest should exist");
 
-//     contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), U64(10_000));
-// }
+    let pool = quest_modified.pools.get(&FIRST_POOL_ID);
 
-// #[test]
-// fn test_add_multiple_near_pools_succeeds() {
-//     let (mut contract, mut context) = setup();
+    assert_eq!(pool.is_some(), true);
 
-//     testing_env!(context.attached_deposit(10 * ONE_NEAR).build());
+    let unwrapped_pool = pool.unwrap();
+    let json_pool: JsonPoolRewards = unwrapped_pool.clone().into();
 
-//     contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), U64(5));
-//     contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), U64(5));
-// }
+    match json_pool {
+        JsonPoolRewards::Near { amount, available, total } => {
+            assert_eq!(unwrapped_pool.rarity, POOL_RARITY);
+            assert_eq!(amount, AMOUNT);
+            assert_eq!(U64(total), CAPACITY);
+        },
+        JsonPoolRewards::NonFungibleToken { contract_id, token_ids, total } => {
+            panic!("Near pool must have been added");
+        }
+    }
+}
+
+#[test]
+fn test_add_big_near_pool() {
+    let (mut contract, mut context) = setup();
+
+    let quest = create_quest(&mut contract, &mut context, Some(10005));
+    
+    const FIRST_POOL_ID:u32 = 0;
+    const POOL_RARITY:BoxRarity = BoxRarity::Rare;
+    const AMOUNT:U128 = U128(ONE_NEAR);
+    const CAPACITY:U64 = U64(10_000);
+
+    contract.add_near_reward(quest.id, POOL_RARITY, AMOUNT, CAPACITY);
+
+    let quest_modified = contract.quests.get(&quest.id).expect("Quest should exist");
+
+    let pool = quest_modified.pools.get(&FIRST_POOL_ID);
+
+    assert_eq!(pool.is_some(), true);
+
+    let unwrapped_pool = pool.unwrap();
+    let json_pool: JsonPoolRewards = unwrapped_pool.clone().into();
+
+    match json_pool {
+        JsonPoolRewards::Near { amount, available, total } => {
+            assert_eq!(unwrapped_pool.rarity, POOL_RARITY);
+            assert_eq!(amount, AMOUNT);
+            assert_eq!(U64(total), CAPACITY);
+        },
+        JsonPoolRewards::NonFungibleToken { contract_id, token_ids, total } => {
+            panic!("Near pool must have been added");
+        }
+    }
+}
+
+#[test]
+fn test_add_multiple_near_pools_succeeds() {
+    let (mut contract, mut context) = setup();
+
+    let quest = create_quest(&mut contract, &mut context, Some(10));
+
+    contract.add_near_reward(quest.id, BoxRarity::Rare, U128(ONE_NEAR), U64(5));
+    contract.add_near_reward(quest.id, BoxRarity::Rare, U128(ONE_NEAR), U64(5));
+
+    const FIRST_POOL_ID:u32 = 0;
+    const SECOND_POOL_ID:u32 = 1;
+
+    let quest_modified = contract.quests.get(&quest.id).expect("Quest should exist");
+
+    let pool1 = quest_modified.pools.get(&FIRST_POOL_ID);
+    let pool2 = quest_modified.pools.get(&SECOND_POOL_ID);
+
+    assert_eq!(pool1.is_some(), true);
+    assert_eq!(pool2.is_some(), true);
+}
 
 // #[test]
 // fn test_add_nft_pool_succeeds() {

@@ -52,13 +52,13 @@ impl Quest {
         Self {
             id,
             title: title.to_string(),
-            next_pool_id: 1,
+            next_pool_id: 0,
             pools: LookupMap::new(StorageKey::Pools),
             pool_ids_by_rarity: LookupMap::new(StorageKey::PoolsByRarity),
             nft_pool_by_key: LookupMap::new(StorageKey::NftPoolByKey),
             trusted_nft_contracts,
             owner_id: owner_id.clone(),
-            next_box_id: 1,
+            next_box_id: 0,
             boxes: LookupMap::new(StorageKey::Boxes),
             probability_by_rarity: LookupMap::new(StorageKey::ProbabilityByRarity),
             users: UnorderedSet::new(StorageKey::Users),
@@ -215,4 +215,6 @@ impl Quest {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
 mod test_utils;
