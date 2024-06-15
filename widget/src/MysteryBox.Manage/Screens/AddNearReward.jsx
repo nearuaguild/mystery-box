@@ -1,6 +1,8 @@
-const widget_owner_id = "untidy-scarecrow.testnet";
+const widget_owner_id = "evasive-dime.testnet";
 
-console.log('props', props);
+const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+
+logInfo('AddNearReward props', props);
 
 const isValidPool = (pool) => {
   if (pool.capacity === undefined || pool.capacity === null) return false;
@@ -225,9 +227,10 @@ const submitTransactionToAddPools = () => {
     const total = Big(pool.capacity).mul(amount);
 
     return {
-      contractName: props.contract?.contract_id,
+      contractName: props.quest.title,
       methodName: 'add_near_reward',
       args: {
+        quest_id: props.quest.quest_id,
         rarity: pool.rarity,
         capacity: pool.capacity,
         amount: amount.toFixed(),
@@ -252,8 +255,8 @@ return (
         <Widget
           src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuHeader`}
           props={{
-            title: props.contract?.title,
-            subtitle: props.contract?.contract_id,
+            title: props.quest?.title,
+            subtitle: props.quest?.quest_id,
           }}
         />
       <MenuContent>

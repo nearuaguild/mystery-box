@@ -1,4 +1,4 @@
-const widget_owner_id = "untidy-scarecrow.testnet";
+const widget_owner_id = "evasive-dime.testnet";
 
 const rpc_endpoint = 'https://rpc.testnet.near.org';
 

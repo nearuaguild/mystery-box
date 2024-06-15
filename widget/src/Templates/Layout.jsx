@@ -1,4 +1,4 @@
-const widget_owner_id = "untidy-scarecrow.testnet";
+const widget_owner_id = "evasive-dime.testnet";
 
 const font = fetch(
   'https://fonts.googleapis.com/css2?family=Kodchasan:wght@300;400;500;700&display=swap'
@@ -97,7 +97,7 @@ const HeaderButton = styled.div`
   justify-content: center;
 `;
 
-function Layout({ children, contract_id, active_home_button }) {
+function Layout({ children, quest_id, active_home_button }) {
   return (
     <Container>
       <Header>
@@ -111,7 +111,7 @@ function Layout({ children, contract_id, active_home_button }) {
           <Widget
             src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.HomeButton`}
             props={{
-              contract_id: contract_id,
+              quest_id,
               active: active_home_button,
             }}
           />

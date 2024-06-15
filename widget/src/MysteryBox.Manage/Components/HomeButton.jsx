@@ -1,4 +1,4 @@
-const widget_owner_id = "untidy-scarecrow.testnet";
+const widget_owner_id = "evasive-dime.testnet";
 
 const { href: linkHref } = VM.require(`${widget_owner_id}/widget/core.lib.url`);
 

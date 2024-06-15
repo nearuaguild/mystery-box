@@ -1,4 +1,12 @@
+const widget_owner_id = 'evasive-dime.testnet';
+const top_contract_id = 'boundless-berry.testnet';
+
+const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
 const rpc_endpoint = 'https://rpc.testnet.near.org';
+
+console.log("MysteryBox.Manage props", props);
+
+logInfo("ETREMELLY IMPORTANT INFORMATION");
 
 const fetchTransactionByHash = (hash, sender_id) => {
   return fetch(rpc_endpoint, {
@@ -33,12 +41,7 @@ const parseResultFromClaimTransactionResponse = (response) => {
   return JSON.parse(Buffer.from(responseValue, 'base64').toString());
 };
 
-const widget_owner_id = 'untidy-scarecrow.testnet';
-const top_contract_id = 'valuable-development.testnet';
-
 const account_id = context.accountId;
-
-let contract_id = props.contract_id;
 
 const KnownPages = [
   'Home',
@@ -68,7 +71,6 @@ const determinePageFromProps = () => {
     console.log('result', result);
 
     if (result) {
-      contract_id = result;
       return 'Home';
     }
   }
@@ -89,7 +91,7 @@ const { href: linkHref } = VM.require(`${widget_owner_id}/widget/core.lib.url`);
 
 linkHref || (linkHref = () => {});
 
-function Page({ page, account_id, contract_id }) {
+function Page({ page, account_id, quest_id }) {
   if (page === 'SignIn') {
     return (
       <Widget
@@ -112,18 +114,18 @@ function Page({ page, account_id, contract_id }) {
     );
   }
 
-  const contracts =
-    Near.view(top_contract_id, 'contracts_for_owner', {
+  const quests =
+    Near.view(top_contract_id, 'quests_per_owner', {
       account_id,
     }) || [];
 
-  const currentContract =
-    contract_id &&
-    contracts.find((contract) => contract.contract_id === contract_id);
+  const currentQuest = !isNaN(quest_id) ? quests.find((quest) => quest.quest_id.toString() === quest_id) : null;
+
+  console.log("MysteryBox.Manage quests", quests, quest_id, currentQuest);
 
   switch (page) {
     case 'Home': {
-      if (contracts.length === 0) {
+      if (quests.length === 0) {
         return (
           <>
             <Widget
@@ -142,7 +144,7 @@ function Page({ page, account_id, contract_id }) {
                 href: linkHref({
                   widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
                   params: {
-                    contract_id: contract_id,
+                    quest_id,
                     page: 'DeployContract',
                   },
                 }),
@@ -156,14 +158,13 @@ function Page({ page, account_id, contract_id }) {
         <Widget
           src={`${widget_owner_id}/widget/MysteryBox.Manage.Screens.Home`}
           props={{
-            defaultContractId: contract_id,
-            contracts,
+            quests: quests,
           }}
         />
       );
     }
     case 'AddNftReward': {
-      const contracts = Near.view(contract_id, 'trusted_nft_contracts');
+      const contracts = Near.view(quest_id, 'trusted_nft_contracts');
 
       console.log('contracts', contracts);
 
@@ -200,7 +201,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
         <Widget
           src={`${widget_owner_id}/widget/MysteryBox.Manage.Screens.AddNftReward`}
           props={{
-            contract: currentContract,
+            contract: currentQuest,
             tokens,
           }}
         />
@@ -210,7 +211,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
       /** @todo fetch rarity from backend */
 
       const fetchRewards = (rarity) => {
-        const rewards = Near.view(contract_id, 'rewards', {
+        const rewards = Near.view(quest_id, 'rewards', {
           rarity,
         });
 
@@ -242,7 +243,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
                 href: linkHref({
                   widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
                   params: {
-                    contract_id,
+                    quest_id,
                     page: 'AddNearReward',
                   },
                 }),
@@ -255,7 +256,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
         <Widget
           src={`${widget_owner_id}/widget/MysteryBox.Manage.Screens.ListRewards`}
           props={{
-            contract: currentContract,
+            contract: currentQuest,
             rewards,
           }}
         />
@@ -263,7 +264,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
     }
     case 'ListUserBoxes': {
       /** @todo fetch addresses from backend */
-      const addresses = Near.view(contract_id, 'users', {
+      const addresses = Near.view(quest_id, 'users', {
         pagination: {
           page: 1,
           size: 50,
@@ -274,7 +275,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
         return {
           account_id: address,
           boxes:
-            Near.view(contract_id, 'boxes_for_owner', {
+            Near.view(quest_id, 'boxes_for_owner', {
               account_id: address,
               pagination: {
                 page: 1,
@@ -300,7 +301,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
                 href: linkHref({
                   widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
                   params: {
-                    contract_id,
+                    quest_id,
                     page: 'MintBox',
                   },
                 }),
@@ -313,7 +314,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
         <Widget
           src={`${widget_owner_id}/widget/MysteryBox.Manage.Screens.ListUserBoxes`}
           props={{
-            contract: currentContract,
+            contract: currentQuest,
             accounts,
           }}
         />
@@ -324,7 +325,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
         <Widget
           src={`${widget_owner_id}/widget/MysteryBox.Manage.Screens.${page}`}
           props={{
-            contract: currentContract,
+            quest: currentQuest,
           }}
         />
       );
@@ -337,10 +338,10 @@ console.log('page', page);
 return (
   <>
     <Layout
-      contract_id={contract_id}
+      quest_id={props.quest_id}
       active_home_button={!['Home', 'SignIn'].includes(page)}
     >
-      <Page page={page} account_id={account_id} contract_id={contract_id} />
+      <Page page={page} account_id={account_id} quest_id={props.quest_id} />
     </Layout>
     <Widget
       src={`${widget_owner_id}/widget/Templates.Notification`}

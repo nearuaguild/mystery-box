@@ -1,21 +1,13 @@
-const widget_owner_id = "untidy-scarecrow.testnet";
+console.log("Home props", props);
+
+const widget_owner_id = "evasive-dime.testnet";
 
 const { href: linkHref } = VM.require(`${widget_owner_id}/widget/core.lib.url`);
 
 linkHref || (linkHref = () => {});
 
-const defaultContractIndex = props.defaultContractId
-  ? (props.contracts || []).findIndex(
-      (contract) => contract.contract_id === props.defaultContractId
-    )
-  : -1;
-const defaultActiveIndex =
-  defaultContractIndex !== -1 ? defaultContractIndex : 0;
-
-console.log('defaultActiveIndex', defaultActiveIndex);
-
 State.init({
-  active: defaultActiveIndex,
+  active_quest_id: props.quests[0].quest_id,
 });
 
 const SliderWrapper = styled.div`
@@ -135,24 +127,24 @@ const Bottom = styled.div`
 `;
 
 const previousActiveContract = () => {
-  if (state.active === 0) return;
+  if (state.active_quest_id === 0) return;
 
-  State.update({ active: state.active - 1 });
+  State.update({ active: state.active_quest_id - 1 });
 };
 
 const nextActiveContract = () => {
-  if (state.active === props.contracts.length - 1) return;
+  if (state.active_quest_id === props.quests.length - 1) return;
 
-  State.update({ active: state.active + 1 });
+  State.update({ active: state.active_quest_id + 1 });
 };
 
-const contract = props.contracts[state.active];
+const quest = props.quests[state.active_quest_id];
 
 const createLinkToPage = (page) => {
   return linkHref({
     widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
     params: {
-      contract_id: contract.contract_id,
+      quest_id: state.active_quest_id,
       page,
     },
   });
@@ -163,20 +155,20 @@ return (
     <Widget
       src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.Title`}
       props={{
-        text: 'Contracts ololo',
+        text: 'My Giveaways',
       }}
     />
     <SliderWrapper>
       <LeftArrow
-        disabled={state.active === 0}
+        disabled={state.active_quest_id === 0}
         onClick={previousActiveContract}
       />
       <WrapperMenu>
         <Widget
           src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuHeader`}
           props={{
-            title: contract.title,
-            subtitle: contract.contract_id,
+            title: quest.title,
+            subtitle: quest.contract_id,
           }}
         />
         <MenuContent></MenuContent>
@@ -232,7 +224,7 @@ return (
         </MenuFooter>
       </WrapperMenu>
       <RightArrow
-        disabled={state.active === props.contracts.length - 1}
+        disabled={state.active_quest_id === props.quests.length - 1}
         onClick={nextActiveContract}
       />
     </SliderWrapper>
@@ -256,7 +248,7 @@ return (
           href: linkHref({
             widgetSrc: `${widget_owner_id}/widget/MysteryBox`,
             params: {
-              contract_id: contract.contract_id,
+              contract_id: quest.contract_id,
             },
           }),
           target: '_blank',

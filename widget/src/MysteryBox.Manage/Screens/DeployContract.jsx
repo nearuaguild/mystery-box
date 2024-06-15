@@ -1,4 +1,4 @@
-const widget_owner_id = "untidy-scarecrow.testnet";
+const widget_owner_id = "evasive-dime.testnet";
 
 console.log('props', props);
 
@@ -138,14 +138,13 @@ console.log('shouldSubmitButtonBeDisabled', shouldSubmitButtonBeDisabled);
 const submitTransactionToDeployContract = () => {
   console.log('submitTransactionToDeployContract', state.title, address);
 
-  const baseDeposit = Big(10).pow(24).mul(6.1); // 6.1N
+  const baseDeposit = Big(10).pow(24).mul(0.5); // 0.5 NEAR
   const argsDeposit = Big(240).mul(state.title.length).mul(Big(10).pow(18));
 
   Near.call(
     props.top_contract_id,
-    'deploy_mystery_box_contract',
+    'create_quest',
     {
-      alias,
       title: state.title,
     },
     Big(10).pow(12).mul(300), // 300 TGas
@@ -158,7 +157,7 @@ return (
     <Widget
       src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.Title`}
       props={{
-        text: 'Deploy Contract',
+        text: 'Create a Giveaway',
       }}
     />
     <WrapperMenu>
@@ -179,20 +178,12 @@ return (
             />
           </WrapperContent>
         </FieldRow>
-        <FieldRow>
-          <WrapperHeader>
-            <PrimaryText>Contract Address Is Going To Be</PrimaryText>
-          </WrapperHeader>
-          <WrapperContent>
-            <SecondaryText>{address || '<No Title>'}</SecondaryText>
-          </WrapperContent>
-        </FieldRow>
       </MenuContent>
     </WrapperMenu>
     <Widget
       src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.SubmitButton`}
       props={{
-        text: 'Deploy',
+        text: 'Create',
         disabled: shouldSubmitButtonBeDisabled,
         onClick: submitTransactionToDeployContract,
       }}
