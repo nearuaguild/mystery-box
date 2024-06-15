@@ -829,6 +829,27 @@ fn test_claim_near_reward_succeeds() {
 }
 
 #[test]
+#[should_panic(expected = "Error parsing message")]
+fn test_claim_nft_reward_message_parse_panics() {
+    let (mut contract, mut context, quest) = setup(None);
+
+    let box_id = contract.mint(quest.id, user1(), BoxRarity::Rare);
+
+    // add NFT token as reward
+    testing_env!(context.predecessor_account_id(nft()).build());
+    contract.nft_on_transfer(
+        owner(),
+        owner(),
+        "some_token".to_string(),
+        String::from("quest_id: 0")
+    );
+
+    testing_env!(context.attached_deposit(1).predecessor_account_id(user1()).build());
+
+    contract.claim(quest.id, box_id);
+}
+
+#[test]
 fn test_claim_nft_reward_succeeds() {
     let (mut contract, mut context, quest) = setup(None);
 
