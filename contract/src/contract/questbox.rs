@@ -5,7 +5,7 @@ use near_sdk::serde::{ Deserialize, Serialize };
 use near_sdk::AccountId;
 
 use super::json_types::json_box::JsonBox;
-use super::{ BoxId, QuestId };
+use super::types::{BoxId, QuestId};
 
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]

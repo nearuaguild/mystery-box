@@ -1,6 +1,6 @@
 use near_sdk::{test_utils::VMContextBuilder, testing_env, ONE_NEAR};
 
-use crate::contract::Contract;
+use crate::Contract;
 
 use super::Quest;
 

@@ -1,17 +1,17 @@
 #![allow(unused)]
 #[cfg(test)]
-use near_sdk::json_types::{U128, U64};
+use near_sdk::json_types::{ U128, U64 };
 use near_sdk::test_utils::VMContextBuilder;
-use near_sdk::{testing_env, AccountId, ONE_NEAR};
+use near_sdk::{ testing_env, AccountId, ONE_NEAR };
 
 use std::str::FromStr;
 
 use crate::contract::enums::BoxRarity;
 use crate::contract::json_types::json_box::JsonBoxStatus;
-use crate::contract::json_types::json_reward::{JsonPoolRewards, JsonReward};
-use crate::contract::quest::test_utils::create_quest;
+use crate::contract::json_types::json_reward::{ JsonPoolRewards, JsonReward };
 use crate::contract::types::Probability;
-use crate::contract::Contract;
+use crate::test_utils::create_quest;
+use crate::Contract;
 
 use super::Quest;
 
@@ -74,10 +74,10 @@ fn test_quest_ownership() {
 
     let first_quest = owner_quests.get(0);
     assert_eq!(first_quest.is_some(), true);
-    
+
     let first_quest_unwrapped = first_quest.unwrap();
 
-    contract.set_owner( first_quest_unwrapped.quest_id, user1());
+    contract.set_owner(first_quest_unwrapped.quest_id, user1());
 
     let owner_quests = contract.quests_per_owner(owner());
     assert_eq!(owner_quests.len(), 0);
@@ -103,12 +103,12 @@ fn test_quest_ownership_panics() {
 
     let first_quest = owner_quests.get(0);
     assert_eq!(first_quest.is_some(), true);
-    
+
     let first_quest_unwrapped = first_quest.unwrap();
 
-    contract.set_owner( first_quest_unwrapped.quest_id, user1());
+    contract.set_owner(first_quest_unwrapped.quest_id, user1());
     // should panic since the predecessor is "owner" that no more has ownership
-    contract.set_owner( first_quest_unwrapped.quest_id, user2());
+    contract.set_owner(first_quest_unwrapped.quest_id, user2());
 }
 
 #[test]
@@ -159,12 +159,12 @@ fn test_add_small_near_pool_with_panic() {
 fn test_add_near_pool_succeeds() {
     let (mut contract, mut context, quest) = setup(None);
 
-    const FIRST_POOL_ID:u32 = 0;
+    const FIRST_POOL_ID: u32 = 0;
     assert_eq!(quest.pools.get(&FIRST_POOL_ID).is_none(), true);
-    
-    const POOL_RARITY:BoxRarity = BoxRarity::Rare;
-    const AMOUNT:U128 = U128(ONE_NEAR);
-    const CAPACITY:U64 = U64(3);
+
+    const POOL_RARITY: BoxRarity = BoxRarity::Rare;
+    const AMOUNT: U128 = U128(ONE_NEAR);
+    const CAPACITY: U64 = U64(3);
 
     contract.add_near_reward(quest.id, POOL_RARITY, AMOUNT, CAPACITY);
 
@@ -179,24 +179,21 @@ fn test_add_near_pool_succeeds() {
 
     assert_eq!(unwrapped_pool.rarity, POOL_RARITY);
 
-    assert_eq!(
-            json_pool,
-            JsonPoolRewards::Near {
-                amount: AMOUNT,
-                available: CAPACITY.into(),
-                total: CAPACITY.into()
-            }
-        );
+    assert_eq!(json_pool, JsonPoolRewards::Near {
+        amount: AMOUNT,
+        available: CAPACITY.into(),
+        total: CAPACITY.into(),
+    });
 }
 
 #[test]
 fn test_add_big_near_pool() {
     let (mut contract, mut context, quest) = setup(Some(10005));
-    
-    const FIRST_POOL_ID:u32 = 0;
-    const POOL_RARITY:BoxRarity = BoxRarity::Rare;
-    const AMOUNT:U128 = U128(ONE_NEAR);
-    const CAPACITY:U64 = U64(10_000);
+
+    const FIRST_POOL_ID: u32 = 0;
+    const POOL_RARITY: BoxRarity = BoxRarity::Rare;
+    const AMOUNT: U128 = U128(ONE_NEAR);
+    const CAPACITY: U64 = U64(10_000);
 
     contract.add_near_reward(quest.id, POOL_RARITY, AMOUNT, CAPACITY);
 
@@ -211,15 +208,11 @@ fn test_add_big_near_pool() {
 
     assert_eq!(unwrapped_pool.rarity, POOL_RARITY);
 
-    assert_eq!(
-            json_pool,
-            JsonPoolRewards::Near {
-                amount: AMOUNT,
-                available: CAPACITY.into(),
-                total: CAPACITY.into()
-            }
-        );
-
+    assert_eq!(json_pool, JsonPoolRewards::Near {
+        amount: AMOUNT,
+        available: CAPACITY.into(),
+        total: CAPACITY.into(),
+    });
 }
 
 #[test]
@@ -229,8 +222,8 @@ fn test_add_multiple_near_pools_succeeds() {
     contract.add_near_reward(quest.id, BoxRarity::Rare, U128(ONE_NEAR), U64(5));
     contract.add_near_reward(quest.id, BoxRarity::Rare, U128(ONE_NEAR), U64(5));
 
-    const FIRST_POOL_ID:u32 = 0;
-    const SECOND_POOL_ID:u32 = 1;
+    const FIRST_POOL_ID: u32 = 0;
+    const SECOND_POOL_ID: u32 = 1;
 
     let quest_modified = contract.quests.get(&quest.id).expect("Quest should exist");
 
@@ -253,7 +246,7 @@ fn test_add_nft_pool_succeeds() {
         owner(),
         owner(),
         "some_token".to_string(),
-        "rare".to_string(),
+        "rare".to_string()
     );
 }
 
@@ -328,14 +321,11 @@ fn test_available_near_rewards_data() {
 
     let reward = rewards.get(0).unwrap().to_owned();
 
-    assert_eq!(
-        reward,
-        JsonPoolRewards::Near {
-            amount: U128(ONE_NEAR),
-            available: 5,
-            total: 5
-        }
-    );
+    assert_eq!(reward, JsonPoolRewards::Near {
+        amount: U128(ONE_NEAR),
+        available: 5,
+        total: 5,
+    });
 }
 
 // #[test]
@@ -600,10 +590,7 @@ fn test_claim_without_pools_with_panic() {
 
     let box_id = contract.mint(quest.id, user1(), BoxRarity::Rare);
 
-    testing_env!(context
-        .attached_deposit(1)
-        .predecessor_account_id(user1())
-        .build());
+    testing_env!(context.attached_deposit(1).predecessor_account_id(user1()).build());
 
     contract.claim(quest.id, box_id);
 }
@@ -615,10 +602,7 @@ fn test_claim_as_a_user_with_zero_boxes_with_panic() {
 
     let box_id = contract.mint(quest.id, user1(), BoxRarity::Rare);
 
-    testing_env!(context
-        .attached_deposit(1)
-        .predecessor_account_id(user2())
-        .build());
+    testing_env!(context.attached_deposit(1).predecessor_account_id(user2()).build());
 
     contract.claim(quest.id, box_id);
 }
@@ -631,10 +615,7 @@ fn test_claim_as_another_user_with_panic() {
     let box_1_id = contract.mint(quest.id, user1(), BoxRarity::Rare);
     let box_2_id = contract.mint(quest.id, user2(), BoxRarity::Rare);
 
-    testing_env!(context
-        .attached_deposit(1)
-        .predecessor_account_id(user2())
-        .build());
+    testing_env!(context.attached_deposit(1).predecessor_account_id(user2()).build());
 
     //claiming box_1_id by 'user2' will fail because 'user2' is not the owner of box_1_id
     contract.claim(quest.id, box_1_id);
@@ -648,10 +629,7 @@ fn test_claim_non_existing_with_panic() {
     contract.add_near_reward(quest.id, BoxRarity::Rare, U128(ONE_NEAR / 10), U64(1));
     let box_id = contract.mint(quest.id, user1(), BoxRarity::Rare);
 
-    testing_env!(context
-        .attached_deposit(1)
-        .predecessor_account_id(user1())
-        .build());
+    testing_env!(context.attached_deposit(1).predecessor_account_id(user1()).build());
 
     const NON_EXISTING_BOX_ID: u128 = 5000;
     assert!(box_id != NON_EXISTING_BOX_ID, "Box id's can't be equal");
@@ -667,10 +645,7 @@ fn test_claim_twice_with_panic() {
     contract.add_near_reward(quest.id, BoxRarity::Rare, U128(ONE_NEAR / 10), U64(5));
     let box_id = contract.mint(quest.id, user1(), BoxRarity::Rare);
 
-    testing_env!(context
-        .attached_deposit(1)
-        .predecessor_account_id(user1())
-        .build());
+    testing_env!(context.attached_deposit(1).predecessor_account_id(user1()).build());
 
     contract.claim(quest.id, box_id);
     contract.claim(quest.id, box_id);
@@ -683,10 +658,7 @@ fn test_claim_box_status() {
     contract.add_near_reward(quest.id, BoxRarity::Rare, U128(ONE_NEAR), U64(2));
     let box_id = contract.mint(quest.id, user1(), BoxRarity::Rare);
 
-    testing_env!(context
-        .attached_deposit(1)
-        .predecessor_account_id(user1())
-        .build());
+    testing_env!(context.attached_deposit(1).predecessor_account_id(user1()).build());
 
     // promises aren't called
     contract.claim(quest.id, box_id);
@@ -695,14 +667,11 @@ fn test_claim_box_status() {
 
     let box_data = boxes.get(0).unwrap();
 
-    assert_eq!(
-        box_data.box_status,
-        JsonBoxStatus::Claimed {
-            reward: JsonReward::Near {
-                amount: ONE_NEAR.into()
-            }
-        }
-    );
+    assert_eq!(box_data.box_status, JsonBoxStatus::Claimed {
+        reward: JsonReward::Near {
+            amount: ONE_NEAR.into(),
+        },
+    });
 }
 
 #[test]
@@ -713,10 +682,7 @@ fn test_claim_box_with_zero_probability() {
     contract.add_near_reward(quest.id, BoxRarity::Rare, U128(ONE_NEAR), U64(2));
     let box_id = contract.mint(quest.id, user1(), BoxRarity::Rare);
 
-    testing_env!(context
-        .attached_deposit(1)
-        .predecessor_account_id(user1())
-        .build());
+    testing_env!(context.attached_deposit(1).predecessor_account_id(user1()).build());
 
     // promises aren't called
     contract.claim(quest.id, box_id);
@@ -725,12 +691,9 @@ fn test_claim_box_with_zero_probability() {
 
     let box_data = boxes.get(0).unwrap();
 
-    assert_eq!(
-        box_data.box_status,
-        JsonBoxStatus::Claimed {
-            reward: JsonReward::Nothing
-        }
-    );
+    assert_eq!(box_data.box_status, JsonBoxStatus::Claimed {
+        reward: JsonReward::Nothing,
+    });
 }
 
 #[test]
@@ -740,10 +703,7 @@ fn test_claim_decreases_reward_availability() {
     contract.add_near_reward(quest.id, BoxRarity::Rare, U128(ONE_NEAR), U64(2));
     let box_id = contract.mint(quest.id, user1(), BoxRarity::Rare);
 
-    testing_env!(context
-        .attached_deposit(1)
-        .predecessor_account_id(user1())
-        .build());
+    testing_env!(context.attached_deposit(1).predecessor_account_id(user1()).build());
 
     // promises aren't called
     contract.claim(quest.id, box_id);
@@ -755,14 +715,11 @@ fn test_claim_decreases_reward_availability() {
     let reward = rewards.get(0).unwrap().to_owned();
 
     // availability decreased
-    assert_eq!(
-        reward,
-        JsonPoolRewards::Near {
-            amount: ONE_NEAR.into(),
-            available: 1,
-            total: 2
-        }
-    );
+    assert_eq!(reward, JsonPoolRewards::Near {
+        amount: ONE_NEAR.into(),
+        available: 1,
+        total: 2,
+    });
 }
 
 #[test]
@@ -774,10 +731,7 @@ fn test_claim_empty_reward_availability() {
     contract.add_near_reward(quest.id, BoxRarity::Rare, U128(ONE_NEAR), U64(1));
     let box_id = contract.mint(quest.id, user1(), BoxRarity::Rare);
 
-    testing_env!(context
-        .attached_deposit(1)
-        .predecessor_account_id(user1())
-        .build());
+    testing_env!(context.attached_deposit(1).predecessor_account_id(user1()).build());
 
     // promises aren't called
     contract.claim(quest.id, box_id);

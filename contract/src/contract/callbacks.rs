@@ -1,7 +1,8 @@
 use near_sdk::{env, log, near_bindgen, require, serde_json, AccountId, Gas, Promise, PromiseOrValue, PromiseResult};
 
+use crate::{Contract, ContractExt};
+
 use super::{enums::{BoxRarity, BoxStatus}, internal, json_types::json_reward::JsonReward, types::{BoxId, PoolId, QuestId, Reward}};
-use crate::contract::{Contract, ContractExt};
 
 pub(crate) fn create_withdraw_box_reward_promise_with_verification(
     account_id: &AccountId,
