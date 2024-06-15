@@ -1,4 +1,3 @@
-use crate::contract::enums::BoxStatus;
 use crate::contract::pools::Pool;
 use crate::contract::types::{BoxId, Capacity, PoolId, Probability, TokenId};
 use near_sdk::{env, require, AccountId};
@@ -7,7 +6,7 @@ use std::str::FromStr;
 
 use super::enums::Network;
 use super::quest::Quest;
-use super::types::BoxRarity;
+use super::types::{BoxRarity, BoxStatus};
 
 fn get_random_number(shift_amount: usize) -> u64 {
     let mut seed = env::random_seed();

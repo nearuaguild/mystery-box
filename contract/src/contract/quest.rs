@@ -14,9 +14,8 @@ use near_sdk::{
 use near_sdk::borsh::{ self, BorshDeserialize, BorshSerialize };
 
 use crate::contract::callbacks::create_withdraw_box_reward_promise_with_verification;
-use crate::contract::enums::BoxStatus;
 
-use crate::contract::types::{ BoxId, PoolId, Probability };
+use crate::contract::types::{ BoxId, BoxStatus, PoolId, Probability };
 
 use near_sdk::serde_json::{ self, Value };
 

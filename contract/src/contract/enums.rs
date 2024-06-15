@@ -1,16 +1,6 @@
-use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::serde::{Deserialize, Serialize};
+use near_sdk::borsh::{self, BorshSerialize};
 use near_sdk::{AccountId, BorshStorageKey};
 
-use super::types::Reward;
-
-
-#[derive(BorshDeserialize, BorshSerialize, Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(crate = "near_sdk::serde", rename_all = "snake_case")]
-pub enum BoxStatus {
-    Claimed { reward: Option<Reward> },
-    NonClaimed,
-}
 
 pub enum Network {
     Mainnet,

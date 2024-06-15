@@ -35,6 +35,12 @@ impl Display for BoxRarity {
     }
 }
 
+#[derive(BorshDeserialize, BorshSerialize, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde", rename_all = "snake_case")]
+pub enum BoxStatus {
+    Claimed { reward: Option<Reward> },
+    NonClaimed,
+}
 
 #[derive(BorshDeserialize, BorshSerialize, Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde", rename_all = "snake_case")]
