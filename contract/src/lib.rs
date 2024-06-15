@@ -1,9 +1,7 @@
 use contract::enums::StorageKey;
 
-use contract::json_types::json_box::JsonBox;
-use contract::json_types::json_pagination::Pagination;
+use contract::json::{JsonBox, JsonPoolRewards, Pagination};
 use contract::json_types::json_quest::JsonQuest;
-use contract::json_types::json_reward::JsonPoolRewards;
 use near_sdk::collections::UnorderedSet;
 use near_sdk::{env, require, Promise, PromiseOrValue, ONE_NEAR};
 use near_sdk::json_types::{U128, U64};

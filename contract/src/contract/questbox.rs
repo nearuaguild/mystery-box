@@ -3,7 +3,7 @@ use near_sdk::borsh::{ self, BorshDeserialize, BorshSerialize };
 use near_sdk::serde::{ Deserialize, Serialize };
 use near_sdk::AccountId;
 
-use super::json_types::json_box::JsonBox;
+use super::json::JsonBox;
 use super::types::{BoxId, BoxRarity, QuestId, BoxStatus};
 
 #[derive(Serialize, Deserialize)]

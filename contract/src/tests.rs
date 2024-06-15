@@ -6,10 +6,8 @@ use near_sdk::{ testing_env, AccountId, ONE_NEAR };
 
 use std::str::FromStr;
 
-use crate::contract::enums::BoxRarity;
-use crate::contract::json_types::json_box::JsonBoxStatus;
-use crate::contract::json_types::json_reward::{ JsonPoolRewards, JsonReward };
-use crate::contract::types::Probability;
+use crate::contract::json::{ JsonPoolRewards, JsonReward, JsonBoxStatus };
+use crate::contract::types::{BoxRarity, Probability};
 use crate::test_utils::create_quest;
 use crate::Contract;
 

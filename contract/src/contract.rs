@@ -8,3 +8,4 @@ pub mod pools;
 pub mod types;
 pub mod enums;
 pub mod json_types;
+pub mod json;

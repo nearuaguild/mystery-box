@@ -2,8 +2,7 @@ use crate::contract::quest::Quest;
 use near_sdk::json_types::U128;
 use near_sdk::AccountId;
 
-use super::json_types::json_pagination::Pagination;
-use super::json_types::json_reward::JsonPoolRewards;
+use super::json::{JsonPoolRewards, Pagination};
 use super::types::BoxRarity;
 
 impl Quest {
