@@ -465,7 +465,7 @@ fn test_delete_boxes_succeeds() {
 
     let mut quest = create_quest(&mut contract, &mut context, Some(10));
 
-    contract.mint(quest.id, user1(), BoxRarity::Epic);
+    let box_id = contract.mint(quest.id, user1(), BoxRarity::Epic);
     contract.mint(quest.id, user1(), BoxRarity::Rare);
 
     assert_eq!(contract.questboxes_supply_per_owner(user1()), U128(2));
@@ -474,8 +474,7 @@ fn test_delete_boxes_succeeds() {
 
     assert_eq!(contract.questboxes_supply_per_owner(user1()), U128(1));
 
-    const FIRST_BOX_ID: u128 = 0;
-    assert!(quest.boxes.get(&FIRST_BOX_ID).is_none());
+    assert!(quest.boxes.get(&box_id).is_none());
 }
 
 #[test]
@@ -594,7 +593,7 @@ fn test_claim_without_pools_with_panic() {
 }
 
 #[test]
-#[should_panic(expected = "No boxes to claim")]
+#[should_panic(expected = "NO_BOXES_TO_CLAIM")]
 fn test_claim_as_a_user_with_zero_boxes_with_panic() {
     let (mut contract, mut context, quest) = setup(None);
 
@@ -606,7 +605,7 @@ fn test_claim_as_a_user_with_zero_boxes_with_panic() {
 }
 
 #[test]
-#[should_panic(expected = "ERR_ONLY_OWNER_CAN_BURN")]
+#[should_panic(expected = "ERR_BOX_NOT_FOUND")]
 fn test_claim_as_another_user_with_panic() {
     let (mut contract, mut context, quest) = setup(None);
 

@@ -257,14 +257,14 @@ impl Contract {
 
         let questboxes_per_owner = self.questboxes_per_owner
             .get(&account_id)
-            .expect("No boxes to claim");
+            .expect("NO_BOXES_TO_CLAIM");
 
         require!(
             questboxes_per_owner
                 .iter()
                 .find(|quest_box| quest_box.quest_id == quest_id && quest_box.box_id == box_id)
                 .is_some(),
-            "ERR_ONLY_OWNER_CAN_BURN"
+            "ERR_BOX_NOT_FOUND"
         );
 
         let mut quest = self.quests
