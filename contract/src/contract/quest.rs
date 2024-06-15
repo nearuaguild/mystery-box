@@ -20,10 +20,10 @@ use crate::contract::types::{ BoxId, PoolId, Probability };
 
 use near_sdk::serde_json::{ self, Value };
 
-use super::enums::{ BoxRarity, StorageKey };
+use super::enums::StorageKey;
 use super::pools::Pool;
 use super::questbox::QuestBox;
-use super::types::{ QuestId, TokenId };
+use super::types::{ BoxRarity, QuestId, TokenId };
 
 #[derive(BorshSerialize, BorshDeserialize, PanicOnDefault)]
 pub struct Quest {

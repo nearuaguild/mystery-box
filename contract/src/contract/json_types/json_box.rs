@@ -1,6 +1,6 @@
 use near_sdk::serde::{Deserialize, Serialize};
 
-use crate::contract::{enums::{BoxRarity, BoxStatus}, types::{BoxId, QuestId}};
+use crate::contract::{enums::BoxStatus, types::{BoxId, BoxRarity, QuestId}};
 
 use super::json_reward::JsonReward;
 

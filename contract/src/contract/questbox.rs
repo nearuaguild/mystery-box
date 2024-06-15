@@ -1,11 +1,11 @@
 
-use crate::contract::enums::{ BoxRarity, BoxStatus };
+use crate::contract::enums::BoxStatus;
 use near_sdk::borsh::{ self, BorshDeserialize, BorshSerialize };
 use near_sdk::serde::{ Deserialize, Serialize };
 use near_sdk::AccountId;
 
 use super::json_types::json_box::JsonBox;
-use super::types::{BoxId, QuestId};
+use super::types::{BoxId, BoxRarity, QuestId};
 
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]

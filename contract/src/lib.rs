@@ -1,4 +1,4 @@
-use contract::enums::{BoxRarity, StorageKey};
+use contract::enums::StorageKey;
 
 use contract::json_types::json_box::JsonBox;
 use contract::json_types::json_pagination::Pagination;
@@ -13,7 +13,7 @@ use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use contract::questbox::QuestBox;
 use contract::trusted_contracts::get_trusted_nft_contracts;
 use contract::types::questbox_data::QuestBoxData;
-use contract::types::{BoxId, Probability, QuestId, TokenId};
+use contract::types::{BoxId, BoxRarity, Probability, QuestId, TokenId};
 
 use crate::contract::quest::Quest;
 

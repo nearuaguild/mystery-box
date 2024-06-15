@@ -1,13 +1,12 @@
 
+use std::fmt::{Display, Formatter, Result};
+
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{require, AccountId, Balance};
 
-use super::enums::BoxRarity;
-
 // modules
 pub mod questbox_data;
-
 
 pub type TokenId = String;
 pub type BoxId = u128;
@@ -15,6 +14,27 @@ pub type QuestTitle = String;
 pub type QuestId = u64;
 pub type PoolId = u32;
 pub type Capacity = u64;
+
+#[derive(
+    BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug, PartialEq, Copy,
+)]
+#[serde(crate = "near_sdk::serde", rename_all = "snake_case")]
+pub enum BoxRarity {
+    Rare,
+    Epic,
+    Legendary,
+}
+
+impl Display for BoxRarity {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        match self {
+            BoxRarity::Rare => write!(f, "rare"),
+            BoxRarity::Epic => write!(f, "epic"),
+            BoxRarity::Legendary => write!(f, "legendary"),
+        }
+    }
+}
+
 
 #[derive(BorshDeserialize, BorshSerialize, Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde", rename_all = "snake_case")]
