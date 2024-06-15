@@ -7,7 +7,7 @@ use near_sdk::{ testing_env, AccountId, ONE_NEAR };
 use std::str::FromStr;
 
 use crate::contract::json::{ JsonPoolRewards, JsonReward, JsonBoxStatus };
-use crate::contract::types::{BoxRarity, Probability};
+use crate::contract::types::{ BoxRarity, Probability, Reward };
 use crate::test_utils::create_quest;
 use crate::Contract;
 
@@ -49,11 +49,17 @@ fn setup(attached_deposit: Option<u128>) -> (Contract, VMContextBuilder, Quest) 
 
     testing_env!(context.build());
 
-    //let trusted_nft_contracts = vec![nft(), nft2()];
-
     let mut contract = Contract::new();
 
     let mut quest = create_quest(&mut contract, &mut context, attached_deposit);
+
+    let trusted_nft_contracts = vec![nft(), nft2()];
+
+    trusted_nft_contracts
+        .iter()
+        .for_each(|contract_id| { 
+            contract.trust_nft_contract(quest.id, contract_id.clone());
+        });
 
     (contract, context, quest)
 }
@@ -250,7 +256,7 @@ fn test_add_nft_pool_succeeds() {
 
 // #[test]
 // fn test_add_multiple_nft_pool_succeeds() {
-//     let (mut contract, mut context) = setup();
+//     let (mut contract, mut context, quest) = setup(None);
 
 //     testing_env!(context.build());
 
@@ -272,7 +278,7 @@ fn test_add_nft_pool_succeeds() {
 // #[should_panic(expected = "ERR_NFT_CONTRACT_NOT_TRUSTED")]
 // #[test]
 // fn test_add_non_whitelisted_nft_pool_with_panic() {
-//     let (mut contract, mut context) = setup();
+//     let (mut contract, mut context, quest) = setup(None);
 
 //     testing_env!(context.predecessor_account_id(nft3()).build());
 
@@ -328,7 +334,7 @@ fn test_available_near_rewards_data() {
 
 // #[test]
 // fn test_available_nft_rewards_amount_for_different_contracts() {
-//     let (mut contract, mut context) = setup();
+//     let (mut contract, mut context, quest) = setup(None);
 
 //     testing_env!(context.build());
 
@@ -357,7 +363,7 @@ fn test_available_near_rewards_data() {
 
 // #[test]
 // fn test_available_nft_rewards_amount_for_same_contract() {
-//     let (mut contract, mut context) = setup();
+//     let (mut contract, mut context, quest) = setup(None);
 
 //     testing_env!(context.build());
 
@@ -386,7 +392,7 @@ fn test_available_near_rewards_data() {
 
 // #[test]
 // fn test_available_nft_rewards_amount_for_same_contract_and_different_rarity() {
-//     let (mut contract, mut context) = setup();
+//     let (mut contract, mut context, quest) = setup(None);
 
 //     testing_env!(context.build());
 
@@ -417,7 +423,7 @@ fn test_available_near_rewards_data() {
 
 // #[test]
 // fn test_available_nft_rewards_data_for_same_contract() {
-//     let (mut contract, mut context) = setup();
+//     let (mut contract, mut context, quest) = setup(None);
 
 //     testing_env!(context.build());
 
@@ -738,158 +744,147 @@ fn test_claim_empty_reward_availability() {
     assert_eq!(rewards.len(), 0);
 }
 
-// #[test]
-// fn test_claim_near_reward_succeeds() {
-//     let (mut contract, mut context) = setup();
+#[test]
+fn test_claim_near_reward_succeeds() {
+    let (mut contract, mut context, quest) = setup(None);
 
-//     testing_env!(context.attached_deposit(3 * ONE_NEAR).build());
+    contract.add_near_reward(quest.id, BoxRarity::Rare, U128(ONE_NEAR), U64(2));
+    let box_id = contract.mint(quest.id, user1(), BoxRarity::Rare);
 
-//     contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), U64(2));
-//     contract.mint(user1(), BoxRarity::Rare);
+    testing_env!(context.attached_deposit(1).predecessor_account_id(user1()).build());
 
-//     testing_env!(context
-//         .attached_deposit(1)
-//         .predecessor_account_id(user1())
-//         .build());
+    // promises aren't called
+    contract.claim(quest.id, box_id);
+}
 
-//     // promises aren't called
-//     contract.claim(1);
-// }
+#[test]
+fn test_claim_nft_reward_succeeds() {
+    let (mut contract, mut context, quest) = setup(None);
 
-// #[test]
-// fn test_claim_nft_reward_succeeds() {
-//     let (mut contract, mut context) = setup();
+    let box_id = contract.mint(quest.id, user1(), BoxRarity::Rare);
 
-//     testing_env!(context.attached_deposit(ONE_NEAR).build());
+    // add NFT token as reward
+    testing_env!(context.predecessor_account_id(nft()).build());
+    contract.nft_on_transfer(
+        quest.id,
+        owner(),
+        owner(),
+        "some_token".to_string(),
+        "rare".to_string()
+    );
 
-//     contract.mint(user1(), BoxRarity::Rare);
+    testing_env!(context.attached_deposit(1).predecessor_account_id(user1()).build());
 
-//     // add NFT token as reward
-//     testing_env!(context.predecessor_account_id(nft()).build());
-//     contract.nft_on_transfer(
-//         owner(),
-//         owner(),
-//         "some_token".to_string(),
-//         "rare".to_string(),
-//     );
+    contract.claim(quest.id, box_id);
+}
 
-//     testing_env!(context
-//         .attached_deposit(1)
-//         .predecessor_account_id(user1())
-//         .build());
+#[test]
+fn test_claim_for_multiple_pools_succeeds() {
+    let (mut contract, mut context, quest) = setup(None);
 
-//     contract.claim(1);
-// }
+    contract.add_near_reward(quest.id, BoxRarity::Rare, U128(ONE_NEAR), U64(1));
+    contract.add_near_reward(quest.id, BoxRarity::Rare, U128(ONE_NEAR / 2), U64(2));
+    contract.add_near_reward(quest.id, BoxRarity::Rare, U128(ONE_NEAR / 4), U64(4));
 
-// #[test]
-// fn test_claim_for_multiple_pools_succeeds() {
-//     let (mut contract, mut context) = setup();
+    let box_id = contract.mint(quest.id, user1(), BoxRarity::Rare);
 
-//     testing_env!(context.attached_deposit(2 * ONE_NEAR).build());
+    testing_env!(context
+        .attached_deposit(1)
+        .predecessor_account_id(user1())
+        .random_seed([2; 32])
+        .build());
 
-//     contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR), U64(1));
-//     contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR / 2), U64(2));
-//     contract.add_near_reward(BoxRarity::Rare, U128(ONE_NEAR / 4), U64(4));
+    contract.claim(quest.id, box_id);
+}
 
-//     contract.mint(user1(), BoxRarity::Rare);
+#[test]
+#[should_panic(expected = "ERR_TOO_MANY_RESULTS")]
+fn test_check_verification_and_claim_callback_by_someone_with_panic() {
+    let (mut contract, mut context, quest) = setup(None);
 
-//     testing_env!(context
-//         .attached_deposit(1)
-//         .predecessor_account_id(user1())
-//         .random_seed([2; 32])
-//         .build());
+    contract.check_iah_verification_and_claim_callback(quest.id, user1(), 0, 0);
+}
 
-//     contract.claim(1);
-// }
+#[test]
+#[should_panic(expected = "ERR_TOO_MANY_RESULTS")]
+fn test_transfer_reward_callback_by_someone_with_panic() {
+    let (mut contract, mut context, quest) = setup(None);
 
-// #[should_panic]
-// #[test]
-// fn test_check_verification_and_claim_callback_by_someone_with_panic() {
-//     let (mut contract, mut context) = setup();
+    contract.transfer_reward_callback(quest.id, user1(), 0,0, Reward::Near { amount: ONE_NEAR });
+}
 
-//     contract.check_iah_verification_and_claim_callback(user1(), 1, 1);
-// }
+#[test]
+fn test_default_trusted_nft_contract_set_succeeds() {
+    let (mut contract, mut context, quest) = setup(None);
 
-// #[should_panic]
-// #[test]
-// fn test_transfer_reward_callback_by_someone_with_panic() {
-//     let (mut contract, mut context) = setup();
+    quest.trusted_nft_contracts.contains(&nft());
+    quest.trusted_nft_contracts.contains(&nft2());
+}
 
-//     contract.transfer_reward_callback(user1(), 1, 1, Reward::Near { amount: ONE_NEAR });
-// }
+#[test]
+#[should_panic(expected = "ERR_FORBIDDEN")]
+fn test_trust_nft_contract_with_regular_user_panic() {
+    let (mut contract, mut context, quest) = setup(None);
 
-// #[test]
-// fn test_default_trusted_nft_contract_set_succeeds() {
-//     let (mut contract, mut context) = setup();
+    testing_env!(context.predecessor_account_id(user1()).build());
 
-//     contract.trusted_nft_contracts.contains(&nft());
-//     contract.trusted_nft_contracts.contains(&nft2());
-// }
+    contract.trust_nft_contract(quest.id, nft3());
+}
 
-// #[should_panic(expected = "ERR_FORBIDDEN")]
-// #[test]
-// fn test_trust_nft_contract_with_regular_user_panic() {
-//     let (mut contract, mut context) = setup();
+#[test]
+fn test_trust_nft_contract_succeeds() {
+    let (mut contract, mut context, quest) = setup(None);
 
-//     testing_env!(context.predecessor_account_id(user1()).build());
+    contract.trust_nft_contract(quest.id, nft3());
+}
 
-//     contract.trust_nft_contract(nft3());
-// }
+#[test]
+fn test_untrust_nft_contract_succeeds() {
+    let (mut contract, mut context, quest) = setup(None);
 
-// #[test]
-// fn test_trust_nft_contract_succeeds() {
-//     let (mut contract, mut context) = setup();
+    contract.untrust_nft_contract(quest.id, nft());
+}
 
-//     contract.trust_nft_contract(nft3());
-// }
+#[test]
+#[should_panic(expected = "Provided contract is already in the set")]
+fn test_trust_nft_contract_with_existed_value_panic() {
+    let (mut contract, mut context, quest) = setup(None);
 
-// #[test]
-// fn test_untrust_nft_contract_succeeds() {
-//     let (mut contract, mut context) = setup();
+    contract.trust_nft_contract(quest.id, nft());
+}
 
-//     contract.untrust_nft_contract(nft());
-// }
+#[test]
+#[should_panic(expected = "Provided contract wasn't trusted before")]
+fn test_untrust_nft_contract_with_non_existed_value_panic() {
+    let (mut contract, mut context, quest) = setup(None);
 
-// #[should_panic]
-// #[test]
-// fn test_trust_nft_contract_with_existed_value_panic() {
-//     let (mut contract, mut context) = setup();
+    contract.untrust_nft_contract(quest.id, nft3());
+}
 
-//     contract.trust_nft_contract(nft());
-// }
+#[test]
+fn test_users_default() {
+    let (mut contract, mut context, quest) = setup(None);
 
-// #[should_panic]
-// #[test]
-// fn test_untrust_nft_contract_with_non_existed_value_panic() {
-//     let (mut contract, mut context) = setup();
+    assert_eq!(contract.users(quest.id).len(), 0);
+}
 
-//     contract.untrust_nft_contract(nft3());
-// }
+#[test]
+fn test_users_increases() {
+    let (mut contract, mut context, quest) = setup(None);
 
-// #[test]
-// fn test_users_default() {
-//     let (mut contract, mut context) = setup();
+    testing_env!(context.attached_deposit(ONE_NEAR).build());
 
-//     assert_eq!(contract.users(None).len(), 0);
-// }
+    contract.mint(quest.id, user1(), BoxRarity::Rare);
 
-// #[test]
-// fn test_users_increases() {
-//     let (mut contract, mut context) = setup();
+    assert_eq!(contract.users(quest.id).len(), 1);
 
-//     testing_env!(context.attached_deposit(ONE_NEAR).build());
+    contract.mint(quest.id, user1(), BoxRarity::Rare);
+    contract.mint(quest.id, user2(), BoxRarity::Epic);
 
-//     contract.mint(user1(), BoxRarity::Rare);
+    assert_eq!(contract.users(quest.id).len(), 2);
 
-//     assert_eq!(contract.users(None).len(), 1);
+    contract.mint_many(quest.id, BoxRarity::Legendary, vec![user1(), user2(), user3()]);
 
-//     contract.mint(user1(), BoxRarity::Rare);
-//     contract.mint(user2(), BoxRarity::Epic);
-
-//     assert_eq!(contract.users(None).len(), 2);
-
-//     contract.mint_many(BoxRarity::Legendary, vec![user1(), user2(), user3()]);
-
-//     assert_eq!(contract.users(None).len(), 3);
-//     assert_eq!(contract.users(None), vec![user1(), user2(), user3()]);
-//}
+    assert_eq!(contract.users(quest.id).len(), 3);
+    assert_eq!(contract.users(quest.id), vec![user1(), user2(), user3()]);
+}

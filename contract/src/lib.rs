@@ -97,6 +97,8 @@ impl Contract {
             .expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
 
         quest.trust_nft_contract(contract_id);
+
+        self.quests.insert(&quest.id, &quest);
     }
 
     pub fn untrust_nft_contract(&mut self, quest_id: QuestId, contract_id: AccountId) {
@@ -105,6 +107,8 @@ impl Contract {
             .expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
 
         quest.untrust_nft_contract(contract_id);
+
+        self.quests.insert(&quest.id, &quest);
     }
 
     #[payable]
@@ -516,6 +520,12 @@ impl Contract {
             .skip(pagination.skip())
             .map(|pool| pool.into())
             .collect()
+    }
+
+    pub fn users(&mut self, quest_id: QuestId) -> Vec<AccountId> {
+        let quest = self.quests.get(&quest_id).expect("Quest wasn't found");
+
+        return quest.users.iter().collect::<Vec<AccountId>>();
     }
 }
 
