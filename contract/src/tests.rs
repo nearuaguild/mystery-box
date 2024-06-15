@@ -55,11 +55,9 @@ fn setup(attached_deposit: Option<u128>) -> (Contract, VMContextBuilder, Quest) 
 
     let trusted_nft_contracts = vec![nft(), nft2()];
 
-    trusted_nft_contracts
-        .iter()
-        .for_each(|contract_id| { 
-            contract.trust_nft_contract(quest.id, contract_id.clone());
-        });
+    trusted_nft_contracts.iter().for_each(|contract_id| {
+        contract.trust_nft_contract(quest.id, contract_id.clone());
+    });
 
     (contract, context, quest)
 }
@@ -238,7 +236,6 @@ fn test_add_multiple_near_pools_succeeds() {
     assert_eq!(pool2.is_some(), true);
 }
 
-#[ignore = "clarification needed on nft_on_transfer"]
 #[test]
 fn test_add_nft_pool_succeeds() {
     let (mut contract, mut context, quest) = setup(Some(10));
@@ -246,49 +243,76 @@ fn test_add_nft_pool_succeeds() {
     testing_env!(context.predecessor_account_id(nft()).build());
 
     contract.nft_on_transfer(
-        quest.id,
         owner(),
         owner(),
         "some_token".to_string(),
-        "rare".to_string()
+        String::from(
+            r#"
+        {
+            "quest_id": 0,
+            "rarity": "rare"
+        }
+        "#
+        )
     );
 }
 
-// #[test]
-// fn test_add_multiple_nft_pool_succeeds() {
-//     let (mut contract, mut context, quest) = setup(None);
+#[test]
+fn test_add_multiple_nft_pool_succeeds() {
+    let (mut contract, mut context, quest) = setup(None);
 
-//     testing_env!(context.build());
+    testing_env!(context.build());
 
-//     testing_env!(context.predecessor_account_id(nft()).build());
-//     contract.nft_on_transfer(
-//         owner(),
-//         owner(),
-//         "some_token".to_string(),
-//         "rare".to_string(),
-//     );
-//     contract.nft_on_transfer(
-//         owner(),
-//         owner(),
-//         "some_token_2".to_string(),
-//         "rare".to_string(),
-//     );
-// }
+    testing_env!(context.predecessor_account_id(nft()).build());
+    contract.nft_on_transfer(
+        owner(),
+        owner(),
+        "some_token".to_string(),
+        String::from(
+            r#"
+        {
+            "quest_id": 0,
+            "rarity": "rare"
+        }
+        "#
+        )
+    );
+    contract.nft_on_transfer(
+        owner(),
+        owner(),
+        "some_token_2".to_string(),
+        String::from(
+            r#"
+        {
+            "quest_id": 0,
+            "rarity": "rare"
+        }
+        "#
+        )
+    );
+}
 
-// #[should_panic(expected = "ERR_NFT_CONTRACT_NOT_TRUSTED")]
-// #[test]
-// fn test_add_non_whitelisted_nft_pool_with_panic() {
-//     let (mut contract, mut context, quest) = setup(None);
+#[test]
+#[should_panic(expected = "ERR_NFT_CONTRACT_NOT_TRUSTED")]
+fn test_add_non_whitelisted_nft_pool_with_panic() {
+    let (mut contract, mut context, quest) = setup(None);
 
-//     testing_env!(context.predecessor_account_id(nft3()).build());
+    testing_env!(context.predecessor_account_id(nft3()).build());
 
-//     contract.nft_on_transfer(
-//         owner(),
-//         owner(),
-//         "some_token".to_string(),
-//         "rare".to_string(),
-//     );
-// }
+    contract.nft_on_transfer(
+        owner(),
+        owner(),
+        "some_token".to_string(),
+        String::from(
+            r#"
+        {
+            "quest_id": 0,
+            "rarity": "rare"
+        }
+        "#
+        )
+    );
+}
 
 #[test]
 fn test_available_near_rewards_amount() {
@@ -332,129 +356,176 @@ fn test_available_near_rewards_data() {
     });
 }
 
-// #[test]
-// fn test_available_nft_rewards_amount_for_different_contracts() {
-//     let (mut contract, mut context, quest) = setup(None);
+#[test]
+fn test_available_nft_rewards_amount_for_different_contracts() {
+    let (mut contract, mut context, quest) = setup(None);
 
-//     testing_env!(context.build());
+    testing_env!(context.predecessor_account_id(nft()).build());
+    contract.nft_on_transfer(
+        owner(),
+        owner(),
+        "some_token".to_string(),
+        String::from(
+            r#"
+        {
+            "quest_id": 0,
+            "rarity": "rare"
+        }
+        "#
+        )
+    );
 
-//     testing_env!(context.predecessor_account_id(nft()).build());
-//     contract.nft_on_transfer(
-//         owner(),
-//         owner(),
-//         "some_token".to_string(),
-//         "rare".to_string(),
-//     );
+    let rewards = contract.available_rewards(quest.id, BoxRarity::Rare, None);
+    assert_eq!(rewards.len(), 1);
 
-//     let rewards = contract.available_rewards(BoxRarity::Rare, None);
-//     assert_eq!(rewards.len(), 1);
+    testing_env!(context.predecessor_account_id(nft2()).build());
+    contract.nft_on_transfer(
+        owner(),
+        owner(),
+        "another_token".to_string(),
+        String::from(
+            r#"
+        {
+            "quest_id": 0,
+            "rarity": "rare"
+        }
+        "#
+        )
+    );
 
-//     testing_env!(context.predecessor_account_id(nft2()).build());
-//     contract.nft_on_transfer(
-//         owner(),
-//         owner(),
-//         "another_token".to_string(),
-//         "rare".to_string(),
-//     );
+    let rewards = contract.available_rewards(quest.id, BoxRarity::Rare, None);
+    assert_eq!(rewards.len(), 2);
+}
 
-//     let rewards = contract.available_rewards(BoxRarity::Rare, None);
-//     assert_eq!(rewards.len(), 2);
-// }
+#[test]
+fn test_available_nft_rewards_amount_for_same_contract() {
+    let (mut contract, mut context, quest) = setup(None);
 
-// #[test]
-// fn test_available_nft_rewards_amount_for_same_contract() {
-//     let (mut contract, mut context, quest) = setup(None);
+    testing_env!(context.predecessor_account_id(nft()).build());
+    contract.nft_on_transfer(
+        owner(),
+        owner(),
+        "some_token".to_string(),
+        String::from(
+            r#"
+        {
+            "quest_id": 0,
+            "rarity": "rare"
+        }
+        "#
+        )
+    );
 
-//     testing_env!(context.build());
+    let rewards = contract.available_rewards(quest.id, BoxRarity::Rare, None);
+    assert_eq!(rewards.len(), 1);
 
-//     testing_env!(context.predecessor_account_id(nft()).build());
-//     contract.nft_on_transfer(
-//         owner(),
-//         owner(),
-//         "some_token".to_string(),
-//         "rare".to_string(),
-//     );
+    testing_env!(context.predecessor_account_id(nft()).build());
+    contract.nft_on_transfer(
+        owner(),
+        owner(),
+        "some_token_2".to_string(),
+        String::from(
+            r#"
+        {
+            "quest_id": 0,
+            "rarity": "rare"
+        }
+        "#
+        )
+    );
 
-//     let rewards = contract.available_rewards(BoxRarity::Rare, None);
-//     assert_eq!(rewards.len(), 1);
+    let rewards = contract.available_rewards(quest.id, BoxRarity::Rare, None);
+    assert_eq!(rewards.len(), 1);
+}
 
-//     testing_env!(context.predecessor_account_id(nft()).build());
-//     contract.nft_on_transfer(
-//         owner(),
-//         owner(),
-//         "some_token_2".to_string(),
-//         "rare".to_string(),
-//     );
+#[test]
+fn test_available_nft_rewards_amount_for_same_contract_and_different_rarity() {
+    let (mut contract, mut context, quest) = setup(None);
 
-//     let rewards = contract.available_rewards(BoxRarity::Rare, None);
-//     assert_eq!(rewards.len(), 1);
-// }
+    testing_env!(context.predecessor_account_id(nft()).build());
+    contract.nft_on_transfer(
+        owner(),
+        owner(),
+        "some_token".to_string(),
+        String::from(
+            r#"
+        {
+            "quest_id": 0,
+            "rarity": "rare"
+        }
+        "#
+        )
+    );
 
-// #[test]
-// fn test_available_nft_rewards_amount_for_same_contract_and_different_rarity() {
-//     let (mut contract, mut context, quest) = setup(None);
+    let rewards = contract.available_rewards(quest.id, BoxRarity::Rare, None);
+    assert_eq!(rewards.len(), 1);
 
-//     testing_env!(context.build());
+    testing_env!(context.predecessor_account_id(nft()).build());
+    contract.nft_on_transfer(
+        owner(),
+        owner(),
+        "some_token_2".to_string(),
+        String::from(
+            r#"
+        {
+            "quest_id": 0,
+            "rarity": "epic"
+        }
+        "#
+        )
+    );
 
-//     testing_env!(context.predecessor_account_id(nft()).build());
-//     contract.nft_on_transfer(
-//         owner(),
-//         owner(),
-//         "some_token".to_string(),
-//         "rare".to_string(),
-//     );
+    let rewards = contract.available_rewards(quest.id, BoxRarity::Rare, None);
+    assert_eq!(rewards.len(), 1);
+    let rewards = contract.available_rewards(quest.id, BoxRarity::Epic, None);
+    assert_eq!(rewards.len(), 1);
+}
 
-//     let rewards = contract.available_rewards(BoxRarity::Rare, None);
-//     assert_eq!(rewards.len(), 1);
+#[test]
+fn test_available_nft_rewards_data_for_same_contract() {
+    let (mut contract, mut context, quest) = setup(None);
 
-//     testing_env!(context.predecessor_account_id(nft()).build());
-//     contract.nft_on_transfer(
-//         owner(),
-//         owner(),
-//         "some_token_2".to_string(),
-//         "epic".to_string(),
-//     );
+    testing_env!(context.predecessor_account_id(nft()).build());
 
-//     let rewards = contract.available_rewards(BoxRarity::Rare, None);
-//     assert_eq!(rewards.len(), 1);
-//     let rewards = contract.available_rewards(BoxRarity::Epic, None);
-//     assert_eq!(rewards.len(), 1);
-// }
+    contract.nft_on_transfer(
+        owner(),
+        owner(),
+        "some_token".to_string(),
+        format!(
+            r#"
+        {{
+            "quest_id": {},
+            "rarity": "rare"
+        }}
+        "#,
+            quest.id
+        )
+    );
+    contract.nft_on_transfer(
+        owner(),
+        owner(),
+        "some_token_2".to_string(),
+        format!(
+            r#"
+        {{
+            "quest_id": {},
+            "rarity": "rare"
+        }}
+        "#,
+            quest.id
+        )
+    );
 
-// #[test]
-// fn test_available_nft_rewards_data_for_same_contract() {
-//     let (mut contract, mut context, quest) = setup(None);
+    let rewards = contract.available_rewards(quest.id, BoxRarity::Rare, None);
 
-//     testing_env!(context.build());
+    let reward = rewards.get(0).unwrap().to_owned();
 
-//     testing_env!(context.predecessor_account_id(nft()).build());
-
-//     contract.nft_on_transfer(
-//         owner(),
-//         owner(),
-//         "some_token".to_string(),
-//         "rare".to_string(),
-//     );
-//     contract.nft_on_transfer(
-//         owner(),
-//         owner(),
-//         "some_token_2".to_string(),
-//         "rare".to_string(),
-//     );
-
-//     let rewards = contract.available_rewards(BoxRarity::Rare, None);
-
-//     let reward = rewards.get(0).unwrap().to_owned();
-
-//     assert_eq!(
-//         reward,
-//         JsonPoolRewards::NonFungibleToken {
-//             contract_id: nft(),
-//             token_ids: vec!["some_token".to_string(), "some_token_2".to_string()],
-//             total: 2
-//         }
-//     );
-// }
+    assert_eq!(reward, JsonPoolRewards::NonFungibleToken {
+        contract_id: nft(),
+        token_ids: vec!["some_token".to_string(), "some_token_2".to_string()],
+        total: 2,
+    });
+}
 
 #[test]
 fn test_mint_succeeds() {
@@ -766,11 +837,17 @@ fn test_claim_nft_reward_succeeds() {
     // add NFT token as reward
     testing_env!(context.predecessor_account_id(nft()).build());
     contract.nft_on_transfer(
-        quest.id,
         owner(),
         owner(),
         "some_token".to_string(),
-        "rare".to_string()
+        String::from(
+            r#"
+        {
+            "quest_id": 0,
+            "rarity": "rare"
+        }
+        "#
+        )
     );
 
     testing_env!(context.attached_deposit(1).predecessor_account_id(user1()).build());
@@ -788,11 +865,13 @@ fn test_claim_for_multiple_pools_succeeds() {
 
     let box_id = contract.mint(quest.id, user1(), BoxRarity::Rare);
 
-    testing_env!(context
-        .attached_deposit(1)
-        .predecessor_account_id(user1())
-        .random_seed([2; 32])
-        .build());
+    testing_env!(
+        context
+            .attached_deposit(1)
+            .predecessor_account_id(user1())
+            .random_seed([2; 32])
+            .build()
+    );
 
     contract.claim(quest.id, box_id);
 }
@@ -810,7 +889,7 @@ fn test_check_verification_and_claim_callback_by_someone_with_panic() {
 fn test_transfer_reward_callback_by_someone_with_panic() {
     let (mut contract, mut context, quest) = setup(None);
 
-    contract.transfer_reward_callback(quest.id, user1(), 0,0, Reward::Near { amount: ONE_NEAR });
+    contract.transfer_reward_callback(quest.id, user1(), 0, 0, Reward::Near { amount: ONE_NEAR });
 }
 
 #[test]

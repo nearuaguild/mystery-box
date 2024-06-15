@@ -17,8 +17,6 @@ use crate::contract::callbacks::create_withdraw_box_reward_promise_with_verifica
 
 use crate::contract::types::{ BoxId, BoxStatus, PoolId, Probability };
 
-use near_sdk::serde_json::{ self, Value };
-
 use super::enums::StorageKey;
 use super::pools::Pool;
 use super::questbox::QuestBox;
@@ -162,7 +160,7 @@ impl Quest {
         #[allow(unused_variables)] sender_id: AccountId,
         previous_owner_id: AccountId,
         token_id: TokenId,
-        msg: String
+        box_rarity: BoxRarity
     ) -> PromiseOrValue<bool> {
         let nft_account_id = env::predecessor_account_id();
 
@@ -174,11 +172,7 @@ impl Quest {
 
         require!(self.owner_id == previous_owner_id, "ERR_FORBIDDEN");
 
-        let rarity = serde_json
-            ::from_value::<BoxRarity>(Value::String(msg))
-            .expect("ERR_PARSE_MSG");
-
-        self.internal_add_nft_pool(rarity, nft_account_id, token_id);
+        self.internal_add_nft_pool(box_rarity, nft_account_id, token_id);
 
         // stands for OK response
         PromiseOrValue::Value(false)

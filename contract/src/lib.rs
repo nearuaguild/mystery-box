@@ -1,6 +1,7 @@
 use contract::enums::StorageKey;
 
 use contract::json::{ JsonBox, JsonPoolRewards, Pagination };
+use contract::json_types::json_nft_message::NftOnTransferMessage;
 use contract::json_types::json_quest::JsonQuest;
 use near_sdk::collections::UnorderedSet;
 use near_sdk::{ env, require, Promise, PromiseOrValue, ONE_NEAR };
@@ -281,18 +282,28 @@ impl Contract {
     #[payable]
     pub fn nft_on_transfer(
         &mut self,
-        quest_id: QuestId,
         #[allow(unused_variables)] sender_id: AccountId,
         previous_owner_id: AccountId,
         token_id: TokenId,
         msg: String
     ) -> PromiseOrValue<bool> {
+        let parsed_message_result: Result<NftOnTransferMessage, near_sdk::serde_json::Error> = near_sdk::serde_json::from_str(&msg);
+
+        if parsed_message_result.is_err() {
+            panic!("Error parsing message");
+        }
+
+        let parsed_nft_message = parsed_message_result.unwrap();
+
         let mut quest = self.quests
-            .get(&quest_id)
-            .expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
+            .get(&parsed_nft_message.quest_id)
+            .expect(&format!("Quest with id {} wasn't found", parsed_nft_message.quest_id.clone()));
 
         let storage_used_before = env::storage_usage();
-        let result = quest.nft_on_transfer(sender_id, previous_owner_id, token_id, msg);
+
+        let result = quest.nft_on_transfer(sender_id, previous_owner_id, token_id, parsed_nft_message.rarity);
+        self.quests.insert(&quest.id, &quest);
+
         let storage_used_after = env::storage_usage();
 
         let storage_deposit =
