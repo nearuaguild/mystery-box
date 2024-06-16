@@ -6,8 +6,6 @@ const rpc_endpoint = 'https://rpc.testnet.near.org';
 
 console.log("MysteryBox.Manage props", props);
 
-logInfo("ETREMELLY IMPORTANT INFORMATION");
-
 const fetchTransactionByHash = (hash, sender_id) => {
   return fetch(rpc_endpoint, {
     method: 'POST',
@@ -119,7 +117,7 @@ function Page({ page, account_id, quest_id }) {
       account_id,
     }) || [];
 
-  const currentQuest = !isNaN(quest_id) ? quests.find((quest) => quest.quest_id.toString() === quest_id) : null;
+  const currentQuest = !isNaN(quest_id) ? quests.find((quest) => quest.quest_id === quest_id) : null;
 
   console.log("MysteryBox.Manage quests", quests, quest_id, currentQuest);
 
@@ -158,7 +156,7 @@ function Page({ page, account_id, quest_id }) {
         <Widget
           src={`${widget_owner_id}/widget/MysteryBox.Manage.Screens.Home`}
           props={{
-            quests: quests,
+            quests: quests
           }}
         />
       );
@@ -211,7 +209,8 @@ Please reach out to Near Ukraine Team in order to have your collection verified
       /** @todo fetch rarity from backend */
 
       const fetchRewards = (rarity) => {
-        const rewards = Near.view(quest_id, 'rewards', {
+        const rewards = Near.view(top_contract_id, 'available_rewards', {
+          quest_id,
           rarity,
         });
 
@@ -256,7 +255,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
         <Widget
           src={`${widget_owner_id}/widget/MysteryBox.Manage.Screens.ListRewards`}
           props={{
-            contract: currentQuest,
+            quest: currentQuest,
             rewards,
           }}
         />
@@ -264,18 +263,21 @@ Please reach out to Near Ukraine Team in order to have your collection verified
     }
     case 'ListUserBoxes': {
       /** @todo fetch addresses from backend */
-      const addresses = Near.view(quest_id, 'users', {
+      const addresses = Near.view(top_contract_id, 'get_users', {
+        quest_id,
         pagination: {
           page: 1,
           size: 50,
         },
       });
 
+      logInfo("addresses", { addresses, quest_id });
+
       const accounts = (addresses || []).map((address) => {
         return {
           account_id: address,
           boxes:
-            Near.view(quest_id, 'boxes_for_owner', {
+            Near.view(top_contract_id, 'questboxes_per_owner', {
               account_id: address,
               pagination: {
                 page: 1,
@@ -284,6 +286,8 @@ Please reach out to Near Ukraine Team in order to have your collection verified
             }) || [],
         };
       });
+
+      logInfo("accounts", addresses, accounts);
 
       if (accounts.length === 0)
         return (
@@ -314,7 +318,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
         <Widget
           src={`${widget_owner_id}/widget/MysteryBox.Manage.Screens.ListUserBoxes`}
           props={{
-            contract: currentQuest,
+            quest: currentQuest,
             accounts,
           }}
         />
@@ -335,13 +339,15 @@ Please reach out to Near Ukraine Team in order to have your collection verified
 
 console.log('page', page);
 
+const quest_id_as_number = parseInt(props.quest_id);
+
 return (
   <>
     <Layout
-      quest_id={props.quest_id}
+      quest_id={quest_id_as_number}
       active_home_button={!['Home', 'SignIn'].includes(page)}
     >
-      <Page page={page} account_id={account_id} quest_id={props.quest_id} />
+      <Page page={page} account_id={account_id} quest_id={quest_id_as_number} />
     </Layout>
     <Widget
       src={`${widget_owner_id}/widget/Templates.Notification`}

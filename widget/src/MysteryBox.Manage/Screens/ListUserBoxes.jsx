@@ -1,6 +1,8 @@
 const widget_owner_id = "evasive-dime.testnet";
 
-console.log('props', props);
+const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+
+logInfo('ListUserBoxes props', props);
 
 const WrapperMenu = styled.div`
   background: rgba(24, 36, 50, 1);

@@ -36,3 +36,8 @@ near contract call-function as-transaction boundless-berry.testnet create_quest 
 `
 near contract call-function as-transaction boundless-berry.testnet delete_quest json-args '{"quest_id":1}' prepaid-gas '100.0 Tgas' attached-deposit '0 NEAR' sign-as volodymyr_matseliukh1.testnet network-config testnet sign-with-keychain send
 `
+
+# Read users
+`
+near contract call-function as-read-only boundless-berry.testnet users json-args '{"quest_id":0, "pagination": {"page": 0, "size": 40}}' network-config testnet now
+`

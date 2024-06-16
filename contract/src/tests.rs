@@ -6,7 +6,7 @@ use near_sdk::{ testing_env, AccountId, ONE_NEAR };
 
 use std::str::FromStr;
 
-use crate::contract::json::{ JsonPoolRewards, JsonReward, JsonBoxStatus };
+use crate::contract::json::{ JsonBoxStatus, JsonPoolRewards, JsonReward, Pagination };
 use crate::contract::types::{ BoxRarity, Probability, Reward };
 use crate::test_utils::create_quest;
 use crate::Contract;
@@ -965,7 +965,9 @@ fn test_untrust_nft_contract_with_non_existed_value_panic() {
 fn test_users_default() {
     let (mut contract, mut context, quest) = setup(None);
 
-    assert_eq!(contract.users(quest.id).len(), 0);
+    let pagination = Some(Pagination::new(1, 40));
+
+    assert_eq!(contract.get_users(quest.id, pagination).len(), 0);
 }
 
 #[test]
@@ -976,15 +978,17 @@ fn test_users_increases() {
 
     contract.mint(quest.id, user1(), BoxRarity::Rare);
 
-    assert_eq!(contract.users(quest.id).len(), 1);
+    let pagination = Some(Pagination::new(1, 40));
+
+    assert_eq!(contract.get_users(quest.id, pagination.clone()).len(), 1);
 
     contract.mint(quest.id, user1(), BoxRarity::Rare);
     contract.mint(quest.id, user2(), BoxRarity::Epic);
 
-    assert_eq!(contract.users(quest.id).len(), 2);
+    assert_eq!(contract.get_users(quest.id, pagination.clone()).len(), 2);
 
     contract.mint_many(quest.id, BoxRarity::Legendary, vec![user1(), user2(), user3()]);
 
-    assert_eq!(contract.users(quest.id).len(), 3);
-    assert_eq!(contract.users(quest.id), vec![user1(), user2(), user3()]);
+    assert_eq!(contract.get_users(quest.id, pagination.clone()).len(), 3);
+    assert_eq!(contract.get_users(quest.id, pagination.clone()), vec![user1(), user2(), user3()]);
 }

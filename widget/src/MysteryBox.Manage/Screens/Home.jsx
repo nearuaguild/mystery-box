@@ -168,7 +168,7 @@ return (
           src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuHeader`}
           props={{
             title: quest.title,
-            subtitle: quest.contract_id,
+            subtitle: quest.quest_id,
           }}
         />
         <MenuContent></MenuContent>

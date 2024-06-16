@@ -1,6 +1,9 @@
 const widget_owner_id = "evasive-dime.testnet";
+const top_contract_id = 'boundless-berry.testnet';
 
-console.log('props', props);
+const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+
+logInfo('MintBox props', props);
 
 const isValidAccount = (account) => {
   if (account.amount === undefined || account.amount === null) return false;
@@ -306,7 +309,7 @@ const everyAccountIsValid = accounts.every(isValidAccount);
 
 const shouldSubmitButtonBeDisabled = !everyAccountIsValid;
 
-console.log('shouldSubmitButtonBeDisabled', shouldSubmitButtonBeDisabled);
+logInfo('shouldSubmitButtonBeDisabled', shouldSubmitButtonBeDisabled);
 
 const submitTransactionToMintBoxes = () => {
   console.log('submitTransactionToMintBoxes', accounts);
@@ -336,8 +339,10 @@ const submitTransactionToMintBoxes = () => {
         )
         .flat();
 
+      const yoctoPerMintedBox = 4000;
+
       const total = accounts.reduce((prev, curr) => {
-        return prev + 2520 + 40 * curr.length;
+        return prev + yoctoPerMintedBox + 40 * curr.length;
       }, 0);
 
       console.log('total', total);
@@ -345,9 +350,10 @@ const submitTransactionToMintBoxes = () => {
       const totalNum = Big(680).plus(total).mul(Big(10).pow(18));
 
       return {
-        contractName: props.contract?.contract_id,
+        contractName: top_contract_id,
         methodName: 'mint_many',
         args: {
+          quest_id: props.quest.quest_id,
           rarity,
           accounts,
         },
@@ -372,8 +378,8 @@ return (
       <Widget
         src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuHeader`}
         props={{
-          title: props.contract?.title,
-          subtitle: props.contract?.contract_id,
+          title: props.quest?.title,
+          subtitle: props.quest?.quest_id,
         }}
       />
       <MenuContent>

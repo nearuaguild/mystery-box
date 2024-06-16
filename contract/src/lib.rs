@@ -287,7 +287,10 @@ impl Contract {
         token_id: TokenId,
         msg: String
     ) -> PromiseOrValue<bool> {
-        let parsed_message_result: Result<NftOnTransferMessage, near_sdk::serde_json::Error> = near_sdk::serde_json::from_str(&msg);
+        let parsed_message_result: Result<
+            NftOnTransferMessage,
+            near_sdk::serde_json::Error
+        > = near_sdk::serde_json::from_str(&msg);
 
         if parsed_message_result.is_err() {
             panic!("Error parsing message");
@@ -301,7 +304,12 @@ impl Contract {
 
         let storage_used_before = env::storage_usage();
 
-        let result = quest.nft_on_transfer(sender_id, previous_owner_id, token_id, parsed_nft_message.rarity);
+        let result = quest.nft_on_transfer(
+            sender_id,
+            previous_owner_id,
+            token_id,
+            parsed_nft_message.rarity
+        );
         self.quests.insert(&quest.id, &quest);
 
         let storage_used_after = env::storage_usage();
@@ -533,10 +541,15 @@ impl Contract {
             .collect()
     }
 
-    pub fn users(&mut self, quest_id: QuestId) -> Vec<AccountId> {
+    pub fn get_users(&self, quest_id: QuestId, pagination: Option<Pagination>) -> Vec<AccountId> {
         let quest = self.quests.get(&quest_id).expect("Quest wasn't found");
+        let pagination = pagination.unwrap_or_default();
 
-        return quest.users.iter().collect::<Vec<AccountId>>();
+        return quest.users
+            .iter()
+            .take(pagination.take())
+            .skip(pagination.skip())
+            .collect();
     }
 }
 

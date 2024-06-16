@@ -1,9 +1,8 @@
-use near_sdk::{json_types::U128, require, serde::{Deserialize, Serialize}, AccountId};
+use near_sdk::{ json_types::U128, require, serde::{ Deserialize, Serialize }, AccountId };
 
-use crate::contract::types::{Capacity, Reward, TokenId};
+use crate::contract::types::{ Capacity, Reward, TokenId };
 
-use super::types::{BoxId, BoxRarity, BoxStatus, QuestId};
-
+use super::types::{ BoxId, BoxRarity, BoxStatus, QuestId };
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 #[serde(crate = "near_sdk::serde", tag = "kind", rename_all = "snake_case")]
@@ -106,7 +105,7 @@ impl JsonBox {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Pagination {
     page: u8,
@@ -120,6 +119,13 @@ impl Default for Pagination {
 }
 
 impl Pagination {
+    pub fn new(page: u8, size: u8) -> Self {
+        return Self {
+            page,
+            size,
+        };
+    }
+
     pub fn assert_valid(&self) {
         require!(self.size <= 50, "A single page can't contain more than 50 elements")
     }

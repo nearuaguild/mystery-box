@@ -1,6 +1,7 @@
 const widget_owner_id = "evasive-dime.testnet";
+const top_contract_id = 'boundless-berry.testnet';
 
-const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+const { logInfo, logError } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
 
 logInfo('AddNearReward props', props);
 
@@ -181,7 +182,7 @@ const addPool = () => {
 };
 
 const updadePool = (id, field, value) => {
-  console.log(`updating pool.${field}`, id, value);
+  logInfo(`updating pool.${field}`, id, value);
 
   State.update((previousState) => {
     const { pools } = previousState;
@@ -192,7 +193,7 @@ const updadePool = (id, field, value) => {
 
     // unknown field
     if (pool[field] === 'undefined') {
-      console.error(
+      logError(
         `Can't update pool property ${field} since it doesn't exist`
       );
 
@@ -214,10 +215,10 @@ const everyPoolIsValid = pools.every(isValidPool);
 
 const shouldSubmitButtonBeDisabled = !everyPoolIsValid;
 
-console.log('shouldSubmitButtonBeDisabled', shouldSubmitButtonBeDisabled);
+logInfo('shouldSubmitButtonBeDisabled', shouldSubmitButtonBeDisabled);
 
 const submitTransactionToAddPools = () => {
-  console.log('submitTransactionToAddPools', pools);
+  logInfo('submitTransactionToAddPools', pools);
 
   if (!everyPoolIsValid) return;
 
@@ -227,7 +228,7 @@ const submitTransactionToAddPools = () => {
     const total = Big(pool.capacity).mul(amount);
 
     return {
-      contractName: props.quest.title,
+      contractName: top_contract_id,
       methodName: 'add_near_reward',
       args: {
         quest_id: props.quest.quest_id,
