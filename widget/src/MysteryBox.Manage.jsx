@@ -156,7 +156,8 @@ function Page({ page, account_id, quest_id }) {
         <Widget
           src={`${widget_owner_id}/widget/MysteryBox.Manage.Screens.Home`}
           props={{
-            quests: quests
+            quests: quests,
+            active_quest_id: quest_id, 
           }}
         />
       );

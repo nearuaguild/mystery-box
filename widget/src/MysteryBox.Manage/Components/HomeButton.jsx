@@ -41,7 +41,7 @@ return (
       to={linkHref({
         widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
         params: {
-          contract_id: props.contract_id,
+          quest_id: props.quest_id,
         },
       })}
     >

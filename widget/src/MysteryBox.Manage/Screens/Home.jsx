@@ -1,14 +1,23 @@
-console.log("Home props", props);
-
 const widget_owner_id = "evasive-dime.testnet";
 
+const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+
+logInfo("Home props", props);
 const { href: linkHref } = VM.require(`${widget_owner_id}/widget/core.lib.url`);
 
 linkHref || (linkHref = () => {});
 
+const active_quest_index_from_props = props.quests.findIndex((element) => element.quest_id === props.active_quest_id);
+
+logInfo('active_quest_index_from_props', active_quest_index_from_props);
+
 State.init({
-  active_quest_id: props.quests[0].quest_id,
+  active_quest_index: active_quest_index_from_props != -1 ? active_quest_index_from_props : 0,
 });
+
+const getActiveQuestId = () => {
+  return props.quests[state.active_quest_index].quest_id;
+}
 
 const SliderWrapper = styled.div`
   display: flex;
@@ -127,24 +136,35 @@ const Bottom = styled.div`
 `;
 
 const previousActiveContract = () => {
-  if (state.active_quest_id === 0) return;
+  if (state.active_quest_index === 0) return;
 
-  State.update({ active: state.active_quest_id - 1 });
+  State.update({ active_quest_index: state.active_quest_index - 1 });
 };
 
 const nextActiveContract = () => {
-  if (state.active_quest_id === props.quests.length - 1) return;
+  logInfo("next active contract switch", { quests: props.quests, active_quest_id: getActiveQuestId() });
 
-  State.update({ active: state.active_quest_id + 1 });
+  if(props.quests.length === 0 || props.quests.length === 1)
+  {
+    return;
+  }
+
+  const isTheLastQuest = state.active_quest_index >= props.quests.length - 1;
+  if (isTheLastQuest) 
+  {
+    return;
+  }
+
+  State.update({ active_quest_index: state.active_quest_index + 1 });
 };
 
-const quest = props.quests[state.active_quest_id];
+const quest = props.quests[state.active_quest_index];
 
 const createLinkToPage = (page) => {
   return linkHref({
     widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
     params: {
-      quest_id: state.active_quest_id,
+      quest_id: getActiveQuestId(),
       page,
     },
   });
@@ -160,7 +180,7 @@ return (
     />
     <SliderWrapper>
       <LeftArrow
-        disabled={state.active_quest_id === 0}
+        disabled={state.active_quest_index === 0}
         onClick={previousActiveContract}
       />
       <WrapperMenu>
@@ -224,7 +244,7 @@ return (
         </MenuFooter>
       </WrapperMenu>
       <RightArrow
-        disabled={state.active_quest_id === props.quests.length - 1}
+        disabled={state.active_quest_index === props.quests.length - 1}
         onClick={nextActiveContract}
       />
     </SliderWrapper>
@@ -232,7 +252,7 @@ return (
       <Widget
         src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
         props={{
-          text: 'Create another contract',
+          text: 'Create another giveaway',
           href: linkHref({
             widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
             params: {
@@ -248,7 +268,7 @@ return (
           href: linkHref({
             widgetSrc: `${widget_owner_id}/widget/MysteryBox`,
             params: {
-              contract_id: quest.contract_id,
+              quest_id: quest.quest_id,
             },
           }),
           target: '_blank',

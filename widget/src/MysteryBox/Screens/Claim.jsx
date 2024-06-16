@@ -1,9 +1,14 @@
-console.log('Claim.props', props);
+const widget_owner_id = "evasive-dime.testnet";
+const top_contract_id = 'boundless-berry.testnet';
+
+const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+
+logInfo('Claim props', props);
 
 const base_ipfs = 'https://ipfs.near.social/ipfs/';
 
 State.init({
-  active: 0,
+  active_box_index: 0,
 });
 
 const font = fetch(
@@ -337,15 +342,15 @@ const SocialIcon = styled.img`
 `;
 
 const previousActiveBox = () => {
-  if (state.active === 0) return;
+  if (state.active_box_index === 0) return;
 
-  State.update({ active: state.active - 1 });
+  State.update({ active_box_index: state.active_box_index - 1 });
 };
 
 const nextActiveBox = () => {
-  if (state.active === props.boxes.length - 1) return;
+  if (state.active_box_index === props.boxes.length - 1) return;
 
-  State.update({ active: state.active + 1 });
+  State.update({ active_box_index: state.active_box_index + 1 });
 };
 
 const NonClaimedBoxComponent = ({ box }) => {
@@ -359,8 +364,9 @@ const NonClaimedBoxComponent = ({ box }) => {
     return props.onClaim(box.id);
   };
 
-  //const amounts = (box.rewards || [])?.map((reward) => {
-  const amounts = []?.map((reward) => {
+  const box_rewards = Array.isArray(box.rewards) ? box.rewards : [];
+
+  const amounts = box_rewards.map((reward) => {
     const count = reward.available || reward.token_ids?.length;
 
     const isPlural = count > 1;
@@ -370,8 +376,7 @@ const NonClaimedBoxComponent = ({ box }) => {
     return `${count} ${title}`;
   });
 
-  //const titles = (box.rewards || []).map((reward) => {
-  const titles = [].map((reward) => {
+  const titles = box_rewards.map((reward) => {
     if (reward.kind === 'near') {
       const amountInNear = Big(
         Big(reward.amount).div(1e24).toFixed(2)
@@ -500,13 +505,16 @@ const OpenedBoxComponent = ({ box }) => {
 };
 
 const BoxComponent = ({ box }) => {
-  if (box.status.kind === 'claimed')
+  logInfo("box", { box });
+
+
+  if (box.box_status.kind === 'claimed')
     return <OpenedBoxComponent key={box.id} box={box} />;
 
-  if (box.status.kind === 'non_claimed' && box.rewards.length === 0)
+  if (box.box_status.kind === 'non_claimed' && box.rewards.length === 0)
     return <LockedBoxComponent key={box.id} box={box} />;
 
-  if (box.status.kind === 'non_claimed')
+  if (box.box_status.kind === 'non_claimed')
     return <NonClaimedBoxComponent key={box.id} box={box} />;
 
   return <></>;
@@ -558,7 +566,9 @@ const LeftArrow = ({ onClick, disabled }) => (
   </Svg>
 );
 
-const available = (props.boxes || []).filter(
+const boxes = Array.isArray(props.boxes) ? props.boxes : [];
+
+const available = boxes.filter(
   (box) => box.status.kind === 'non_claimed' && box.rewards.length > 0
 ).length;
 
@@ -572,18 +582,18 @@ return (
         />
         <SliderWrapper>
           <LeftArrow
-            disabled={state.active === 0}
+            disabled={state.active_box_index === 0}
             onClick={previousActiveBox}
           />
-          {props.boxes?.map((box, index) => {
+          {boxes.map((box, index) => {
             return (
-              <SingleBoxWrapper active={state.active === index}>
+              <SingleBoxWrapper active={state.active_box_index === index}>
                 <BoxComponent box={box} />
               </SingleBoxWrapper>
             );
           })}
           <RightArrow
-            disabled={state.active === props.boxes.length - 1}
+            disabled={state.active_box_index === boxes.length - 1}
             onClick={nextActiveBox}
           />
         </SliderWrapper>

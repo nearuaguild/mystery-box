@@ -1,8 +1,16 @@
 const widget_owner_id = "evasive-dime.testnet";
+const top_contract_id = 'boundless-berry.testnet';
+
+const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+
+logInfo("MysteryBox props", { props, context });
+
 const rpc_endpoint = "https://rpc.testnet.near.org";
 
 const account_id = context.accountId;
-const contract_id = props.contract_id;
+const quest_id = isNaN(props.quest_id) ? null : parseInt(props.quest_id);
+
+logInfo("MysteryBox props", { props, context, quest_id });
 
 const createRewardsKey = (rarity) => `${rarity}_rewards`;
 
@@ -19,7 +27,7 @@ State.init({
 });
 
 // TODO: view spec to make sure it's appropriate contract
-if (!contract_id) {
+if (quest_id == null) {
   return (
     <Widget
       src={`${widget_owner_id}/widget/MysteryBox.Screens.InvalidContract`}
@@ -39,14 +47,15 @@ if (!account_id) {
   );
 }
 
-const fetchRewards = (contract_id) => {
-  fetchAndUpdateRewardsByRarity(contract_id, "rare");
-  fetchAndUpdateRewardsByRarity(contract_id, "epic");
-  fetchAndUpdateRewardsByRarity(contract_id, "legendary");
+const fetchRewards = (quest_id) => {
+  fetchAndUpdateRewardsByRarity(quest_id, "rare");
+  fetchAndUpdateRewardsByRarity(quest_id, "epic");
+  fetchAndUpdateRewardsByRarity(quest_id, "legendary");
 };
 
-const fetchAvailableRewardsByRarity = (contract_id, rarity) => {
-  const data = Near.view(contract_id, "available_rewards", {
+const fetchAvailableRewardsByRarity = (quest_id, rarity) => {
+  const data = Near.view(top_contract_id, "available_rewards", {
+    quest_id,
     rarity: rarity,
     pagination: {
       page: 1,
@@ -59,12 +68,12 @@ const fetchAvailableRewardsByRarity = (contract_id, rarity) => {
   return data || [];
 };
 
-const fetchAndUpdateRewardsByRarity = (contract_id, rarity) => {
+const fetchAndUpdateRewardsByRarity = (quest_id, rarity) => {
   const key = createRewardsKey(rarity);
 
   if (state[key].length !== 0) return;
 
-  const rewards = fetchAvailableRewardsByRarity(contract_id, rarity);
+  const rewards = fetchAvailableRewardsByRarity(quest_id, rarity);
 
   if (rewards.length === 0) return;
 
@@ -75,8 +84,8 @@ const fetchAndUpdateRewardsByRarity = (contract_id, rarity) => {
   });
 };
 
-const fetchUserBoxes = (contract_id, account_id) => {
-  const boxes = Near.view(contract_id, "boxes_for_owner", {
+const fetchUserBoxes = (account_id) => {
+  const boxes = Near.view(top_contract_id, "questboxes_per_owner", {
     account_id: account_id,
     pagination: {
       page: 1,
@@ -86,7 +95,7 @@ const fetchUserBoxes = (contract_id, account_id) => {
 
   if (boxes === undefined) throw `No boxes returned :(`;
 
-  const entries = (boxes || []).map((box) => [box.id, box]);
+  const entries = (boxes || []).map((box) => [box.box_id, box]);
 
   const updated_boxes = Object.assign(
     {},
@@ -99,8 +108,10 @@ const fetchUserBoxes = (contract_id, account_id) => {
   });
 };
 
-const fetchTotalSupply = (contract_id) => {
-  const totalSupply = Near.view(contract_id, "total_supply", {});
+const fetchTotalSupply = (quest_id) => {
+  const totalSupply = Near.view(top_contract_id, "questboxes_total_supply", {
+    quest_id
+  });
 
   if (totalSupply === undefined) throw `No supply returned :(`;
 
@@ -174,11 +185,11 @@ const fetchClaimTransactionResult = (hash, account_id) => {
 };
 
 try {
-  fetchRewards(contract_id);
-  fetchUserBoxes(contract_id, account_id);
-  fetchTotalSupply(contract_id);
+  fetchRewards(quest_id);
+  fetchUserBoxes(account_id);
+  fetchTotalSupply(quest_id);
 } catch (err) {
-  console.log("caught error on fetch rewards:", err);
+  logInfo("caught error on fetch rewards:", err);
   return (
     <Widget
       src={`${widget_owner_id}/widget/MysteryBox.Screens.InvalidContract`}
@@ -230,7 +241,7 @@ if (state.showClaimAnimationScreen === true) {
 
 const boxes = Object.values(state.boxes).map((box) => ({
   ...box,
-  rewards: state[createRewardsKey(box.rarity)],
+  rewards: state[createRewardsKey(box.box_rarity)],
 }));
 
 if (boxes.length === 0) {
@@ -282,9 +293,10 @@ const onClaim = (box_id) => {
   const gas = Big(100e12).toString(); // 100 TGas
 
   return Near.call(
-    contract_id,
+    top_contract_id,
     "claim",
     {
+      quest_id,
       box_id,
     },
     gas,
