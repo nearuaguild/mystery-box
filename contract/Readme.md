@@ -39,5 +39,10 @@ near contract call-function as-transaction boundless-berry.testnet delete_quest 
 
 # Read users
 `
-near contract call-function as-read-only boundless-berry.testnet users json-args '{"quest_id":0, "pagination": {"page": 0, "size": 40}}' network-config testnet now
+near contract call-function as-read-only boundless-berry.testnet get_users json-args '{"quest_id":0, "pagination": {"page": 0, "size": 40}}' network-config testnet now
+`
+
+# Read get_trusted_nft_contracts
+`
+near contract call-function as-read-only boundless-berry.testnet get_trusted_nft_contracts json-args '{"quest_id":1}' network-config testnet now
 `

@@ -1,12 +1,12 @@
 use crate::contract::pools::Pool;
-use crate::contract::types::{BoxId, Capacity, PoolId, Probability, TokenId};
-use near_sdk::{env, require, AccountId};
+use crate::contract::types::{ BoxId, Capacity, PoolId, Probability, TokenId };
+use near_sdk::{ env, require, AccountId };
 
 use std::str::FromStr;
 
 use super::enums::Network;
 use super::quest::Quest;
-use super::types::{BoxRarity, BoxStatus};
+use super::types::{ BoxRarity, BoxStatus };
 
 fn get_random_number(shift_amount: usize) -> u64 {
     let mut seed = env::random_seed();
@@ -43,14 +43,10 @@ impl Quest {
         &mut self,
         rarity: BoxRarity,
         contract_id: AccountId,
-        token_id: TokenId,
+        token_id: TokenId
     ) {
         // to ensure tokens within the contract and rarity will be in the same pool
-        let key = vec![
-            contract_id.to_owned().to_string(),
-            rarity.to_owned().to_string(),
-        ]
-        .join(":");
+        let key = vec![contract_id.to_owned().to_string(), rarity.to_owned().to_string()].join(":");
 
         let pool = match self.nft_pool_by_key.get(&key) {
             Option::None => {
@@ -83,14 +79,10 @@ impl Quest {
     pub(crate) fn internal_claim(&mut self, box_id: BoxId) -> PoolId {
         let mut box_data = self.boxes.get(&box_id).expect("ERR_BOX_NOT_FOUND");
 
-        require!(
-            box_data.box_status == BoxStatus::NonClaimed,
-            "ERR_BOX_ALREADY_CLAIMED"
-        );
+        require!(box_data.box_status == BoxStatus::NonClaimed, "ERR_BOX_ALREADY_CLAIMED");
 
         // take reward of some rarity
-        let available_pools = self
-            .pool_ids_by_rarity
+        let available_pools = self.pool_ids_by_rarity
             .get(&box_data.box_rarity)
             .unwrap_or_default()
             .iter()
@@ -103,8 +95,10 @@ impl Quest {
 
         require!(available_pools.len() > 0, "ERR_NO_POOLS_AVAILABLE");
 
-        let total_available: Capacity =
-            available_pools.iter().map(|pool| pool.availability()).sum();
+        let total_available: Capacity = available_pools
+            .iter()
+            .map(|pool| pool.availability())
+            .sum();
 
         let random_number = get_random_number(0);
 
@@ -129,8 +123,7 @@ impl Quest {
             last += pool.availability().clone();
         };
 
-        let probability = self
-            .probability_by_rarity
+        let probability = self.probability_by_rarity
             .get(&box_data.box_rarity)
             .unwrap_or(Probability::ONE);
 

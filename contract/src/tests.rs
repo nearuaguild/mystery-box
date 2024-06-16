@@ -41,6 +41,14 @@ fn nft3() -> AccountId {
     AccountId::from_str("nft_contract_3").unwrap()
 }
 
+fn testnet_user() -> AccountId {
+    AccountId::from_str("test.testnet").unwrap()
+}
+
+fn mainnet_user() -> AccountId {
+    AccountId::from_str("test.near").unwrap()
+}
+
 fn setup(attached_deposit: Option<u128>) -> (Contract, VMContextBuilder, Quest) {
     let mut context = VMContextBuilder::new();
 
@@ -991,4 +999,27 @@ fn test_users_increases() {
 
     assert_eq!(contract.get_users(quest.id, pagination.clone()).len(), 3);
     assert_eq!(contract.get_users(quest.id, pagination.clone()), vec![user1(), user2(), user3()]);
+}
+
+
+#[test]
+fn test_testnet_default_nft_contracts() {
+    let (mut contract, mut context, quest) = setup(None);
+
+    testing_env!(context.predecessor_account_id(testnet_user()).build());
+
+    let new_quest_id = contract.create_quest(&"new title".to_string());
+
+    assert_eq!(contract.get_trusted_nft_contracts(new_quest_id).len(), 4);
+}
+
+#[test]
+fn test_mainnet_default_nft_contracts() {
+    let (mut contract, mut context, quest) = setup(None);
+
+    testing_env!(context.predecessor_account_id(mainnet_user()).build());
+
+    let new_quest_id = contract.create_quest(&"new title".to_string());
+
+    assert_eq!(contract.get_trusted_nft_contracts(new_quest_id).len(), 10);
 }

@@ -1,11 +1,11 @@
-use near_sdk::{env, AccountId};
+use near_sdk::{env::{self}, AccountId};
 
 use crate::contract::enums::Network;
 
 pub fn get_trusted_nft_contracts() -> Vec<AccountId> {
-    let network = Network::from(env::current_account_id());
+    let network = Network::from(env::predecessor_account_id());
 
-    match network {
+    return match network {
         Network::Testnet => vec![
             "nft.helpua.testnet".parse().unwrap(),
             "nft2.helpua.testnet".parse().unwrap(),
@@ -23,6 +23,6 @@ pub fn get_trusted_nft_contracts() -> Vec<AccountId> {
             "spin-nft-contract.near".parse().unwrap(),
             "mrbrownproject.near".parse().unwrap(),
             "nft.thedons.near".parse().unwrap(),
-        ],
-    }
+        ]
+    };
 }

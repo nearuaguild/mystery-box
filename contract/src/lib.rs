@@ -10,7 +10,7 @@ use near_sdk::{ collections::LookupMap, near_bindgen, AccountId, PanicOnDefault 
 
 use near_sdk::borsh::{ self, BorshDeserialize, BorshSerialize };
 use contract::questbox::QuestBox;
-use contract::trusted_contracts::get_trusted_nft_contracts;
+use contract::trusted_contracts::get_trusted_nft_contracts as get_trusted_nft_contracts_internal;
 use contract::types::questbox_data::QuestBoxData;
 use contract::types::{ BoxId, BoxRarity, Probability, QuestId, TokenId };
 
@@ -419,14 +419,20 @@ impl Contract {
         let account_id = env::predecessor_account_id();
         let storage_used_before = env::storage_usage();
 
-        let default_trusted_nft_contracts = get_trusted_nft_contracts();
-        let quest = Quest::new(
+        let default_trusted_nft_contracts = get_trusted_nft_contracts_internal();
+
+        println!("{:?}", default_trusted_nft_contracts);
+
+        let mut quest = Quest::new(
             self.next_quest_id,
             &title,
             &account_id,
-            default_trusted_nft_contracts
         );
         self.next_quest_id += 1;
+
+        default_trusted_nft_contracts.iter().for_each(|contract_id| {
+            quest.trust_nft_contract(contract_id.clone());
+        });
 
         self.quests.insert(&quest.id, &quest);
         self.insert_quest_into_quests_per_owner(&quest);
@@ -545,11 +551,13 @@ impl Contract {
         let quest = self.quests.get(&quest_id).expect("Quest wasn't found");
         let pagination = pagination.unwrap_or_default();
 
-        return quest.users
-            .iter()
-            .take(pagination.take())
-            .skip(pagination.skip())
-            .collect();
+        return quest.users.iter().take(pagination.take()).skip(pagination.skip()).collect();
+    }
+
+    pub fn get_trusted_nft_contracts(&self, quest_id: QuestId) -> Vec<AccountId> {
+        let quest = self.quests.get(&quest_id).expect("Quest wasn't found");
+
+        return quest.trusted_nft_contracts.iter().collect();
     }
 }
 

@@ -3,13 +3,7 @@ use std::collections::HashSet;
 use near_sdk::collections::{ LookupMap, UnorderedSet };
 use near_sdk::json_types::{U128, U64};
 use near_sdk::{
-    assert_one_yocto,
-    env,
-    require,
-    AccountId,
-    PanicOnDefault,
-    Promise,
-    PromiseOrValue,
+    assert_one_yocto, env, require, AccountId, PanicOnDefault, Promise, PromiseOrValue
 };
 use near_sdk::borsh::{ self, BorshDeserialize, BorshSerialize };
 
@@ -39,26 +33,24 @@ pub struct Quest {
 }
 
 impl Quest {
-    pub fn new(id: QuestId, title: &String, owner_id: &AccountId, default_trusted_nft_contracts: Vec<AccountId>) -> Self {
-        let mut trusted_nft_contracts = UnorderedSet::new(StorageKey::TrustedNftContracts);
+    pub fn new(id: QuestId, title: &String, owner_id: &AccountId) -> Self {
 
-        default_trusted_nft_contracts.iter().for_each(|contract_id| {
-            trusted_nft_contracts.insert(contract_id);
-        });
+        // nested prefixes should be unique according to this: https://docs.near.org/sdk/rust/contract-structure/nesting
+        let quest_hash = env::sha256_array(&id.to_be_bytes());
 
         Self {
             id,
             title: title.to_string(),
             next_pool_id: 0,
-            pools: LookupMap::new(StorageKey::Pools),
-            pool_ids_by_rarity: LookupMap::new(StorageKey::PoolsByRarity),
-            nft_pool_by_key: LookupMap::new(StorageKey::NftPoolByKey),
-            trusted_nft_contracts,
+            pools: LookupMap::new(StorageKey::Pools{quest_hash}),
+            pool_ids_by_rarity: LookupMap::new(StorageKey::PoolsByRarity{quest_hash}),
+            nft_pool_by_key: LookupMap::new(StorageKey::NftPoolByKey{quest_hash}),
+            trusted_nft_contracts: UnorderedSet::new(StorageKey::TrustedNftContracts{quest_hash}),
             owner_id: owner_id.clone(),
             next_box_id: 0,
-            boxes: LookupMap::new(StorageKey::Boxes),
-            probability_by_rarity: LookupMap::new(StorageKey::ProbabilityByRarity),
-            users: UnorderedSet::new(StorageKey::Users),
+            boxes: LookupMap::new(StorageKey::Boxes{quest_hash}),
+            probability_by_rarity: LookupMap::new(StorageKey::ProbabilityByRarity{quest_hash}),
+            users: UnorderedSet::new(StorageKey::Users{quest_hash}),
         }
     }
 

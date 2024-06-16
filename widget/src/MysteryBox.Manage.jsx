@@ -51,7 +51,7 @@ const KnownPages = [
   'DeployContract',
 ];
 
-const determinePageFromProps = () => {
+const determinePageAndActiveQuestFromProps = () => {
   if (!account_id) return 'SignIn';
 
   if (!KnownPages.includes(props.page)) return 'Home';
@@ -62,21 +62,21 @@ const determinePageFromProps = () => {
       account_id
     );
 
-    console.log('response', response);
+    logInfo('MysteryBox.Manage response', response);
 
     const result = parseResultFromClaimTransactionResponse(response);
 
-    console.log('result', result);
+    logInfo('MysteryBox.Manage result', result);
 
     if (result) {
-      return 'Home';
+      return {page:'Home', active_quest_id: result };
     }
   }
 
-  return props.page;
+  return {page: props.page, active_quest_id: 0 };
 };
 
-const page = determinePageFromProps();
+const { page, active_quest_id } = determinePageAndActiveQuestFromProps();
 
 // Import our modules
 const { Layout } = VM.require(`${widget_owner_id}/widget/Templates.Layout`);
@@ -163,7 +163,9 @@ function Page({ page, account_id, quest_id }) {
       );
     }
     case 'AddNftReward': {
-      const contracts = Near.view(quest_id, 'trusted_nft_contracts');
+      const contracts = Near.view(top_contract_id, 'get_trusted_nft_contracts', {
+        quest_id
+      });
 
       console.log('contracts', contracts);
 
@@ -200,7 +202,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
         <Widget
           src={`${widget_owner_id}/widget/MysteryBox.Manage.Screens.AddNftReward`}
           props={{
-            contract: currentQuest,
+            quest: currentQuest,
             tokens,
           }}
         />
@@ -340,7 +342,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
 
 console.log('page', page);
 
-const quest_id_as_number = parseInt(props.quest_id);
+const quest_id_as_number = active_quest_id ?? parseInt(props.quest_id);
 
 return (
   <>

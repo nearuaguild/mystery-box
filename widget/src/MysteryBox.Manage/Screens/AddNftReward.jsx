@@ -1,6 +1,9 @@
 const widget_owner_id = "evasive-dime.testnet";
+const top_contract_id = 'boundless-berry.testnet';
 
-console.log('props', props);
+const { logInfo, logError } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+
+logInfo('AddNftReward props', props);
 
 const tokens = props.tokens || [];
 
@@ -376,7 +379,7 @@ const submitTransactionToAddNftRewards = () => {
         contractName: rarity.contract,
         methodName: 'nft_transfer_call',
         args: {
-          receiver_id: props.contract?.contract_id,
+          receiver_id: top_contract_id,
           token_id: rarity.token_id,
           msg: rarity.value,
         },
@@ -395,8 +398,8 @@ return (
       <LeftArrow disabled={state.active === 0} onClick={previousActiveToken} />
       <WrapperMenu>
         <MenuHeader>
-          <MenuTitle>{props.contract?.title}</MenuTitle>
-          <MenuSubtitle>{props.contract?.contract_id}</MenuSubtitle>
+          <MenuTitle>{props.quest?.title}</MenuTitle>
+          <MenuSubtitle>{props.quest?.quest_id}</MenuSubtitle>
         </MenuHeader>
         <MenuContent>
           <WrapperNftPreview url={getMediaUrlForToken(token)}>
