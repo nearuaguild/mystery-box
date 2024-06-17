@@ -61,12 +61,13 @@ impl Contract {
             .get(&quest_id)
             .expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
 
+        let current_owner_id = quest.owner_id.clone();
+
         quest.set_owner(&new_owner_id);
 
         self.quests.insert(&quest_id, &quest);
 
         //remove from old owner
-        let current_owner_id = env::predecessor_account_id();
         let owner_quests = self.quests_per_owner.get(&current_owner_id);
 
         if !owner_quests.is_some() {
@@ -464,8 +465,6 @@ impl Contract {
 
         let default_trusted_nft_contracts = get_trusted_nft_contracts_internal();
 
-        println!("{:?}", default_trusted_nft_contracts);
-
         let mut quest = Quest::new(self.next_quest_id, &title, &account_id);
         self.next_quest_id += 1;
 
@@ -511,7 +510,8 @@ impl Contract {
         self.quests_per_owner.insert(&account_id, &quests_per_owner);
     }
 
-    pub fn delete_quest(&mut self, quest_id: QuestId) {
+    //This is private for the time being. We don't allow quests deletion at this moment.
+    fn delete_quest(&mut self, quest_id: QuestId) {
         assert!(quest_id != 0, "Title should be specified");
 
         assert!(self.quests.get(&quest_id).is_some(), "Quest not found");
@@ -538,7 +538,6 @@ impl Contract {
         quests_per_owner_unwrapped
             .unwrap()
             .iter()
-            //.collect::<Vec<u64>>();
             .for_each(|quest_id_inner| {
                 if quest_id_inner != quest_id {
                     quests_per_owner_retained.insert(&quest_id_inner);
