@@ -46,3 +46,8 @@ near contract call-function as-read-only boundless-berry.testnet get_users json-
 `
 near contract call-function as-read-only boundless-berry.testnet get_trusted_nft_contracts json-args '{"quest_id":1}' network-config testnet now
 `
+
+# Call claim
+`
+near contract call-function as-transaction boundless-berry.testnet claim json-args '{"quest_id":1, "box_id": 0}' prepaid-gas '100.0 Tgas' attached-deposit '1 yoctoNEAR' sign-as volodymyr_matseliukh1.testnet network-config testnet sign-with-keychain send
+`

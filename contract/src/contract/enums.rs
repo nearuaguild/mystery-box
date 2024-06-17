@@ -24,12 +24,12 @@ pub enum StorageKey {
     PoolsByRarity { quest_hash: CryptoHash },
     NftPoolByKey { quest_hash: CryptoHash },
     Boxes { quest_hash: CryptoHash },
-    BoxesPerOwner,
+    BoxesPerOwner { quest_hash: CryptoHash },
     TrustedNftContracts { quest_hash: CryptoHash },
     ProbabilityByRarity { quest_hash: CryptoHash },
     Users { quest_hash: CryptoHash },
     Quests,
     QuestsPerOwner,
     QuestBoxesPerOwner,
-    QuestIdsPerOwner,
+    QuestIdsPerOwner { account_hash: CryptoHash }
 }

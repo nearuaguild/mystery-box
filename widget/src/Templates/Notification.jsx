@@ -1,5 +1,7 @@
 const widget_owner_id = "evasive-dime.testnet";
 
+const { logInfo, logError } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+
 const rpc_endpoint = 'https://rpc.testnet.near.org';
 
 State.init({
@@ -69,7 +71,7 @@ const fetchTransactionResult = (hash, account_id) => {
 
     const result = parseResultFromTransactionResponse(response);
 
-    console.log('tx result', result);
+    logInfo('tx result', result);
 
     if (!result) return;
 
@@ -110,10 +112,10 @@ const fetchTransactionResult = (hash, account_id) => {
 
 const value = Storage.get(props.tx_hash);
 
-console.log('value', value);
+logInfo('value', value);
 const hashExistInStorage = value !== null && value !== undefined;
 
-console.log('hashExistInStorage', hashExistInStorage);
+logInfo('hashExistInStorage', hashExistInStorage);
 
 try {
   if (props.tx_hash && !hashExistInStorage) {

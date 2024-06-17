@@ -160,7 +160,7 @@ const WrapperTable = styled.div`
 `;
 
 const deletePool = (id) => {
-  console.log('deleting pool', id);
+  logInfo('deleting pool', id);
 
   State.update((previousState) => {
     return {
@@ -171,7 +171,7 @@ const deletePool = (id) => {
 };
 
 const addPool = () => {
-  console.log('add new pool');
+  logInfo('add new pool');
 
   State.update((previousState) => {
     return {

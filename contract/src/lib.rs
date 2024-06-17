@@ -81,8 +81,9 @@ impl Contract {
 
         //add to new owner
         let new_owner_quests_unwrapped = self.quests_per_owner.get(&new_owner_id);
+        let account_hash = env::sha256_array(&new_owner_id.as_bytes());
 
-        let mut quests_per_owner = UnorderedSet::new(StorageKey::QuestIdsPerOwner);
+        let mut quests_per_owner = UnorderedSet::new(StorageKey::QuestIdsPerOwner { account_hash });
 
         if new_owner_quests_unwrapped.is_some() {
             quests_per_owner = new_owner_quests_unwrapped.unwrap();
@@ -406,6 +407,48 @@ impl Contract {
             .collect();
     }
 
+    pub fn questboxes_for_quest_per_owner(
+        &self,
+        quest_id: QuestId,
+        account_id: AccountId,
+        pagination: Option<Pagination>
+    ) -> Vec<JsonBox> {
+        let pagination = pagination.unwrap_or_default();
+
+        let questboxes_per_owner = self.questboxes_per_owner.get(&account_id);
+
+        if !questboxes_per_owner.is_some() {
+            return Vec::new();
+        }
+
+        return questboxes_per_owner
+            .unwrap()
+            .iter()
+            .filter(|quest_box| quest_box.quest_id == quest_id)
+            .take(pagination.take())
+            .skip(pagination.skip())
+            .filter_map(|quest_box| {
+                let quest = self.quests.get(&quest_box.quest_id);
+
+                if !quest.is_some() {
+                    return None;
+                }
+
+                let box_object = quest.unwrap().boxes.get(&quest_box.box_id);
+
+                if !box_object.is_some() {
+                    return None;
+                }
+
+                let box_object_unwrapped = box_object.unwrap();
+
+                let box_json = JsonBox::from(box_object_unwrapped);
+
+                return Some(box_json);
+            })
+            .collect();
+    }
+
     pub fn questboxes_total_supply(&self, quest_id: QuestId) -> U128 {
         let quest = self.quests.get(&quest_id).expect("Quest wasn't found");
 
@@ -423,11 +466,7 @@ impl Contract {
 
         println!("{:?}", default_trusted_nft_contracts);
 
-        let mut quest = Quest::new(
-            self.next_quest_id,
-            &title,
-            &account_id,
-        );
+        let mut quest = Quest::new(self.next_quest_id, &title, &account_id);
         self.next_quest_id += 1;
 
         default_trusted_nft_contracts.iter().for_each(|contract_id| {
@@ -460,7 +499,9 @@ impl Contract {
         let account_id = env::predecessor_account_id();
 
         let quests_per_owner_unwrapped = self.quests_per_owner.get(&account_id);
-        let mut quests_per_owner = UnorderedSet::new(StorageKey::QuestIdsPerOwner);
+
+        let account_hash = env::sha256_array(&account_id.as_bytes());
+        let mut quests_per_owner = UnorderedSet::new(StorageKey::QuestIdsPerOwner { account_hash });
 
         if quests_per_owner_unwrapped.is_some() {
             quests_per_owner = quests_per_owner_unwrapped.unwrap();
@@ -488,10 +529,11 @@ impl Contract {
             return;
         }
 
-        //quests_per_owner_unwrapped.unwrap().re
-        // use HashSet remove method
+        let account_hash = env::sha256_array(&account_id.as_bytes());
 
-        let mut quests_per_owner_retained = UnorderedSet::new(StorageKey::QuestIdsPerOwner);
+        let mut quests_per_owner_retained = UnorderedSet::new(StorageKey::QuestIdsPerOwner {
+            account_hash,
+        });
 
         quests_per_owner_unwrapped
             .unwrap()

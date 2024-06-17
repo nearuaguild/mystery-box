@@ -4,7 +4,7 @@ const top_contract_id = 'boundless-berry.testnet';
 const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
 const rpc_endpoint = 'https://rpc.testnet.near.org';
 
-console.log("MysteryBox.Manage props", props);
+logInfo("MysteryBox.Manage props", props);
 
 const fetchTransactionByHash = (hash, sender_id) => {
   return fetch(rpc_endpoint, {
@@ -34,7 +34,7 @@ const parseResultFromClaimTransactionResponse = (response) => {
 
   if (!responseValue) return null;
 
-  console.log('result', result);
+  logInfo('result', result);
 
   return JSON.parse(Buffer.from(responseValue, 'base64').toString());
 };
@@ -69,14 +69,14 @@ const determinePageAndActiveQuestFromProps = () => {
     logInfo('MysteryBox.Manage result', result);
 
     if (result) {
-      return {page:'Home', active_quest_id: result };
+      return 'Home';
     }
   }
 
-  return {page: props.page, active_quest_id: 0 };
+  return props.page;
 };
 
-const { page, active_quest_id } = determinePageAndActiveQuestFromProps();
+const page = determinePageAndActiveQuestFromProps();
 
 // Import our modules
 const { Layout } = VM.require(`${widget_owner_id}/widget/Templates.Layout`);
@@ -119,7 +119,7 @@ function Page({ page, account_id, quest_id }) {
 
   const currentQuest = !isNaN(quest_id) ? quests.find((quest) => quest.quest_id === quest_id) : null;
 
-  console.log("MysteryBox.Manage quests", quests, quest_id, currentQuest);
+  logInfo("MysteryBox.Manage quests", { quests, quest_id, currentQuest });
 
   switch (page) {
     case 'Home': {
@@ -167,7 +167,7 @@ function Page({ page, account_id, quest_id }) {
         quest_id
       });
 
-      console.log('contracts', contracts);
+      logInfo('contracts', contracts);
 
       const tokens = (contracts || [])
         .map((contract) => {
@@ -340,9 +340,23 @@ Please reach out to Near Ukraine Team in order to have your collection verified
   }
 }
 
-console.log('page', page);
 
-const quest_id_as_number = active_quest_id ?? parseInt(props.quest_id);
+
+const is_active_quest_id_present = props.active_quest_id != undefined && !isNaN(props.active_quest_id);
+const is_quest_id_from_props_present = props.quest_id != undefined && !isNaN(props.quest_id);
+
+let quest_id_as_number = 0;
+
+if(is_active_quest_id_present)
+{
+  quest_id_as_number = parseInt(props.active_quest_id);
+}
+else if(is_quest_id_from_props_present)
+{
+  quest_id_as_number = parseInt(props.quest_id);
+}
+
+logInfo('page', { page, quest_id_as_number, active_quest_id: props.active_quest_id, props_quest_id: props.quest_id });
 
 return (
   <>

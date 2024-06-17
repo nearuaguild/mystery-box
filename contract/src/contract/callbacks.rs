@@ -97,55 +97,55 @@ impl Contract {
         // https://docs.rs/near-sdk/latest/near_sdk/env/fn.promise_results_count.html
         assert_eq!(env::promise_results_count(), 1, "ERR_TOO_MANY_RESULTS");
 
-        let iah_result = env::promise_result(0);
+        //TODO: Fix verification
+        // let iah_result = env::promise_result(0);
 
-        let is_verified = match iah_result {
-            PromiseResult::Successful(data) => {
-                let deserealize_result = serde_json::from_slice::<serde_json::Value>(data.as_slice());
+        // let is_verified = match iah_result {
+        //     PromiseResult::Successful(data) => {
+        //         let deserealize_result = serde_json::from_slice::<serde_json::Value>(data.as_slice());
 
-                match deserealize_result {
-                    Err(_) => {
-                        log!("Couldn't deserialize cross-contract results");
+        //         match deserealize_result {
+        //             Err(_) => {
+        //                 log!("Couldn't deserialize cross-contract results");
 
-                        false
-                    }
-                    Ok(data) => {
-                        let verification_result = data.pointer("/0/1/0");
+        //                 false
+        //             }
+        //             Ok(data) => {
+        //                 let verification_result = data.pointer("/0/1/0");
 
-                        match verification_result {
-                            None => {
-                                log!(
-                                    "Verification data not found in registry {} for issuer {}",
-                                    internal::get_registry_iah_contract(),
-                                    internal::get_issuer_iah_contract()
-                                );
+        //                 match verification_result {
+        //                     None => {
+        //                         log!(
+        //                             "Verification data not found in registry {} for issuer {}",
+        //                             internal::get_registry_iah_contract(),
+        //                             internal::get_issuer_iah_contract()
+        //                         );
 
-                                false
-                            }
-                            Some(_) => true,
-                        }
-                    }
-                }
-            }
-            _ => {
-                log!(
-                    "Something failed while getting data from IAH registry {}",
-                    internal::get_registry_iah_contract()
-                );
+        //                         false
+        //                     }
+        //                     Some(_) => true,
+        //                 }
+        //             }
+        //         }
+        //     }
+        //     _ => {
+        //         log!(
+        //             "Something failed while getting data from IAH registry {}",
+        //             internal::get_registry_iah_contract()
+        //         );
 
-                false
-            }
-        };
+        //         false
+        //     }
+        // };
 
-        let mut quest = self.quests.get(&quest_id).expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
+        let quest = self.quests.get(&quest_id).expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
 
-        if !is_verified {
-            
+        //TODO: Fix verification.
+        // if !is_verified {
+        //     quest.internal_undo_claim(box_id, pool_id);
 
-            quest.internal_undo_claim(box_id, pool_id);
-
-            return PromiseOrValue::Value(None);
-        };
+        //     return PromiseOrValue::Value(None);
+        // };
 
         let box_data = quest.boxes.get(&box_id).expect("ERR_BOX_NOT_FOUND");
 

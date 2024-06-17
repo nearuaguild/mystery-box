@@ -666,6 +666,25 @@ fn test_boxes_for_owner_status() {
 }
 
 #[test]
+fn test_boxes_for_quest_for_owner_amount() {
+    let (mut contract, mut context, quest) = setup(None);
+
+    let new_quest_id = contract.create_quest(&"new quest".to_string());
+
+    contract.mint(quest.id, user1(), BoxRarity::Rare);
+
+    assert_eq!(contract.questboxes_for_quest_per_owner(quest.id, user1(), None).len(), 1);
+
+    contract.mint(new_quest_id, user1(), BoxRarity::Epic);
+    contract.mint(new_quest_id, user1(), BoxRarity::Epic);
+
+    contract.mint(quest.id, user1(), BoxRarity::Legendary);
+
+    assert_eq!(contract.questboxes_for_quest_per_owner(new_quest_id, user1(), None).len(), 2);
+    assert_eq!(contract.questboxes_for_quest_per_owner(quest.id, user1(), None).len(), 2);
+}
+
+#[test]
 #[should_panic(expected = "ERR_NO_POOLS_AVAILABLE")]
 fn test_claim_without_pools_with_panic() {
     let (mut contract, mut context, quest) = setup(None);
@@ -719,6 +738,7 @@ fn test_claim_non_existing_with_panic() {
     contract.claim(quest.id, NON_EXISTING_BOX_ID);
 }
 
+//TODO. Create a test with kyc verification = false
 #[test]
 #[should_panic(expected = "ERR_BOX_ALREADY_CLAIMED")]
 fn test_claim_twice_with_panic() {

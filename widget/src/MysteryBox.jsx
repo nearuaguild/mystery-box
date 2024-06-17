@@ -85,8 +85,9 @@ const fetchAndUpdateRewardsByRarity = (quest_id, rarity) => {
 };
 
 const fetchUserBoxes = (account_id) => {
-  const boxes = Near.view(top_contract_id, "questboxes_per_owner", {
+  const boxes = Near.view(top_contract_id, "questboxes_for_quest_per_owner", {
     account_id: account_id,
+    quest_id,
     pagination: {
       page: 1,
       size: 20,
@@ -148,7 +149,7 @@ const parseResultFromClaimTransactionResponse = (response) => {
 
   if (!responseValue) return null;
 
-  console.log("result", result);
+  logInfo("result", result);
 
   return JSON.parse(Buffer.from(responseValue, "base64").toString());
 };
@@ -159,7 +160,7 @@ const fetchClaimTransactionResult = (hash, account_id) => {
 
     const result = parseResultFromClaimTransactionResponse(response);
 
-    console.log("claim result", result);
+    logInfo("claim result", result);
 
     if (!result) return;
 
@@ -210,7 +211,7 @@ if (state.showVerificationScreen === true) {
 
 const value = Storage.get(props.transactionHashes);
 const hashExistInStorage = value !== null && value !== undefined;
-console.log("hashExistInStorage", hashExistInStorage);
+logInfo("hashExistInStorage", hashExistInStorage);
 
 try {
   if (props.transactionHashes && !hashExistInStorage) {
@@ -286,10 +287,6 @@ const redirectToVerification = () => {
 };
 
 const onClaim = (box_id) => {
-  if (!isVerified) {
-    return redirectToVerification();
-  }
-
   const gas = Big(100e12).toString(); // 100 TGas
 
   return Near.call(

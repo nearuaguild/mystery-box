@@ -1,6 +1,8 @@
 const widget_owner_id = "evasive-dime.testnet";
 
-console.log('props', props);
+const { logInfo, logError } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+
+logInfo('props', props);
 
 State.init({
   activeKind: 'near',

@@ -1,4 +1,8 @@
-console.log('ClaimAnimation.props', props);
+const widget_owner_id = 'evasive-dime.testnet';
+
+const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+
+logInfo('ClaimAnimation.props', props);
 
 const font = fetch(
   'https://fonts.googleapis.com/css2?family=Lilita+One:wght@400&display=swap'
@@ -191,7 +195,7 @@ const NearRewardIcon = (props) => {
 };
 
 const onClick = () => {
-  console.log('ClaimAnimation', 'Clicked button to go back');
+  logInfo('ClaimAnimation', 'Clicked button to go back');
 
   return props.onBack();
 };
@@ -1653,7 +1657,7 @@ const LoadingReward = ({ width, height }) => {
     markers: [],
   };
 
-  console.log('el', element, animation.v);
+  logInfo('el', element, animation.v);
 
   lottie.loadAnimation({
     container: element, // the dom element that will contain the animation
@@ -1709,7 +1713,7 @@ const getMediaUrlForToken = (contract_id, token_id) => {
 const NonFungibleTokenReward = ({ contract_id, token_id }) => {
   const url = getMediaUrlForToken(contract_id, token_id);
 
-  console.log(`Loading NFT image from ${url}`);
+  logInfo(`Loading NFT image from ${url}`);
 
   return (
     <RewardBoundary rarity={props.rarity}>

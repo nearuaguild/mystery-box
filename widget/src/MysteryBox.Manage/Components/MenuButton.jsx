@@ -1,4 +1,8 @@
-console.log('props', props);
+const widget_owner_id = 'evasive-dime.testnet';
+
+const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+
+logInfo('props', props);
 
 const WrapperMenuButton = styled.div`
   flex-basis: 50%;

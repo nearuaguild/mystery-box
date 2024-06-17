@@ -1,6 +1,8 @@
 const widget_owner_id = "evasive-dime.testnet";
 
-console.log('props', props);
+const { logInfo, logError } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+
+logInfo('props', props);
 
 State.init({
   title: '',
@@ -133,10 +135,10 @@ const address = alias && alias + '.' + props.top_contract_id;
 
 const shouldSubmitButtonBeDisabled = !state.title;
 
-console.log('shouldSubmitButtonBeDisabled', shouldSubmitButtonBeDisabled);
+logInfo('shouldSubmitButtonBeDisabled', shouldSubmitButtonBeDisabled);
 
 const submitTransactionToDeployContract = () => {
-  console.log('submitTransactionToDeployContract', state.title, address);
+  logInfo('submitTransactionToDeployContract', state.title, address);
 
   const baseDeposit = Big(10).pow(24).mul(0.5); // 0.5 NEAR
   const argsDeposit = Big(240).mul(state.title.length).mul(Big(10).pow(18));

@@ -356,12 +356,12 @@ const nextActiveBox = () => {
 const NonClaimedBoxComponent = ({ box }) => {
   /** @todo: concat with the URL object */
   const image = base_ipfs + box.ipfs;
-  const rarity = box.rarity;
+  const rarity = box.box_rarity;
 
   const onClick = () => {
-    console.log('clicked claim button', box.id);
+    logInfo('clicked claim button', box.box_id);
 
-    return props.onClaim(box.id);
+    return props.onClaim(box.box_id);
   };
 
   const box_rewards = Array.isArray(box.rewards) ? box.rewards : [];
@@ -444,7 +444,7 @@ const LockIcon = ({}) => {
 const LockedBoxComponent = ({ box }) => {
   /** @todo: concat with the URL object */
   const image = base_ipfs + box.ipfs;
-  const rarity = box.rarity;
+  const rarity = box.box_rarity;
 
   return (
     <>
@@ -466,9 +466,9 @@ const LockedBoxComponent = ({ box }) => {
 const OpenedBoxComponent = ({ box }) => {
   /** @todo: concat with the URL object */
   const image = base_ipfs + box.ipfs;
-  const rarity = box.rarity;
+  const rarity = box.box_rarity;
 
-  const reward = box.status.reward;
+  const reward = box.box_status.reward;
 
   let text;
 
@@ -509,13 +509,13 @@ const BoxComponent = ({ box }) => {
 
 
   if (box.box_status.kind === 'claimed')
-    return <OpenedBoxComponent key={box.id} box={box} />;
+    return <OpenedBoxComponent key={box.box_id} box={box} />;
 
   if (box.box_status.kind === 'non_claimed' && box.rewards.length === 0)
-    return <LockedBoxComponent key={box.id} box={box} />;
+    return <LockedBoxComponent key={box.box_id} box={box} />;
 
   if (box.box_status.kind === 'non_claimed')
-    return <NonClaimedBoxComponent key={box.id} box={box} />;
+    return <NonClaimedBoxComponent key={box.box_id} box={box} />;
 
   return <></>;
 };
@@ -569,7 +569,7 @@ const LeftArrow = ({ onClick, disabled }) => (
 const boxes = Array.isArray(props.boxes) ? props.boxes : [];
 
 const available = boxes.filter(
-  (box) => box.status.kind === 'non_claimed' && box.rewards.length > 0
+  (box) => box.box_status.kind === 'non_claimed' && box.rewards.length > 0
 ).length;
 
 return (

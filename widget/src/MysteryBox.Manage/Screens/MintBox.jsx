@@ -254,7 +254,7 @@ const SocialIcon = styled.img`
 `;
 
 const deleteAccount = (id) => {
-  console.log('deleting account', id);
+  logInfo('deleting account', id);
 
   State.update((previousState) => {
     return {
@@ -265,7 +265,7 @@ const deleteAccount = (id) => {
 };
 
 const addAccount = () => {
-  console.log('add new account');
+  logInfo('add new account');
 
   State.update((previousState) => {
     return {
@@ -276,7 +276,7 @@ const addAccount = () => {
 };
 
 const updadeAccount = (id, field, value) => {
-  console.log(`updating account.${field}`, id, value);
+  logInfo(`updating account.${field}`, id, value);
 
   State.update((previousState) => {
     const { accounts } = previousState;
@@ -312,7 +312,7 @@ const shouldSubmitButtonBeDisabled = !everyAccountIsValid;
 logInfo('shouldSubmitButtonBeDisabled', shouldSubmitButtonBeDisabled);
 
 const submitTransactionToMintBoxes = () => {
-  console.log('submitTransactionToMintBoxes', accounts);
+  logInfo('submitTransactionToMintBoxes', accounts);
 
   if (!everyAccountIsValid) return;
 
@@ -327,7 +327,7 @@ const submitTransactionToMintBoxes = () => {
     };
   }, {});
 
-  console.log('accountsGrouppedByRarity', accountsGrouppedByRarity);
+  logInfo('accountsGrouppedByRarity', accountsGrouppedByRarity);
 
   const txn = Object.entries(accountsGrouppedByRarity).map(
     ([rarity, partialAccounts]) => {
@@ -345,7 +345,7 @@ const submitTransactionToMintBoxes = () => {
         return prev + yoctoPerMintedBox + 40 * curr.length;
       }, 0);
 
-      console.log('total', total);
+      logInfo('total', total);
 
       const totalNum = Big(680).plus(total).mul(Big(10).pow(18));
 

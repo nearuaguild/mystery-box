@@ -295,7 +295,7 @@ const RarityPickerMenu = styled.div`
 
 const rarities = state.rarities || [];
 
-console.log('rarities', rarities);
+logInfo('rarities', rarities);
 
 const previousActiveToken = () => {
   if (state.active === 0) return;
@@ -368,7 +368,7 @@ const someRarityIsChosen = rarities.some((rarity) => !!rarity.value);
 const shouldSubmitButtonBeDisabled = !someRarityIsChosen;
 
 const submitTransactionToAddNftRewards = () => {
-  console.log('submitTransactionToAddNftRewards', rarities);
+  logInfo('submitTransactionToAddNftRewards', rarities);
 
   if (!someRarityIsChosen) return;
 
