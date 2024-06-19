@@ -77,31 +77,26 @@ impl Contract {
 
         self.quests.insert(&quest_id, &quest);
 
-        //remove from old owner
-        let owner_quests = self.quests_per_owner.get(&current_owner_id); // create unordered set
-
-        if !owner_quests.is_some() {
-            return;
-        }
-
-        let mut owners_quests_unwrapped = owner_quests.unwrap();
-
-        owners_quests_unwrapped.remove(&quest_id);
-
-        self.quests_per_owner.insert(&current_owner_id, &owners_quests_unwrapped);
-
-        //add to new owner
-        let new_owner_quests_unwrapped = self.quests_per_owner.get(&new_owner_id);
         let account_hash = env::sha256_array(&new_owner_id.as_bytes());
 
-        let mut quests_per_owner = UnorderedSet::new(StorageKey::QuestIdsPerOwner { account_hash });
+        //remove from old owner
+        let mut owner_quests = self.quests_per_owner
+            .get(&current_owner_id)
+            .unwrap_or(UnorderedSet::new(StorageKey::QuestIdsPerOwner { account_hash }));
 
-        if new_owner_quests_unwrapped.is_some() {
-            quests_per_owner = new_owner_quests_unwrapped.unwrap(); // unwrap_or(new)
-        }
+        assert!(owner_quests.contains(&quest_id), "Quest doesn't belong to owner");
 
-        quests_per_owner.insert(&quest_id);
-        self.quests_per_owner.insert(&new_owner_id, &quests_per_owner);
+        owner_quests.remove(&quest_id);
+
+        self.quests_per_owner.insert(&current_owner_id, &owner_quests);
+
+        //add to new owner
+        let mut new_owner_quests = self.quests_per_owner
+            .get(&new_owner_id)
+            .unwrap_or(UnorderedSet::new(StorageKey::QuestIdsPerOwner { account_hash }));
+
+        new_owner_quests.insert(&quest_id);
+        self.quests_per_owner.insert(&new_owner_id, &new_owner_quests);
     }
 
     pub fn trust_nft_contract(&mut self, contract_id: AccountId) {
@@ -338,7 +333,7 @@ impl Contract {
             token_id,
             parsed_nft_message.rarity
         );
-        
+
         self.quests.insert(&quest.id, &quest);
 
         let storage_used_after = env::storage_usage();
@@ -386,13 +381,12 @@ impl Contract {
     }
 
     pub fn questboxes_supply_per_owner(&self, account_id: AccountId) -> U128 {
-        let quest_boxes = self.questboxes_per_owner.get(&account_id);
+        let questboxes = self.questboxes_per_owner.get(&account_id);
 
-        if quest_boxes.is_some() {
-            return U128(quest_boxes.unwrap().len().into());
-        }
-
-        return U128(0);
+        return match questboxes {
+            Option::Some(questboxes) => U128(questboxes.len().into()),
+            _ => U128(0),
+        };
     }
 
     pub fn questboxes_per_owner(
