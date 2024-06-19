@@ -27,7 +27,6 @@ pub struct Quest {
     pub pool_ids_by_rarity: LookupMap<BoxRarity, HashSet<PoolId>>,
     pub next_box_id: BoxId,
     pub boxes: LookupMap<BoxId, QuestBox>,
-    pub trusted_nft_contracts: UnorderedSet<AccountId>,
     pub probability_by_rarity: LookupMap<BoxRarity, Probability>,
     pub users: UnorderedSet<AccountId>,
 }
@@ -45,7 +44,6 @@ impl Quest {
             pools: LookupMap::new(StorageKey::Pools{quest_hash}),
             pool_ids_by_rarity: LookupMap::new(StorageKey::PoolsByRarity{quest_hash}),
             nft_pool_by_key: LookupMap::new(StorageKey::NftPoolByKey{quest_hash}),
-            trusted_nft_contracts: UnorderedSet::new(StorageKey::TrustedNftContracts{quest_hash}),
             owner_id: owner_id.clone(),
             next_box_id: 0,
             boxes: LookupMap::new(StorageKey::Boxes{quest_hash}),
@@ -87,24 +85,6 @@ impl Quest {
         self.assert_only_owner();
 
         self.owner_id = new_owner_id.clone();
-    }
-
-    pub fn trust_nft_contract(&mut self, contract_id: AccountId) {
-        self.assert_only_owner();
-
-        require!(
-            self.trusted_nft_contracts.insert(&contract_id),
-            "Provided contract is already in the set"
-        );
-    }
-
-    pub fn untrust_nft_contract(&mut self, contract_id: AccountId) {
-        self.assert_only_owner();
-
-        require!(
-            self.trusted_nft_contracts.remove(&contract_id),
-            "Provided contract wasn't trusted before"
-        );
     }
 
     pub fn mint(&mut self, box_owner_id: AccountId, rarity: BoxRarity) -> QuestBox {
@@ -156,13 +136,8 @@ impl Quest {
     ) -> PromiseOrValue<bool> {
         let nft_account_id = env::predecessor_account_id();
 
-        // we're required to ensure that the predecessor account is whitelisted, since the function is public
-        require!(
-            self.trusted_nft_contracts.contains(&nft_account_id),
-            "ERR_NFT_CONTRACT_NOT_TRUSTED"
-        );
-
-        require!(self.owner_id == previous_owner_id, "ERR_FORBIDDEN");
+        //there is no point in sending nft to itself
+        require!(env::current_account_id() == previous_owner_id, "ERR_FORBIDDEN");
 
         self.internal_add_nft_pool(box_rarity, nft_account_id, token_id);
 

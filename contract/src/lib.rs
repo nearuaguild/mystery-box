@@ -27,18 +27,28 @@ pub struct Contract {
     quests_per_owner: LookupMap<AccountId, UnorderedSet<QuestId>>,
     questboxes_per_owner: LookupMap<AccountId, UnorderedSet<QuestBoxData>>,
     next_quest_id: QuestId,
+    trusted_nft_contracts: UnorderedSet<AccountId>,
 }
 
 #[near_bindgen]
 impl Contract {
     #[init]
     pub fn new() -> Self {
-        Self {
+        let mut instance = Self {
             quests: LookupMap::new(StorageKey::Quests),
             quests_per_owner: LookupMap::new(StorageKey::QuestsPerOwner),
             questboxes_per_owner: LookupMap::new(StorageKey::QuestBoxesPerOwner),
+            trusted_nft_contracts: UnorderedSet::new(StorageKey::TrustedNftContracts),
             next_quest_id: 0,
-        }
+        };
+
+        let default_trusted_nft_contracts = get_trusted_nft_contracts_internal();
+
+        default_trusted_nft_contracts.iter().for_each(|contract_id| {
+            instance.trust_nft_contract(contract_id.clone());
+        });
+
+        return instance;
     }
 
     pub fn set_probability(
@@ -68,7 +78,7 @@ impl Contract {
         self.quests.insert(&quest_id, &quest);
 
         //remove from old owner
-        let owner_quests = self.quests_per_owner.get(&current_owner_id);
+        let owner_quests = self.quests_per_owner.get(&current_owner_id); // create unordered set
 
         if !owner_quests.is_some() {
             return;
@@ -87,31 +97,38 @@ impl Contract {
         let mut quests_per_owner = UnorderedSet::new(StorageKey::QuestIdsPerOwner { account_hash });
 
         if new_owner_quests_unwrapped.is_some() {
-            quests_per_owner = new_owner_quests_unwrapped.unwrap();
+            quests_per_owner = new_owner_quests_unwrapped.unwrap(); // unwrap_or(new)
         }
 
         quests_per_owner.insert(&quest_id);
         self.quests_per_owner.insert(&new_owner_id, &quests_per_owner);
     }
 
-    pub fn trust_nft_contract(&mut self, quest_id: QuestId, contract_id: AccountId) {
-        let mut quest = self.quests
-            .get(&quest_id)
-            .expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
+    pub fn trust_nft_contract(&mut self, contract_id: AccountId) {
+        assert!(env::predecessor_account_id() == env::current_account_id(), "ERR_FORBIDDEN");
 
-        quest.trust_nft_contract(contract_id);
+        let is_contract_trusted = self.trusted_nft_contracts.contains(&contract_id);
 
-        self.quests.insert(&quest.id, &quest);
+        if !is_contract_trusted {
+            self.trusted_nft_contracts.insert(&contract_id);
+        } else {
+            panic!("Provided contract is already in the set");
+        }
     }
 
-    pub fn untrust_nft_contract(&mut self, quest_id: QuestId, contract_id: AccountId) {
-        let mut quest = self.quests
-            .get(&quest_id)
-            .expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
+    pub fn untrust_nft_contract(&mut self, contract_id: AccountId) {
+        assert!(
+            env::predecessor_account_id() == env::current_account_id(),
+            "Signer account is not the owner of the contract."
+        );
 
-        quest.untrust_nft_contract(contract_id);
+        let is_contract_trusted = self.trusted_nft_contracts.contains(&contract_id);
 
-        self.quests.insert(&quest.id, &quest);
+        if is_contract_trusted {
+            self.trusted_nft_contracts.remove(&contract_id);
+        } else {
+            panic!("Provided contract wasn't trusted before");
+        }
     }
 
     #[payable]
@@ -237,8 +254,10 @@ impl Contract {
         return questbox.box_id;
     }
 
+    //forbidden for now. we should implement returning the deposit to customer before allowing this method.
+    #[allow(dead_code)]
     #[payable]
-    pub fn delete_boxes(&mut self, quest_id: QuestId, ids: Vec<BoxId>) {
+    fn delete_boxes(&mut self, quest_id: QuestId, ids: Vec<BoxId>) {
         let mut quest = self.quests
             .get(&quest_id)
             .expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
@@ -289,6 +308,13 @@ impl Contract {
         token_id: TokenId,
         msg: String
     ) -> PromiseOrValue<bool> {
+        // we're required to ensure that the predecessor account is whitelisted, since the function is public
+        let nft_account_id = env::predecessor_account_id();
+        require!(
+            self.trusted_nft_contracts.contains(&nft_account_id),
+            format!("ERR_NFT_CONTRACT_NOT_TRUSTED. {}", &nft_account_id)
+        );
+
         let parsed_message_result: Result<
             NftOnTransferMessage,
             near_sdk::serde_json::Error
@@ -312,6 +338,7 @@ impl Contract {
             token_id,
             parsed_nft_message.rarity
         );
+        
         self.quests.insert(&quest.id, &quest);
 
         let storage_used_after = env::storage_usage();
@@ -327,7 +354,7 @@ impl Contract {
 
         let refund = env::attached_deposit() - storage_deposit;
         if refund > 1 {
-            Promise::new(env::predecessor_account_id()).transfer(refund);
+            Promise::new(nft_account_id).transfer(refund);
         }
 
         return result;
@@ -463,14 +490,8 @@ impl Contract {
         let account_id = env::predecessor_account_id();
         let storage_used_before = env::storage_usage();
 
-        let default_trusted_nft_contracts = get_trusted_nft_contracts_internal();
-
-        let mut quest = Quest::new(self.next_quest_id, &title, &account_id);
+        let quest = Quest::new(self.next_quest_id, &title, &account_id);
         self.next_quest_id += 1;
-
-        default_trusted_nft_contracts.iter().for_each(|contract_id| {
-            quest.trust_nft_contract(contract_id.clone());
-        });
 
         self.quests.insert(&quest.id, &quest);
         self.insert_quest_into_quests_per_owner(&quest);
@@ -511,6 +532,7 @@ impl Contract {
     }
 
     //This is private for the time being. We don't allow quests deletion at this moment.
+    #[allow(dead_code)]
     fn delete_quest(&mut self, quest_id: QuestId) {
         assert!(quest_id != 0, "Title should be specified");
 
@@ -595,15 +617,10 @@ impl Contract {
         return quest.users.iter().take(pagination.take()).skip(pagination.skip()).collect();
     }
 
-    pub fn get_trusted_nft_contracts(&self, quest_id: QuestId) -> Vec<AccountId> {
-        let quest = self.quests.get(&quest_id).expect("Quest wasn't found");
-
-        return quest.trusted_nft_contracts.iter().collect();
+    pub fn get_trusted_nft_contracts(&self) -> Vec<AccountId> {
+        self.trusted_nft_contracts.to_vec()
     }
 }
 
 #[cfg(test)]
 mod tests;
-
-#[cfg(test)]
-mod test_utils;
