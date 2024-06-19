@@ -11,6 +11,7 @@ pub fn get_trusted_nft_contracts() -> Vec<AccountId> {
             "nft2.helpua.testnet".parse().unwrap(),
             "paras-token-v2.testnet".parse().unwrap(),
             "nearkingdoms.testnet".parse().unwrap(),
+            "spectacular-song.testnet".parse().unwrap(),
         ],
         Network::Mainnet => vec![
             "x.paras.near".parse().unwrap(),

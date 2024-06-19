@@ -906,17 +906,18 @@ fn test_claim_nft_reward_message_parse_panics() {
 fn test_claim_nft_reward_succeeds() {
     let (mut contract, mut context, quest) = setup(None, None, Some(user1()));
 
-    let box_id = contract.mint(quest.id, user1(), BoxRarity::Rare);
-
+    //only contract owner can perform trust
     testing_env!(context.predecessor_account_id(owner()).build());
-
     contract.trust_nft_contract(nft().clone());
+
+    testing_env!(context.predecessor_account_id(user1()).build());
+    let box_id = contract.mint(quest.id, user1(), BoxRarity::Rare);
     
     testing_env!(context.predecessor_account_id(nft()).build());
     // add NFT token as reward
     contract.nft_on_transfer(
         nft(),
-        owner(),
+        user1(),
         "some_token".to_string(),
         String::from(
             r#"
@@ -1060,7 +1061,7 @@ fn test_testnet_default_nft_contracts() {
         Some(testnet_user())
     );
 
-    assert_eq!(contract.get_trusted_nft_contracts().len(), 4);
+    assert_eq!(contract.get_trusted_nft_contracts().len(), 5);
 }
 
 #[test]

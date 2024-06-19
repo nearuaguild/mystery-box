@@ -325,8 +325,6 @@ impl Contract {
             .get(&parsed_nft_message.quest_id)
             .expect(&format!("Quest with id {} wasn't found", parsed_nft_message.quest_id.clone()));
 
-        let storage_used_before = env::storage_usage();
-
         let result = quest.nft_on_transfer(
             sender_id,
             previous_owner_id,
@@ -335,22 +333,6 @@ impl Contract {
         );
 
         self.quests.insert(&quest.id, &quest);
-
-        let storage_used_after = env::storage_usage();
-
-        let storage_deposit =
-            env::storage_byte_cost() * ((storage_used_after - storage_used_before) as u128);
-
-        assert!(
-            env::attached_deposit() >= storage_deposit,
-            "Deposited amount must be bigger than {} yocto",
-            storage_deposit
-        );
-
-        let refund = env::attached_deposit() - storage_deposit;
-        if refund > 1 {
-            Promise::new(nft_account_id).transfer(refund);
-        }
 
         return result;
     }

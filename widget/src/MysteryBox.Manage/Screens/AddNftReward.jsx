@@ -1,5 +1,5 @@
 const widget_owner_id = "evasive-dime.testnet";
-const top_contract_id = 'boundless-berry.testnet';
+const top_contract_id = 'friendly-eye.testnet';
 
 const { logInfo, logError } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
 
@@ -381,10 +381,10 @@ const submitTransactionToAddNftRewards = () => {
         args: {
           receiver_id: top_contract_id,
           token_id: rarity.token_id,
-          msg: rarity.value,
+          msg: `{ "rarity": "${rarity.value}", "quest_id": ${props.quest.quest_id} }`,
         },
         gas: Big(10).pow(12).mul(50), // 50 TGas
-        deposit: 1, // 0.00064N + accounts
+        deposit: 1,
       };
     });
 

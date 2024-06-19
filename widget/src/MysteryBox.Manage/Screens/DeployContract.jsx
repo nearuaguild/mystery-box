@@ -166,7 +166,7 @@ return (
       <MenuContent>
         <FieldRow>
           <WrapperHeader>
-            <PrimaryText>Contract Title</PrimaryText>
+            <PrimaryText>Giveaway Title</PrimaryText>
           </WrapperHeader>
           <WrapperContent>
             <TextInput

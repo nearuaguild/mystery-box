@@ -1,9 +1,15 @@
 use std::collections::HashSet;
 
 use near_sdk::collections::{ LookupMap, UnorderedSet };
-use near_sdk::json_types::{U128, U64};
+use near_sdk::json_types::{ U128, U64 };
 use near_sdk::{
-    assert_one_yocto, env, require, AccountId, PanicOnDefault, Promise, PromiseOrValue
+    assert_one_yocto,
+    env,
+    require,
+    AccountId,
+    PanicOnDefault,
+    Promise,
+    PromiseOrValue,
 };
 use near_sdk::borsh::{ self, BorshDeserialize, BorshSerialize };
 
@@ -33,7 +39,6 @@ pub struct Quest {
 
 impl Quest {
     pub fn new(id: QuestId, title: &String, owner_id: &AccountId) -> Self {
-
         // nested prefixes should be unique according to this: https://docs.near.org/sdk/rust/contract-structure/nesting
         let quest_hash = env::sha256_array(&id.to_be_bytes());
 
@@ -41,14 +46,14 @@ impl Quest {
             id,
             title: title.to_string(),
             next_pool_id: 0,
-            pools: LookupMap::new(StorageKey::Pools{quest_hash}),
-            pool_ids_by_rarity: LookupMap::new(StorageKey::PoolsByRarity{quest_hash}),
-            nft_pool_by_key: LookupMap::new(StorageKey::NftPoolByKey{quest_hash}),
+            pools: LookupMap::new(StorageKey::Pools { quest_hash }),
+            pool_ids_by_rarity: LookupMap::new(StorageKey::PoolsByRarity { quest_hash }),
+            nft_pool_by_key: LookupMap::new(StorageKey::NftPoolByKey { quest_hash }),
             owner_id: owner_id.clone(),
             next_box_id: 0,
-            boxes: LookupMap::new(StorageKey::Boxes{quest_hash}),
-            probability_by_rarity: LookupMap::new(StorageKey::ProbabilityByRarity{quest_hash}),
-            users: UnorderedSet::new(StorageKey::Users{quest_hash}),
+            boxes: LookupMap::new(StorageKey::Boxes { quest_hash }),
+            probability_by_rarity: LookupMap::new(StorageKey::ProbabilityByRarity { quest_hash }),
+            users: UnorderedSet::new(StorageKey::Users { quest_hash }),
         }
     }
 
@@ -137,7 +142,7 @@ impl Quest {
         let nft_account_id = env::predecessor_account_id();
 
         //there is no point in sending nft to itself
-        require!(env::current_account_id() == previous_owner_id, "ERR_FORBIDDEN");
+        require!(self.owner_id == previous_owner_id, "ERR_FORBIDDEN");
 
         self.internal_add_nft_pool(box_rarity, nft_account_id, token_id);
 

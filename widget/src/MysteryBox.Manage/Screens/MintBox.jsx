@@ -1,5 +1,5 @@
 const widget_owner_id = "evasive-dime.testnet";
-const top_contract_id = 'boundless-berry.testnet';
+const top_contract_id = 'friendly-eye.testnet';
 
 const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
 
@@ -339,7 +339,7 @@ const submitTransactionToMintBoxes = () => {
         )
         .flat();
 
-      const yoctoPerMintedBox = 4000;
+      const yoctoPerMintedBox = 5000;
 
       const total = accounts.reduce((prev, curr) => {
         return prev + yoctoPerMintedBox + 40 * curr.length;

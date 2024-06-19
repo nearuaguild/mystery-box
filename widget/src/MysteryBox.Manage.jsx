@@ -1,5 +1,5 @@
 const widget_owner_id = 'evasive-dime.testnet';
-const top_contract_id = 'boundless-berry.testnet';
+const top_contract_id = 'friendly-eye.testnet';
 
 const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
 const rpc_endpoint = 'https://rpc.testnet.near.org';
@@ -131,14 +131,14 @@ function Page({ page, account_id, quest_id }) {
               props={{
                 text: `
                 Ready for an adventure?
-                Click below to create a new contract and join the Mystery Box community!
+                Click below to create a new giveaway and join the Mystery Box community!
                 `,
               }}
             />
             <Widget
               src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
               props={{
-                text: 'Create new contract',
+                text: 'Create new giveaway',
                 href: linkHref({
                   widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
                   params: {
@@ -163,9 +163,7 @@ function Page({ page, account_id, quest_id }) {
       );
     }
     case 'AddNftReward': {
-      const contracts = Near.view(top_contract_id, 'get_trusted_nft_contracts', {
-        quest_id
-      });
+      const contracts = Near.view(top_contract_id, 'get_trusted_nft_contracts', {});
 
       logInfo('contracts', contracts);
 
@@ -184,6 +182,8 @@ function Page({ page, account_id, quest_id }) {
           }));
         })
         .flat();
+
+      logInfo("tokens for owner", {tokens, account_id});
 
       if (tokens.length === 0)
         return (
