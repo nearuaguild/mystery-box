@@ -1,4 +1,4 @@
-const LOGGING_ON = true;
+const LOGGING_ON = false;
 
 function logInfo(arg1, arg2, arg3, arg4) {
     if(LOGGING_ON) {
