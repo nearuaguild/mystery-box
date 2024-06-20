@@ -149,8 +149,8 @@ impl NonFungibleTokenPoolKind {
 
     pub fn add_token(&mut self, token_id: TokenId) {
         // should never panic
-        require!(self.tokens.insert(token_id.clone()));
-        require!(self.available_tokens.insert(token_id.clone()));
+        require!(self.tokens.insert(token_id.clone()), format!("Token add problem {}", token_id.clone()));
+        require!(self.available_tokens.insert(token_id.clone()), format!("Available tokens add problem {}", token_id.clone()));
     }
 
     pub fn take_first_token(&mut self) -> Option<TokenId> {

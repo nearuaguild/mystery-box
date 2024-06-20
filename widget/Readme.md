@@ -6,5 +6,5 @@
 
 #### Start local development. Run from widget/src folder.
 `
-bos-loader evasive-dime.testnet --port 1234
+bos-loader evasive-dime.testnet --port 1235
 `
