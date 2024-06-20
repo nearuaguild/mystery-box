@@ -31,8 +31,8 @@ const getTitleFromMethod = (method) => {
       return 'Adding NEAR reward was successful';
     case 'nft_transfer_call':
       return 'Adding NFT reward was successful';
-    case 'deploy_mystery_box_contract':
-      return 'Contract was deployed';
+    case 'create_quest':
+      return 'Giveaway has been created';
     default:
       return '';
   }
