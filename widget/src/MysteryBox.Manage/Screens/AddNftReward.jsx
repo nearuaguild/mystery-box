@@ -381,7 +381,7 @@ const submitTransactionToAddNftRewards = () => {
         args: {
           receiver_id: top_contract_id,
           token_id: rarity.token_id,
-          msg: `{ "rarity": "${rarity.value}", "quest_id": ${props.quest.quest_id} }`,
+          msg: JSON.stringify({rarity: rarity.value, quest_id: props.quest.quest_id}),
         },
         gas: Big(10).pow(12).mul(50), // 50 TGas
         deposit: 1,

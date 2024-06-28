@@ -586,6 +586,34 @@ impl Contract {
             .collect()
     }
 
+    pub fn rewards(
+        &self,
+        quest_id: QuestId,
+        rarity: BoxRarity,
+        pagination: Option<Pagination>
+    ) -> Vec<JsonPoolRewards> {
+        let pagination = pagination.unwrap_or_default();
+
+        pagination.assert_valid();
+
+        let quest = self.quests
+            .get(&quest_id)
+            .expect(&format!("Quest with id {} wasn't found", quest_id.clone()));
+
+        pagination.assert_valid();
+
+        quest.pool_ids_by_rarity
+            .get(&rarity)
+            .unwrap_or_default()
+            .iter()
+            .map(|pool_id| quest.pools.get(pool_id))
+            .flatten()
+            .take(pagination.take())
+            .skip(pagination.skip())
+            .map(|pool| pool.into())
+            .collect()
+    }
+
     pub fn get_users(&self, quest_id: QuestId, pagination: Option<Pagination>) -> Vec<AccountId> {
         let quest = self.quests.get(&quest_id).expect("Quest wasn't found");
         let pagination = pagination.unwrap_or_default();

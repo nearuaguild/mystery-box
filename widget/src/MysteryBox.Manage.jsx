@@ -212,7 +212,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
       /** @todo fetch rarity from backend */
 
       const fetchRewards = (rarity) => {
-        const rewards = Near.view(top_contract_id, 'available_rewards', {
+        const rewards = Near.view(top_contract_id, 'rewards', {
           quest_id,
           rarity,
         });
