@@ -12,6 +12,8 @@ use crate::contract::quest::Quest;
 use crate::contract::types::{ BoxRarity, Probability, Reward };
 
 mod utils;
+mod integration_tests;
+
 use crate::Contract;
 
 fn owner() -> AccountId {
