@@ -9,21 +9,13 @@ use near_workspaces::{
 
 use crate::contract::types::BoxRarity;
 
-use crate::tests::integration_tests::utils::deploy_mystery_box_contract;
-
-const QUEST_OWNER_ACCOUNT_NAME: &str = "quest_owner";
-const USER_1_ACCOUNT_NAME: &str = "user1";
-const USER_2_ACCOUNT_NAME: &str = "user2";
-
-const INITIAL_NEAR_PER_ACCOUNT: u128 = 10;
-
-const USER_1_BOX_NEAR_REWARD: u128 = 1;
-const USER_2_BOX_NEAR_REWARD: u128 = 2;
-
-const QUEST_TITLE: &str = "my first quest";
+use crate::tests::integration_tests::utils::{
+    deploy_mystery_box_contract, INITIAL_NEAR_PER_ACCOUNT, QUEST_OWNER_ACCOUNT_NAME, QUEST_TITLE,
+    USER_1_ACCOUNT_NAME, USER_1_BOX_NEAR_REWARD, USER_2_ACCOUNT_NAME, USER_2_BOX_NEAR_REWARD,
+};
 
 #[tokio::test]
-async fn test_mystery_box() -> anyhow::Result<()> {
+async fn test_near_reward_flow() -> anyhow::Result<()> {
     let sandbox = near_workspaces::sandbox().await?;
     let mystery_box_contract = deploy_mystery_box_contract(&sandbox).await?;
 
