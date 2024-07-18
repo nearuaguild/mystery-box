@@ -10,12 +10,15 @@ use near_workspaces::{
 use crate::contract::types::BoxRarity;
 
 use crate::tests::integration_tests::utils::{
-    deploy_mystery_box_contract, INITIAL_NEAR_PER_ACCOUNT, QUEST_OWNER_ACCOUNT_NAME, QUEST_TITLE,
-    USER_1_ACCOUNT_NAME, USER_1_BOX_NEAR_REWARD, USER_2_ACCOUNT_NAME, USER_2_BOX_NEAR_REWARD,
+    claim_box, create_quest, create_user_account, deploy_mystery_box_contract,
+    get_first_quests_per_owner, get_quest_boxes_per_owner, mint_box, INITIAL_NEAR_PER_ACCOUNT,
+    QUEST_OWNER_ACCOUNT_NAME, QUEST_TITLE, USER_1_ACCOUNT_NAME, USER_1_BOX_NEAR_REWARD,
+    USER_2_ACCOUNT_NAME, USER_2_BOX_NEAR_REWARD,
 };
 
 #[tokio::test]
 async fn test_near_reward_flow() -> anyhow::Result<()> {
+    //Arrange
     let sandbox = near_workspaces::sandbox().await?;
     let mystery_box_contract = deploy_mystery_box_contract(&sandbox).await?;
 
@@ -53,10 +56,12 @@ async fn test_near_reward_flow() -> anyhow::Result<()> {
         INITIAL_NEAR_PER_ACCOUNT - USER_1_BOX_NEAR_REWARD - USER_2_BOX_NEAR_REWARD,
     );
 
+    //Assuming GAS fees will not be higher than 1 Near.
     let minimal_expected_quest_owner_balance = NearToken::from_near(
         INITIAL_NEAR_PER_ACCOUNT - USER_1_BOX_NEAR_REWARD - USER_2_BOX_NEAR_REWARD - 1,
     );
 
+    //Checking that quest owner balance is deducted by created rewards
     assert!(quest_owner_account.view_account().await?.balance < expected_quest_owner_balance);
     assert!(
         quest_owner_account.view_account().await?.balance > minimal_expected_quest_owner_balance
@@ -117,6 +122,7 @@ async fn test_near_reward_flow() -> anyhow::Result<()> {
     )
     .await?;
 
+    //Checking user's balance after claim. It should be increased by the amount which was in the boxes
     let user_1_balance_after_claim = user_1_account.view_account().await?.balance;
     let user_2_balance_after_claim = user_2_account.view_account().await?.balance;
 
@@ -133,64 +139,6 @@ async fn test_near_reward_flow() -> anyhow::Result<()> {
     assert!(user_2_balance_after_claim.as_near() >= user_2_expected_balance.as_near());
 
     Ok(())
-}
-
-async fn create_user_account(root: &Account, account_name: &str) -> anyhow::Result<(Account)> {
-    let user_account = root
-        .create_subaccount(account_name)
-        .initial_balance(NearToken::from_near(INITIAL_NEAR_PER_ACCOUNT))
-        .transact()
-        .await?
-        .unwrap();
-
-    return Ok((user_account));
-}
-
-async fn create_quest(
-    mystery_box_contract: &Contract,
-    user_account: &Account,
-    quest_title: &str,
-) -> anyhow::Result<(ExecutionFinalResult)> {
-    let create_quest_outcome = user_account
-        .call(mystery_box_contract.id(), "create_quest")
-        .deposit(NearToken::from_millinear(10))
-        .args_json(json!({
-            "title": quest_title
-        }))
-        .transact()
-        .await?;
-
-    assert!(
-        create_quest_outcome.is_success(),
-        "Quest creation failed {:#?}",
-        create_quest_outcome
-    );
-
-    return Ok((create_quest_outcome));
-}
-
-async fn get_first_quests_per_owner(
-    mystery_box_contract: &Contract,
-    user_account: &Account,
-) -> anyhow::Result<(Map<String, Value>)> {
-    let outcome: Value = mystery_box_contract
-        .call("quests_per_owner")
-        .args_json(json!({
-            "account_id": user_account.id(),
-        }))
-        .view()
-        .await?
-        .json()?;
-
-    let quests = outcome.as_array().unwrap();
-
-    assert!(quests.len() == 1);
-
-    let quest = quests[0].as_object().unwrap();
-
-    assert!(quest.get("title").unwrap() == QUEST_TITLE);
-
-    return Ok((quest.clone()));
 }
 
 async fn add_near_reward(
@@ -221,80 +169,4 @@ async fn add_near_reward(
     );
 
     return Ok((add_near_reward_outcome));
-}
-
-async fn mint_box(
-    mystery_box_contract: &Contract,
-    quest_owner: &Account,
-    user_account: &Account,
-    quest_id: &Value,
-    rarity: BoxRarity,
-) -> anyhow::Result<ExecutionFinalResult> {
-    const STORAGE_DEPOSIT: u128 = 10;
-
-    let mint_box_outcome = quest_owner
-        .call(mystery_box_contract.id(), "mint_many")
-        .deposit(NearToken::from_millinear(STORAGE_DEPOSIT))
-        .args_json(json!({
-            "quest_id": quest_id,
-            "rarity": rarity.to_string(),
-            "accounts": [
-                user_account.id()
-            ]
-        }))
-        .transact()
-        .await?;
-
-    assert!(
-        mint_box_outcome.is_success(),
-        "Minting box failed {:#?}",
-        mint_box_outcome
-    );
-
-    return Ok((mint_box_outcome));
-}
-
-async fn get_quest_boxes_per_owner(
-    mystery_box_contract: &Contract,
-    user_account: &Account,
-    quest_id: &Value,
-) -> anyhow::Result<Vec<Value>> {
-    let outcome: Value = mystery_box_contract
-        .call("questboxes_per_owner")
-        .args_json(json!({
-            "account_id": user_account.id(),
-        }))
-        .view()
-        .await?
-        .json()?;
-
-    let quest_boxes_ids = outcome.as_array().unwrap();
-
-    return Ok((quest_boxes_ids.clone()));
-}
-
-async fn claim_box(
-    mystery_box_contract: &Contract,
-    user_account: &Account,
-    quest_id: &Value,
-    box_id: &Value,
-) -> anyhow::Result<ExecutionFinalResult> {
-    let claim_box_outcome = user_account
-        .call(mystery_box_contract.id(), "claim")
-        .gas(Gas::from_tgas(300))
-        .deposit(NearToken::from_yoctonear(1))
-        .args_json(json!({
-            "quest_id": quest_id,
-            "box_id": box_id
-        }))
-        .transact()
-        .await?;
-
-    assert!(
-        claim_box_outcome.is_success(),
-        "Claiming box failed {:#?}",
-        claim_box_outcome
-    );
-
-    return Ok((claim_box_outcome));
 }
