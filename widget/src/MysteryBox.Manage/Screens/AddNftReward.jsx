@@ -1,9 +1,11 @@
 const widget_owner_id = "evasive-dime.testnet";
-const top_contract_id = 'coherent-rail.testnet';
+const top_contract_id = "succinct-slave.testnet";
 
-const { logInfo, logError } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+const { logInfo, logError } = VM.require(
+  `${widget_owner_id}/widget/Utils.Logger`
+);
 
-logInfo('AddNftReward props', props);
+logInfo("AddNftReward props", props);
 
 const tokens = props.tokens || [];
 
@@ -12,7 +14,7 @@ State.init({
   rarities: tokens.map((token) => ({
     contract: token.contract,
     token_id: token.token.token_id,
-    value: '',
+    value: "",
   })),
 });
 
@@ -60,7 +62,7 @@ const RightArrow = ({ onClick, disabled }) => (
         fill-rule="evenodd"
         clip-rule="evenodd"
         d="M0.550369 4.94975L5.50011 0L29.521 24.0209L29.542 24L34.4917 28.9497L34.4708 28.9707L34.4915 28.9914L29.5417 33.9411L29.521 33.9204L5.50032 57.9411L0.550575 52.9914L24.5713 28.9707L0.550369 4.94975Z"
-        fill={disabled ? '#818B94' : '#fff'}
+        fill={disabled ? "#818B94" : "#fff"}
       />
     </g>
   </Svg>
@@ -78,7 +80,7 @@ const LeftArrow = ({ onClick, disabled }) => (
         fill-rule="evenodd"
         clip-rule="evenodd"
         d="M0.550369 4.94975L5.50011 0L29.521 24.0209L29.542 24L34.4917 28.9497L34.4708 28.9707L34.4915 28.9914L29.5417 33.9411L29.521 33.9204L5.50032 57.9411L0.550575 52.9914L24.5713 28.9707L0.550369 4.94975Z"
-        fill={disabled ? '#818B94' : '#fff'}
+        fill={disabled ? "#818B94" : "#fff"}
       />
     </g>
   </Svg>
@@ -108,7 +110,7 @@ const HomeButton = styled.button`
 `;
 
 const Title = styled.p`
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 28px;
   font-weight: 700;
   letter-spacing: 0em;
@@ -134,7 +136,7 @@ const WrapperMenu = styled.div`
 `;
 
 const MenuTitle = styled.p`
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 28px;
   font-weight: 700;
   letter-spacing: 0em;
@@ -144,7 +146,7 @@ const MenuTitle = styled.p`
 `;
 
 const MenuSubtitle = styled.p`
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 14px;
   font-weight: 400;
   letter-spacing: 0em;
@@ -295,7 +297,7 @@ const RarityPickerMenu = styled.div`
 
 const rarities = state.rarities || [];
 
-logInfo('rarities', rarities);
+logInfo("rarities", rarities);
 
 const previousActiveToken = () => {
   if (state.active === 0) return;
@@ -321,7 +323,7 @@ const getMediaUrlForToken = (nftToken) => {
 
   if (!metadata.base_uri) return token.metadata?.media;
 
-  const url = metadata.base_uri + '/' + token.metadata.media;
+  const url = metadata.base_uri + "/" + token.metadata.media;
 
   return url;
 };
@@ -368,7 +370,7 @@ const someRarityIsChosen = rarities.some((rarity) => !!rarity.value);
 const shouldSubmitButtonBeDisabled = !someRarityIsChosen;
 
 const submitTransactionToAddNftRewards = () => {
-  logInfo('submitTransactionToAddNftRewards', rarities);
+  logInfo("submitTransactionToAddNftRewards", rarities);
 
   if (!someRarityIsChosen) return;
 
@@ -377,11 +379,14 @@ const submitTransactionToAddNftRewards = () => {
     .map((rarity) => {
       return {
         contractName: rarity.contract,
-        methodName: 'nft_transfer_call',
+        methodName: "nft_transfer_call",
         args: {
           receiver_id: top_contract_id,
           token_id: rarity.token_id,
-          msg: JSON.stringify({rarity: rarity.value, quest_id: props.quest.quest_id}),
+          msg: JSON.stringify({
+            rarity: rarity.value,
+            quest_id: props.quest.quest_id,
+          }),
         },
         gas: Big(10).pow(12).mul(50), // 50 TGas
         deposit: 1,
@@ -422,7 +427,7 @@ return (
               xmlns="http://www.w3.org/2000/svg"
               disabled={!rarity}
               onClick={() => {
-                updateRarity(token.contract, token.token.token_id, '');
+                updateRarity(token.contract, token.token.token_id, "");
               }}
             >
               <path
@@ -439,38 +444,38 @@ return (
               <Widget
                 src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.RarityButton`}
                 props={{
-                  rarity: 'rare',
-                  active: rarity === 'rare',
+                  rarity: "rare",
+                  active: rarity === "rare",
                   onClick: () => {
-                    updateRarity(token.contract, token.token.token_id, 'rare');
+                    updateRarity(token.contract, token.token.token_id, "rare");
                   },
-                  tooltip: 'Rare',
+                  tooltip: "Rare",
                 }}
               />
               <Widget
                 src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.RarityButton`}
                 props={{
-                  rarity: 'epic',
-                  active: rarity === 'epic',
+                  rarity: "epic",
+                  active: rarity === "epic",
                   onClick: () => {
-                    updateRarity(token.contract, token.token.token_id, 'epic');
+                    updateRarity(token.contract, token.token.token_id, "epic");
                   },
-                  tooltip: 'Epic',
+                  tooltip: "Epic",
                 }}
               />
               <Widget
                 src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.RarityButton`}
                 props={{
-                  rarity: 'legendary',
-                  active: rarity === 'legendary',
+                  rarity: "legendary",
+                  active: rarity === "legendary",
                   onClick: () => {
                     updateRarity(
                       token.contract,
                       token.token.token_id,
-                      'legendary'
+                      "legendary"
                     );
                   },
-                  tooltip: 'Legendary',
+                  tooltip: "Legendary",
                 }}
               />
             </RarityPickerMenu>
@@ -485,7 +490,7 @@ return (
     <Widget
       src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.SubmitButton`}
       props={{
-        text: 'Submit',
+        text: "Submit",
         disabled: shouldSubmitButtonBeDisabled,
         onClick: submitTransactionToAddNftRewards,
       }}

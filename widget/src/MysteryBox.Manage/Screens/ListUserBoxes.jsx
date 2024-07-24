@@ -199,8 +199,8 @@ return (
         <Widget
           src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuHeader`}
           props={{
-            title: props.contract?.title,
-            subtitle: props.contract?.contract_id,
+            title: props.quest?.title,
+            subtitle: props.quest?.quest_id,
           }}
         />
       <MenuContent>
@@ -222,14 +222,14 @@ return (
                 <TableCell key={1}>{account.boxes.length}</TableCell>
                 <TableCell key={2}>
                   {
-                    account.boxes.filter((box) => box.status.kind === 'claimed')
+                    account.boxes.filter((box) => box.box_status.kind === 'claimed')
                       .length
                   }
                 </TableCell>
                 <TableCell key={3}>
                   {
                     account.boxes.filter(
-                      (box) => box.status.kind === 'non_claimed'
+                      (box) => box.box_status.kind === 'non_claimed'
                     ).length
                   }
                 </TableCell>

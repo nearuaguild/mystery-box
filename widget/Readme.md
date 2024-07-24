@@ -8,3 +8,9 @@
 `
 bos-loader evasive-dime.testnet --port 1111
 `
+
+# Url for testing 
+
+`
+https://test.near.org/evasive-dime.testnet/widget/MysteryBox.Manage
+`

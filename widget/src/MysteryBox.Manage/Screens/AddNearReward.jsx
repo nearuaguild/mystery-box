@@ -1,9 +1,11 @@
 const widget_owner_id = "evasive-dime.testnet";
-const top_contract_id = 'coherent-rail.testnet';
+const top_contract_id = "succinct-slave.testnet";
 
-const { logInfo, logError } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+const { logInfo, logError } = VM.require(
+  `${widget_owner_id}/widget/Utils.Logger`
+);
 
-logInfo('AddNearReward props', props);
+logInfo("AddNearReward props", props);
 
 const isValidPool = (pool) => {
   if (pool.capacity === undefined || pool.capacity === null) return false;
@@ -27,9 +29,9 @@ const isValidPool = (pool) => {
 
 const createPool = () => ({
   id: Date.now(),
-  rarity: 'rare',
-  capacity: '1',
-  amount: '0.1',
+  rarity: "rare",
+  capacity: "1",
+  amount: "0.1",
 });
 
 State.init({
@@ -69,7 +71,7 @@ const WrapperMenu = styled.div`
 `;
 
 const MenuTitle = styled.p`
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 24px;
   font-weight: 700;
   letter-spacing: 0em;
@@ -79,7 +81,7 @@ const MenuTitle = styled.p`
 `;
 
 const MenuSubtitle = styled.p`
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 14px;
   font-weight: 400;
   letter-spacing: 0em;
@@ -115,7 +117,7 @@ const MenuButton = styled.button`
   width: 45%;
   height: 36px;
 
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0em;
@@ -139,7 +141,7 @@ const AddPoolButton = styled.button`
   width: 60%;
   height: 24px;
 
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0em;
@@ -160,7 +162,7 @@ const WrapperTable = styled.div`
 `;
 
 const deletePool = (id) => {
-  logInfo('deleting pool', id);
+  logInfo("deleting pool", id);
 
   State.update((previousState) => {
     return {
@@ -171,7 +173,7 @@ const deletePool = (id) => {
 };
 
 const addPool = () => {
-  logInfo('add new pool');
+  logInfo("add new pool");
 
   State.update((previousState) => {
     return {
@@ -192,10 +194,8 @@ const updadePool = (id, field, value) => {
     if (pool === -1) return previousState;
 
     // unknown field
-    if (pool[field] === 'undefined') {
-      logError(
-        `Can't update pool property ${field} since it doesn't exist`
-      );
+    if (pool[field] === "undefined") {
+      logError(`Can't update pool property ${field} since it doesn't exist`);
 
       return previousState;
     }
@@ -215,10 +215,10 @@ const everyPoolIsValid = pools.every(isValidPool);
 
 const shouldSubmitButtonBeDisabled = !everyPoolIsValid;
 
-logInfo('shouldSubmitButtonBeDisabled', shouldSubmitButtonBeDisabled);
+logInfo("shouldSubmitButtonBeDisabled", shouldSubmitButtonBeDisabled);
 
 const submitTransactionToAddPools = () => {
-  logInfo('submitTransactionToAddPools', pools);
+  logInfo("submitTransactionToAddPools", pools);
 
   if (!everyPoolIsValid) return;
 
@@ -229,7 +229,7 @@ const submitTransactionToAddPools = () => {
 
     return {
       contractName: top_contract_id,
-      methodName: 'add_near_reward',
+      methodName: "add_near_reward",
       args: {
         quest_id: props.quest.quest_id,
         rarity: pool.rarity,
@@ -249,17 +249,17 @@ return (
     <Widget
       src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.Title`}
       props={{
-        text: 'Add Near Reward',
+        text: "Add Near Reward",
       }}
     />
     <WrapperMenu>
-        <Widget
-          src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuHeader`}
-          props={{
-            title: props.quest?.title,
-            subtitle: props.quest?.quest_id,
-          }}
-        />
+      <Widget
+        src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuHeader`}
+        props={{
+          title: props.quest?.title,
+          subtitle: props.quest?.quest_id,
+        }}
+      />
       <MenuContent>
         {pools.map((pool) => (
           <WrapperTable key={`pool_unique_key_${pool.id}`}>
@@ -292,7 +292,7 @@ return (
     <Widget
       src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.SubmitButton`}
       props={{
-        text: 'Submit',
+        text: "Submit",
         disabled: shouldSubmitButtonBeDisabled,
         onClick: submitTransactionToAddPools,
       }}

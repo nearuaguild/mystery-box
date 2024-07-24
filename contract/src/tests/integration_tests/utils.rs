@@ -1,11 +1,8 @@
 use anyhow::Ok;
-use near_sdk::{
-    serde_json::{json, Map, Value},
-    AccountId,
-};
+use near_sdk::serde_json::{json, Map, Value};
 use near_workspaces::{
     network::Sandbox, result::ExecutionFinalResult, types::Gas, types::NearToken, Account,
-    Contract, Worker,
+    AccountId, Contract, Worker,
 };
 
 use crate::contract::types::BoxRarity;
@@ -136,9 +133,10 @@ pub async fn create_quest(
     return Ok((create_quest_outcome));
 }
 
-pub async fn get_first_quests_per_owner(
+pub async fn get_quest_per_owner_by_index(
     mystery_box_contract: &Contract,
     user_account: &Account,
+    index: usize
 ) -> anyhow::Result<(Map<String, Value>)> {
     let outcome: Value = mystery_box_contract
         .call("quests_per_owner")
@@ -151,11 +149,7 @@ pub async fn get_first_quests_per_owner(
 
     let quests = outcome.as_array().unwrap();
 
-    assert!(quests.len() == 1);
-
-    let quest = quests[0].as_object().unwrap();
-
-    assert!(quest.get("title").unwrap() == QUEST_TITLE);
+    let quest = quests[index].as_object().unwrap();
 
     return Ok((quest.clone()));
 }
@@ -163,11 +157,11 @@ pub async fn get_first_quests_per_owner(
 pub async fn mint_box(
     mystery_box_contract: &Contract,
     quest_owner: &Account,
-    user_account: &Account,
+    user_account_ids: Vec<&AccountId>,
     quest_id: &Value,
     rarity: BoxRarity,
 ) -> anyhow::Result<ExecutionFinalResult> {
-    const STORAGE_DEPOSIT: u128 = 10;
+    const STORAGE_DEPOSIT: u128 = 20;
 
     let mint_box_outcome = quest_owner
         .call(mystery_box_contract.id(), "mint_many")
@@ -175,9 +169,7 @@ pub async fn mint_box(
         .args_json(json!({
             "quest_id": quest_id,
             "rarity": rarity.to_string(),
-            "accounts": [
-                user_account.id()
-            ]
+            "accounts": user_account_ids
         }))
         .transact()
         .await?;

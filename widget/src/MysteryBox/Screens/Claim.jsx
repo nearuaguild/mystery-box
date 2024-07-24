@@ -1,18 +1,18 @@
 const widget_owner_id = "evasive-dime.testnet";
-const top_contract_id = 'coherent-rail.testnet';
+const top_contract_id = "succinct-slave.testnet";
 
 const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
 
-logInfo('Claim props', props);
+logInfo("Claim props", props);
 
-const base_ipfs = 'https://ipfs.near.social/ipfs/';
+const base_ipfs = "https://ipfs.near.social/ipfs/";
 
 State.init({
   active_box_index: 0,
 });
 
 const font = fetch(
-  'https://fonts.googleapis.com/css2?family=Kodchasan:wght@700&display=swap'
+  "https://fonts.googleapis.com/css2?family=Kodchasan:wght@700&display=swap"
 ).body;
 
 if (!font) {
@@ -60,7 +60,7 @@ const SingleBoxWrapper = styled.div`
   height: 100%;
   flex-basis: 80%;
 
-  display: ${(props) => (props.active ? 'flex' : 'none')};
+  display: ${(props) => (props.active ? "flex" : "none")};
 `;
 
 const levitation = styled.keyframes`
@@ -74,7 +74,7 @@ const levitation = styled.keyframes`
 
 const BoxImageWrapper = styled.div`
   animation-duration: 3s;
-  animation-iteration-count: ${(props) => (props.animate ? 'infinite' : '0')};
+  animation-iteration-count: ${(props) => (props.animate ? "infinite" : "0")};
   animation-name: ${levitation};
   animation-timing-function: ease;
   animation-direction: alternate;
@@ -111,7 +111,7 @@ const BoxTitle = styled.div`
 
   font-size: 14px;
   line-height: 20px;
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-weight: 700;
   letter-spacing: 0em;
   text-align: center;
@@ -144,7 +144,7 @@ const BoxRewardAmount = styled.p`
   white-space: nowrap; /* Don't forget this one */
   text-overflow: ellipsis;
   color: rgba(161, 224, 234, 1);
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 12px;
   font-weight: 700;
   line-height: 18px;
@@ -171,7 +171,7 @@ const BoxRewardTitle = styled.p`
   white-space: nowrap; /* Don't forget this one */
   text-overflow: ellipsis;
   color: rgba(255, 255, 255, 1);
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 12px;
   font-weight: 700;
   line-height: 18px;
@@ -184,7 +184,7 @@ const BoxRewardTitle = styled.p`
 
 const BoxLockedTitle = styled.p`
   color: #a1e0ea;
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 18px;
   font-weight: 700;
   letter-spacing: 0em;
@@ -219,7 +219,7 @@ const ClaimButton = styled.div`
   line-height: 1;
   padding: 0.6875em 2.5em;
 
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-weight: 700;
   letter-spacing: 0em;
   text-align: center;
@@ -229,7 +229,7 @@ const ClaimButton = styled.div`
   background: none;
 
   &:after {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
     border-radius: 100px;
@@ -251,7 +251,7 @@ const ClaimButton = styled.div`
 
 const OpenedBoxRewardTitle = styled.p`
   color: rgba(254, 185, 3, 1);
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 16px;
   font-weight: 700;
   line-height: 22px;
@@ -278,7 +278,7 @@ const ClaimedButton = styled.div`
   line-height: 1;
   padding: 0.5em 2em;
 
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-weight: 700;
   letter-spacing: 0em;
   text-align: center;
@@ -302,7 +302,7 @@ const BottomText = styled.p`
   color: white;
 
   font-size: 14px;
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-weight: 700;
   letter-spacing: 0em;
   text-align: center;
@@ -317,7 +317,7 @@ const WrapperSocial = styled.div`
 `;
 
 const SocialText = styled.p`
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 12px;
   font-weight: 700;
   line-height: 16px;
@@ -359,7 +359,7 @@ const NonClaimedBoxComponent = ({ box }) => {
   const rarity = box.box_rarity;
 
   const onClick = () => {
-    logInfo('clicked claim button', box.box_id);
+    logInfo("clicked claim button", box.box_id);
 
     return props.onClaim(box.box_id);
   };
@@ -371,25 +371,25 @@ const NonClaimedBoxComponent = ({ box }) => {
 
     const isPlural = count > 1;
 
-    const title = isPlural ? 'prizes' : 'prize';
+    const title = isPlural ? "prizes" : "prize";
 
     return `${count} ${title}`;
   });
 
   const titles = box_rewards.map((reward) => {
-    if (reward.kind === 'near') {
+    if (reward.kind === "near") {
       const amountInNear = Big(
         Big(reward.amount).div(1e24).toFixed(2)
       ).toNumber();
 
       return `${amountInNear} near token`;
-    } else if (reward.kind === 'non_fungible_token') {
-      const { name } = Near.view(reward.contract_id, 'nft_metadata');
+    } else if (reward.kind === "non_fungible_token") {
+      const { name } = Near.view(reward.contract_id, "nft_metadata");
 
       const maximumNameLength = 12;
       const shortName =
         name.length > maximumNameLength
-          ? name.substring(0, maximumNameLength) + '...'
+          ? name.substring(0, maximumNameLength) + "..."
           : name;
 
       return `${shortName} nft`;
@@ -472,18 +472,18 @@ const OpenedBoxComponent = ({ box }) => {
 
   let text;
 
-  if (reward.kind === 'near') {
+  if (reward.kind === "near") {
     const amountInNear = Big(
       Big(reward.amount).div(1e24).toFixed(2)
     ).toNumber();
 
     text = `${amountInNear} near token`;
-  } else if (reward.kind === 'non_fungible_token') {
-    const { name } = Near.view(reward.contract_id, 'nft_metadata');
+  } else if (reward.kind === "non_fungible_token") {
+    const { name } = Near.view(reward.contract_id, "nft_metadata");
 
     text = `${name} nft`;
-  } else if (reward.kind === 'nothing') {
-    text = 'Better luck next time';
+  } else if (reward.kind === "nothing") {
+    text = "Better luck next time";
   }
 
   return (
@@ -507,14 +507,13 @@ const OpenedBoxComponent = ({ box }) => {
 const BoxComponent = ({ box }) => {
   logInfo("box", { box });
 
-
-  if (box.box_status.kind === 'claimed')
+  if (box.box_status.kind === "claimed")
     return <OpenedBoxComponent key={box.box_id} box={box} />;
 
-  if (box.box_status.kind === 'non_claimed' && box.rewards.length === 0)
+  if (box.box_status.kind === "non_claimed" && box.rewards.length === 0)
     return <LockedBoxComponent key={box.box_id} box={box} />;
 
-  if (box.box_status.kind === 'non_claimed')
+  if (box.box_status.kind === "non_claimed")
     return <NonClaimedBoxComponent key={box.box_id} box={box} />;
 
   return <></>;
@@ -542,7 +541,7 @@ const RightArrow = ({ onClick, disabled }) => (
         fill-rule="evenodd"
         clip-rule="evenodd"
         d="M0.550369 4.94975L5.50011 0L29.521 24.0209L29.542 24L34.4917 28.9497L34.4708 28.9707L34.4915 28.9914L29.5417 33.9411L29.521 33.9204L5.50032 57.9411L0.550575 52.9914L24.5713 28.9707L0.550369 4.94975Z"
-        fill={disabled ? '#818B94' : '#fff'}
+        fill={disabled ? "#818B94" : "#fff"}
       />
     </g>
   </Svg>
@@ -560,7 +559,7 @@ const LeftArrow = ({ onClick, disabled }) => (
         fill-rule="evenodd"
         clip-rule="evenodd"
         d="M0.550369 4.94975L5.50011 0L29.521 24.0209L29.542 24L34.4917 28.9497L34.4708 28.9707L34.4915 28.9914L29.5417 33.9411L29.521 33.9204L5.50032 57.9411L0.550575 52.9914L24.5713 28.9707L0.550369 4.94975Z"
-        fill={disabled ? '#818B94' : '#fff'}
+        fill={disabled ? "#818B94" : "#fff"}
       />
     </g>
   </Svg>
@@ -569,7 +568,7 @@ const LeftArrow = ({ onClick, disabled }) => (
 const boxes = Array.isArray(props.boxes) ? props.boxes : [];
 
 const available = boxes.filter(
-  (box) => box.box_status.kind === 'non_claimed' && box.rewards.length > 0
+  (box) => box.box_status.kind === "non_claimed" && box.rewards.length > 0
 ).length;
 
 return (
@@ -599,13 +598,13 @@ return (
         </SliderWrapper>
 
         <BottomText>
-          <span style={{ color: '#2bccc2' }}>{props.totalSupply}</span>
+          <span style={{ color: "#2bccc2" }}>{props.totalSupply}</span>
           minted boxes
           <br />
-          <span style={{ color: available > 0 ? '#FFD951' : '#2bccc2' }}>
+          <span style={{ color: available > 0 ? "#FFD951" : "#2bccc2" }}>
             {available}
           </span>
-          box{available === 1 ? '' : 'es'} available
+          box{available === 1 ? "" : "es"} available
         </BottomText>
 
         <WrapperSocial>

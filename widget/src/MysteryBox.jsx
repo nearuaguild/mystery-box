@@ -1,5 +1,5 @@
 const widget_owner_id = "evasive-dime.testnet";
-const top_contract_id = 'coherent-rail.testnet';
+const top_contract_id = "succinct-slave.testnet";
 
 const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
 
@@ -111,7 +111,7 @@ const fetchUserBoxes = (account_id) => {
 
 const fetchTotalSupply = (quest_id) => {
   const totalSupply = Near.view(top_contract_id, "questboxes_total_supply", {
-    quest_id
+    quest_id,
   });
 
   if (totalSupply === undefined) throw `No supply returned :(`;

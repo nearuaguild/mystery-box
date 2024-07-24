@@ -13,8 +13,8 @@ use crate::contract::types::BoxRarity;
 
 use crate::tests::integration_tests::utils::deploy_mystery_box_contract;
 use crate::tests::integration_tests::utils::{
-    claim_box, create_quest, create_user_account, deploy_nft_contract, get_first_quests_per_owner,
-    get_quest_boxes_per_owner, mint_box, INITIAL_NEAR_PER_ACCOUNT, NFT_1_MEDIA, NFT_1_TOKEN_ID,
+    claim_box, create_quest, create_user_account, deploy_nft_contract, get_quest_boxes_per_owner,
+    get_quest_per_owner_by_index, mint_box, INITIAL_NEAR_PER_ACCOUNT, NFT_1_MEDIA, NFT_1_TOKEN_ID,
     NFT_2_MEDIA, NFT_2_TOKEN_ID, QUEST_OWNER_ACCOUNT_NAME, QUEST_TITLE, USER_1_ACCOUNT_NAME,
     USER_2_ACCOUNT_NAME,
 };
@@ -39,7 +39,7 @@ async fn test_nft_reward_flow() -> anyhow::Result<()> {
 
     create_quest(&mystery_box_contract, &quest_owner_account, QUEST_TITLE).await?;
 
-    let quest = get_first_quests_per_owner(&mystery_box_contract, &quest_owner_account).await?;
+    let quest = get_quest_per_owner_by_index(&mystery_box_contract, &quest_owner_account, 0).await?;
 
     let quest_id = quest.get("quest_id").unwrap();
 
@@ -80,7 +80,7 @@ async fn test_nft_reward_flow() -> anyhow::Result<()> {
     mint_box(
         &mystery_box_contract,
         &quest_owner_account,
-        &user_1_account,
+        vec![user_1_account.id()],
         quest_id,
         BoxRarity::Rare,
     )
@@ -89,7 +89,7 @@ async fn test_nft_reward_flow() -> anyhow::Result<()> {
     mint_box(
         &mystery_box_contract,
         &quest_owner_account,
-        &user_2_account,
+        vec![user_2_account.id()],
         quest_id,
         BoxRarity::Epic,
     )
