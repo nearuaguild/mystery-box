@@ -589,11 +589,11 @@ fn test_delete_boxes_succeeds() {
     let box_id = contract.mint(quest.id, user1(), BoxRarity::Epic);
     contract.mint(quest.id, user1(), BoxRarity::Rare);
 
-    assert_eq!(contract.questboxes_supply_per_owner(user1()), U128(2));
+    assert_eq!(contract.questboxes_supply_per_owner(user1(), quest.id), U128(2));
 
     contract.delete_boxes(quest.id, vec![0]);
 
-    assert_eq!(contract.questboxes_supply_per_owner(user1()), U128(1));
+    assert_eq!(contract.questboxes_supply_per_owner(user1(), quest.id), U128(1));
 
     assert!(quest.boxes.get(&box_id).is_none());
 }
@@ -642,7 +642,7 @@ fn test_total_supply_increases() {
 fn test_supply_for_owner_default() {
     let (mut contract, mut context, quest) = setup(Some(10), None, None);
 
-    assert_eq!(contract.questboxes_supply_per_owner(user1()), U128(0));
+    assert_eq!(contract.questboxes_supply_per_owner(user1(), quest.id), U128(0));
 }
 
 #[test]
@@ -651,13 +651,13 @@ fn test_supply_for_owner_increases() {
 
     contract.mint(quest.id, user1(), BoxRarity::Rare);
 
-    assert_eq!(contract.questboxes_supply_per_owner(user1()), U128(1));
+    assert_eq!(contract.questboxes_supply_per_owner(user1(), quest.id), U128(1));
 
     contract.mint(quest.id, user1(), BoxRarity::Rare);
     contract.mint(quest.id, user2(), BoxRarity::Epic);
 
-    assert_eq!(contract.questboxes_supply_per_owner(user1()), U128(2));
-    assert_eq!(contract.questboxes_supply_per_owner(user2()), U128(1));
+    assert_eq!(contract.questboxes_supply_per_owner(user1(), quest.id), U128(2));
+    assert_eq!(contract.questboxes_supply_per_owner(user2(), quest.id), U128(1));
 
     contract.mint_many(
         quest.id,
@@ -665,16 +665,16 @@ fn test_supply_for_owner_increases() {
         vec![user1(), user2(), user1()],
     );
 
-    assert_eq!(contract.questboxes_supply_per_owner(user1()), U128(4));
-    assert_eq!(contract.questboxes_supply_per_owner(user2()), U128(2));
+    assert_eq!(contract.questboxes_supply_per_owner(user1(), quest.id), U128(4));
+    assert_eq!(contract.questboxes_supply_per_owner(user2(), quest.id), U128(2));
 }
 
 #[test]
 fn test_quest_boxes_differ_after_mint_many() {
     let (mut contract, mut context, quest) = setup(Some(10), None, None);
 
-    assert_eq!(contract.questboxes_supply_per_owner(user1()), U128(0));
-    assert_eq!(contract.questboxes_supply_per_owner(user2()), U128(0));
+    assert_eq!(contract.questboxes_supply_per_owner(user1(), quest.id), U128(0));
+    assert_eq!(contract.questboxes_supply_per_owner(user2(), quest.id), U128(0));
 
     contract.mint_many(
         quest.id,
@@ -682,8 +682,8 @@ fn test_quest_boxes_differ_after_mint_many() {
         vec![user1(), user2()],
     );
 
-    assert_eq!(contract.questboxes_supply_per_owner(user1()), U128(1));
-    assert_eq!(contract.questboxes_supply_per_owner(user2()), U128(1));
+    assert_eq!(contract.questboxes_supply_per_owner(user1(), quest.id), U128(1));
+    assert_eq!(contract.questboxes_supply_per_owner(user2(), quest.id), U128(1));
 
     contract.mint_many(
         quest.id,
@@ -691,13 +691,49 @@ fn test_quest_boxes_differ_after_mint_many() {
         vec![user1(), user2()],
     );
 
-    assert_eq!(contract.questboxes_supply_per_owner(user1()), U128(2));
-    assert_eq!(contract.questboxes_supply_per_owner(user2()), U128(2));
+    assert_eq!(contract.questboxes_supply_per_owner(user1(), quest.id), U128(2));
+    assert_eq!(contract.questboxes_supply_per_owner(user2(), quest.id), U128(2));
 
     let pagination = Some(Pagination::new(1, 40));
 
-    let user_1_quest_boxes = contract.questboxes_per_owner(user1(), pagination.clone());
-    let user_2_quest_boxes = contract.questboxes_per_owner(user2(), pagination.clone());
+    let user_1_quest_boxes = contract.questboxes_per_owner(user1(), quest.id, pagination.clone());
+    let user_2_quest_boxes = contract.questboxes_per_owner(user2(), quest.id, pagination.clone());
+
+    let user_1_quest_box = user_1_quest_boxes.get(1).unwrap();
+    let user_2_quest_box = user_2_quest_boxes.get(1).unwrap();
+
+    assert_ne!(user_1_quest_box.box_id, user_2_quest_box.box_id, "Box id's should be different");
+}
+
+#[test]
+fn test_quest_per_owner_differ_per_quest() {
+    let (mut contract, mut context, quest) = setup(Some(10), None, None);
+
+    assert_eq!(contract.questboxes_supply_per_owner(user1(), quest.id), U128(0));
+    assert_eq!(contract.questboxes_supply_per_owner(user2(), quest.id), U128(0));
+
+    contract.mint_many(
+        quest.id,
+        BoxRarity::Rare,
+        vec![user1(), user2()],
+    );
+
+    assert_eq!(contract.questboxes_supply_per_owner(user1(), quest.id), U128(1));
+    assert_eq!(contract.questboxes_supply_per_owner(user2(), quest.id), U128(1));
+
+    contract.mint_many(
+        quest.id,
+        BoxRarity::Rare,
+        vec![user1(), user2()],
+    );
+
+    assert_eq!(contract.questboxes_supply_per_owner(user1(), quest.id), U128(2));
+    assert_eq!(contract.questboxes_supply_per_owner(user2(), quest.id), U128(2));
+
+    let pagination = Some(Pagination::new(1, 40));
+
+    let user_1_quest_boxes = contract.questboxes_per_owner(user1(), quest.id, pagination.clone());
+    let user_2_quest_boxes = contract.questboxes_per_owner(user2(), quest.id, pagination.clone());
 
     let user_1_quest_box = user_1_quest_boxes.get(1).unwrap();
     let user_2_quest_box = user_2_quest_boxes.get(1).unwrap();
@@ -713,19 +749,19 @@ fn test_boxes_for_owner_amount() {
 
     contract.mint(quest.id, user1(), BoxRarity::Rare);
 
-    assert_eq!(contract.questboxes_per_owner(user1(), None).len(), 1);
+    assert_eq!(contract.questboxes_per_owner(user1(), quest.id, None).len(), 1);
 
     contract.mint(quest.id, user1(), BoxRarity::Epic);
     contract.mint(quest.id, user1(), BoxRarity::Epic);
 
     contract.mint(quest.id, user1(), BoxRarity::Legendary);
 
-    assert_eq!(contract.questboxes_per_owner(user1(), None).len(), 4);
+    assert_eq!(contract.questboxes_per_owner(user1(), quest.id, None).len(), 4);
 
     contract.mint(quest.id, user2(), BoxRarity::Epic);
 
-    assert_eq!(contract.questboxes_per_owner(user1(), None).len(), 4);
-    assert_eq!(contract.questboxes_per_owner(user2(), None).len(), 1);
+    assert_eq!(contract.questboxes_per_owner(user1(), quest.id, None).len(), 4);
+    assert_eq!(contract.questboxes_per_owner(user2(), quest.id, None).len(), 1);
 }
 
 #[test]
@@ -734,7 +770,7 @@ fn test_boxes_for_owner_status() {
 
     contract.mint(quest.id, user1(), BoxRarity::Rare);
 
-    let boxes = contract.questboxes_per_owner(user1(), None);
+    let boxes = contract.questboxes_per_owner(user1(), quest.id, None);
 
     let box_data = boxes.get(0).unwrap().to_owned();
 
@@ -874,7 +910,7 @@ fn test_claim_box_status() {
     // promises aren't called
     contract.claim(quest.id, box_id);
 
-    let boxes = contract.questboxes_per_owner(user1(), None);
+    let boxes = contract.questboxes_per_owner(user1(), quest.id, None);
 
     let box_data = boxes.get(0).unwrap();
 
@@ -888,7 +924,7 @@ fn test_claim_box_status() {
     );
 
     let pagination = Some(Pagination::new(1, 40));
-    let quest_boxes_per_owner = contract.questboxes_per_owner(user1(), pagination);
+    let quest_boxes_per_owner = contract.questboxes_per_owner(user1(), quest.id, pagination);
 
     let needed_box = quest_boxes_per_owner
         .iter()
@@ -922,7 +958,7 @@ fn test_claiming_one_box_doesnt_affect_others() {
     // promises aren't called
     contract.claim(quest.id, box_1_id);
 
-    let boxes = contract.questboxes_per_owner(user1(), None);
+    let boxes = contract.questboxes_per_owner(user1(), quest.id, None);
 
     let box_data = boxes.get(0).unwrap();
 
@@ -935,7 +971,7 @@ fn test_claiming_one_box_doesnt_affect_others() {
         }
     );
 
-    let boxes_for_user_2 = contract.questboxes_per_owner(user2(), None);
+    let boxes_for_user_2 = contract.questboxes_per_owner(user2(), quest.id, None);
 
     let box_2_data = boxes_for_user_2.get(0).unwrap();
 
@@ -959,7 +995,7 @@ fn test_claim_box_with_zero_probability() {
     // promises aren't called
     contract.claim(quest.id, box_id);
 
-    let boxes = contract.questboxes_per_owner(user1(), None);
+    let boxes = contract.questboxes_per_owner(user1(), quest.id, None);
 
     let box_data = boxes.get(0).unwrap();
 
@@ -969,6 +1005,28 @@ fn test_claim_box_with_zero_probability() {
             reward: JsonReward::Nothing,
         }
     );
+}
+
+#[test]
+fn test_quest_boxes_differ_for_different_quests() {
+    let (mut contract, mut context, quest) = setup(None, None, None);
+
+    let quest_2_id = contract.create_quest(&"new quest".to_string());
+    
+    contract.mint(quest.id, user1(), BoxRarity::Rare);
+    contract.mint(quest.id, user1(), BoxRarity::Rare);
+    contract.mint(quest_2_id, user1(), BoxRarity::Rare);
+    contract.mint(quest_2_id, user2(), BoxRarity::Rare);
+
+    let user_1_quest_1_boxes = contract.questboxes_per_owner(user1(), quest.id, None);
+    let user_2_quest_1_boxes = contract.questboxes_per_owner(user2(), quest.id, None);
+    let user_1_quest_2_boxes = contract.questboxes_per_owner(user1(), quest_2_id, None);
+    let user_2_quest_2_boxes = contract.questboxes_per_owner(user2(), quest_2_id, None);
+
+    assert!(user_1_quest_1_boxes.len() == 2, "Boxes count for user 1 quest 1 is wrong");
+    assert!(user_2_quest_1_boxes.len() == 0, "Boxes count for user 2 quest 1 is wrong");
+    assert!(user_1_quest_2_boxes.len() == 1, "Boxes count for user 1 quest 2 is wrong");
+    assert!(user_2_quest_2_boxes.len() == 1, "Boxes count for user 2 quest 2 is wrong");
 }
 
 #[test]

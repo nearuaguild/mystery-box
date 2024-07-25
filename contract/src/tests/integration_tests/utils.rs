@@ -5,7 +5,7 @@ use near_workspaces::{
     AccountId, Contract, Worker,
 };
 
-use crate::contract::types::BoxRarity;
+use crate::contract::types::{BoxRarity, QuestId};
 
 const MYSTERY_BOX_CONTRACT: &[u8] = include_bytes!("./wasms/mystery_box.wasm");
 const NFT_CONTRACT: &[u8] = include_bytes!("./wasms/non_fungible_token.wasm");
@@ -192,6 +192,7 @@ pub async fn get_quest_boxes_per_owner(
         .call("questboxes_per_owner")
         .args_json(json!({
             "account_id": user_account.id(),
+            "quest_id": quest_id,
         }))
         .view()
         .await?

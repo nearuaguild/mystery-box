@@ -291,6 +291,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
           boxes:
             Near.view(top_contract_id, "questboxes_per_owner", {
               account_id: address,
+              quest_id,
               pagination: {
                 page: 1,
                 size: 40,
@@ -298,10 +299,6 @@ Please reach out to Near Ukraine Team in order to have your collection verified
             }) || [],
         };
       });
-
-      for(let account of accounts) {
-        account.boxes = account.boxes.filter((box) => box.quest_id === quest_id);
-      }
 
       logInfo("accounts", addresses, accounts);
 

@@ -387,11 +387,15 @@ impl Contract {
         return result_vec;
     }
 
-    pub fn questboxes_supply_per_owner(&self, account_id: AccountId) -> U128 {
+    pub fn questboxes_supply_per_owner(&self, account_id: AccountId, quest_id: QuestId) -> U128 {
         let questboxes = self.questboxes_per_owner.get(&account_id);
 
         return match questboxes {
-            Option::Some(questboxes) => U128(questboxes.len().into()),
+            Option::Some(questboxes) => U128(questboxes
+                .iter()
+                .filter(|quest_box| quest_box.quest_id == quest_id)
+                .collect::<Vec<QuestBoxData>>()
+                .len() as u128),
             _ => U128(0),
         };
     }
@@ -399,6 +403,7 @@ impl Contract {
     pub fn questboxes_per_owner(
         &self,
         account_id: AccountId,
+        quest_id: QuestId,
         pagination: Option<Pagination>,
     ) -> Vec<JsonBox> {
         let pagination = pagination.unwrap_or_default();
@@ -415,6 +420,10 @@ impl Contract {
             .take(pagination.take())
             .skip(pagination.skip())
             .filter_map(|quest_box| {
+                if quest_box.quest_id != quest_id {
+                    return None;
+                }
+
                 let quest = self.quests.get(&quest_box.quest_id);
 
                 if !quest.is_some() {
