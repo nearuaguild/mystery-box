@@ -1,15 +1,23 @@
-const rpc_endpoint = 'https://rpc.testnet.near.org';
+const widget_owner_id = "evasive-dime.testnet";
+const top_contract_id = "succinct-slave.testnet";
+
+const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+const rpc_endpoint = "https://rpc.testnet.near.org";
+
+let global_created_quest_id = undefined;
+
+logInfo("MysteryBox.Manage props", props);
 
 const fetchTransactionByHash = (hash, sender_id) => {
   return fetch(rpc_endpoint, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      jsonrpc: '2.0',
-      id: 'dontcare',
-      method: 'tx',
+      jsonrpc: "2.0",
+      id: "dontcare",
+      method: "tx",
       params: [hash, sender_id],
     }),
   });
@@ -18,7 +26,7 @@ const fetchTransactionByHash = (hash, sender_id) => {
 const parseResultFromClaimTransactionResponse = (response) => {
   if (!response?.body) throw `Response is missing body`;
 
-  if (response.body.error) throw response.body.error.data || 'Unknown error';
+  if (response.body.error) throw response.body.error.data || "Unknown error";
 
   const result = response.body.result;
 
@@ -28,80 +36,75 @@ const parseResultFromClaimTransactionResponse = (response) => {
 
   if (!responseValue) return null;
 
-  console.log('result', result);
+  logInfo("result", result);
 
-  return JSON.parse(Buffer.from(responseValue, 'base64').toString());
+  return JSON.parse(Buffer.from(responseValue, "base64").toString());
 };
-
-const widget_owner_id = 'denbite.testnet';
-const top_contract_id = 'management2.denbite.testnet';
 
 const account_id = context.accountId;
 
-let contract_id = props.contract_id;
-
 const KnownPages = [
-  'Home',
-  'AddNearReward',
-  'AddNftReward',
-  'MintBox',
-  'ListRewards',
-  'ListUserBoxes',
-  'DeployContract',
+  "Home",
+  "AddNearReward",
+  "AddNftReward",
+  "MintBox",
+  "ListRewards",
+  "ListUserBoxes",
+  "DeployContract",
 ];
 
-const determinePageFromProps = () => {
-  if (!account_id) return 'SignIn';
+const determinePageAndActiveQuestFromProps = () => {
+  if (!account_id) return "SignIn";
 
-  if (!KnownPages.includes(props.page)) return 'Home';
+  if (!KnownPages.includes(props.page)) return "Home";
 
-  if (props.page === 'DeployContract' && props.transactionHashes) {
+  if (props.page === "DeployContract" && props.transactionHashes) {
     const response = fetchTransactionByHash(
       props.transactionHashes,
       account_id
     );
 
-    console.log('response', response);
+    logInfo("MysteryBox.Manage response", response);
 
-    const result = parseResultFromClaimTransactionResponse(response);
+    const created_quest_id = parseResultFromClaimTransactionResponse(response);
 
-    console.log('result', result);
+    logInfo("MysteryBox.Manage result", created_quest_id);
 
-    if (result) {
-      contract_id = result;
-      return 'Home';
+    if (created_quest_id != undefined && created_quest_id != null) {
+      global_created_quest_id = created_quest_id;
+      return "Home";
     }
   }
 
   return props.page;
 };
 
-const page = determinePageFromProps();
+const page = determinePageAndActiveQuestFromProps();
 
 // Import our modules
-const { Layout } = VM.require('denbite.testnet/widget/Templates.Layout');
+const { Layout } = VM.require(`${widget_owner_id}/widget/Templates.Layout`);
 
 if (!Layout) {
   return <p>Loading modules...</p>;
 }
 
-const { href: linkHref } = VM.require('denbite.testnet/widget/core.lib.url');
+const { href: linkHref } = VM.require(`${widget_owner_id}/widget/core.lib.url`);
 
 linkHref || (linkHref = () => {});
 
-function Page({ page, account_id, contract_id }) {
-  if (page === 'SignIn') {
+function Page({ page, account_id, quest_id }) {
+  if (page === "SignIn") {
     return (
       <Widget
         src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryText`}
         props={{
-          text: 'Please sign in with your near wallet to proceed',
+          text: "Please sign in with your near wallet to proceed",
         }}
       />
     );
   }
 
-  if (page === 'DeployContract') {
+  if (page === "DeployContract") {
     return (
       <Widget
         src={`${widget_owner_id}/widget/MysteryBox.Manage.Screens.DeployContract`}
@@ -112,18 +115,20 @@ function Page({ page, account_id, contract_id }) {
     );
   }
 
-  const contracts =
-    Near.view(top_contract_id, 'contracts_for_owner', {
+  const quests =
+    Near.view(top_contract_id, "quests_per_owner", {
       account_id,
     }) || [];
 
-  const currentContract =
-    contract_id &&
-    contracts.find((contract) => contract.contract_id === contract_id);
+  const currentQuest = !isNaN(quest_id)
+    ? quests.find((quest) => quest.quest_id === quest_id)
+    : null;
+
+  logInfo("MysteryBox.Manage quests", { quests, quest_id, currentQuest });
 
   switch (page) {
-    case 'Home': {
-      if (contracts.length === 0) {
+    case "Home": {
+      if (quests.length === 0) {
         return (
           <>
             <Widget
@@ -131,19 +136,19 @@ function Page({ page, account_id, contract_id }) {
               props={{
                 text: `
                 Ready for an adventure?
-                Click below to create a new contract and join the Mystery Box community!
+                Click below to create a new giveaway and join the Mystery Box community!
                 `,
               }}
             />
             <Widget
               src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
               props={{
-                text: 'Create new contract',
+                text: "Create new giveaway",
                 href: linkHref({
-                  widgetSrc: 'denbite.testnet/widget/MysteryBox.Manage',
+                  widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
                   params: {
-                    contract_id: contract_id,
-                    page: 'DeployContract',
+                    quest_id,
+                    page: "DeployContract",
                   },
                 }),
               }}
@@ -156,22 +161,26 @@ function Page({ page, account_id, contract_id }) {
         <Widget
           src={`${widget_owner_id}/widget/MysteryBox.Manage.Screens.Home`}
           props={{
-            defaultContractId: contract_id,
-            contracts,
+            quests: quests,
+            active_quest_id: quest_id,
           }}
         />
       );
     }
-    case 'AddNftReward': {
-      const contracts = Near.view(contract_id, 'trusted_nft_contracts');
+    case "AddNftReward": {
+      const contracts = Near.view(
+        top_contract_id,
+        "get_trusted_nft_contracts",
+        {}
+      );
 
-      console.log('contracts', contracts);
+      logInfo("contracts", contracts);
 
       const tokens = (contracts || [])
         .map((contract) => {
-          const metadata = Near.view(contract, 'nft_metadata');
+          const metadata = Near.view(contract, "nft_metadata");
 
-          const tokens = Near.view(contract, 'nft_tokens_for_owner', {
+          const tokens = Near.view(contract, "nft_tokens_for_owner", {
             account_id,
           });
 
@@ -182,6 +191,8 @@ function Page({ page, account_id, contract_id }) {
           }));
         })
         .flat();
+
+      logInfo("tokens for owner", { tokens, account_id });
 
       if (tokens.length === 0)
         return (
@@ -200,17 +211,18 @@ Please reach out to Near Ukraine Team in order to have your collection verified
         <Widget
           src={`${widget_owner_id}/widget/MysteryBox.Manage.Screens.AddNftReward`}
           props={{
-            contract: currentContract,
+            quest: currentQuest,
             tokens,
           }}
         />
       );
     }
-    case 'ListRewards': {
+    case "ListRewards": {
       /** @todo fetch rarity from backend */
 
       const fetchRewards = (rarity) => {
-        const rewards = Near.view(contract_id, 'rewards', {
+        const rewards = Near.view(top_contract_id, "rewards", {
+          quest_id,
           rarity,
         });
 
@@ -221,9 +233,9 @@ Please reach out to Near Ukraine Team in order to have your collection verified
       };
 
       const rewards = [
-        fetchRewards('rare'),
-        fetchRewards('epic'),
-        fetchRewards('legendary'),
+        fetchRewards("rare"),
+        fetchRewards("epic"),
+        fetchRewards("legendary"),
       ].flat();
 
       if (rewards.length === 0)
@@ -232,18 +244,18 @@ Please reach out to Near Ukraine Team in order to have your collection verified
             <Widget
               src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryText`}
               props={{
-                text: 'No rewards have been added so far',
+                text: "No rewards have been added so far",
               }}
             />
             <Widget
               src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
               props={{
-                text: 'Add first NEAR reward',
+                text: "Add first NEAR reward",
                 href: linkHref({
-                  widgetSrc: 'denbite.testnet/widget/MysteryBox.Manage',
+                  widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
                   params: {
-                    contract_id,
-                    page: 'AddNearReward',
+                    quest_id,
+                    page: "AddNearReward",
                   },
                 }),
               }}
@@ -255,27 +267,31 @@ Please reach out to Near Ukraine Team in order to have your collection verified
         <Widget
           src={`${widget_owner_id}/widget/MysteryBox.Manage.Screens.ListRewards`}
           props={{
-            contract: currentContract,
+            quest: currentQuest,
             rewards,
           }}
         />
       );
     }
-    case 'ListUserBoxes': {
+    case "ListUserBoxes": {
       /** @todo fetch addresses from backend */
-      const addresses = Near.view(contract_id, 'users', {
+      const addresses = Near.view(top_contract_id, "get_users", {
+        quest_id,
         pagination: {
           page: 1,
           size: 50,
         },
       });
 
+      logInfo("addresses", { addresses, quest_id });
+
       const accounts = (addresses || []).map((address) => {
         return {
           account_id: address,
           boxes:
-            Near.view(contract_id, 'boxes_for_owner', {
+            Near.view(top_contract_id, "questboxes_per_owner", {
               account_id: address,
+              quest_id,
               pagination: {
                 page: 1,
                 size: 40,
@@ -284,24 +300,26 @@ Please reach out to Near Ukraine Team in order to have your collection verified
         };
       });
 
+      logInfo("accounts", addresses, accounts);
+
       if (accounts.length === 0)
         return (
           <>
             <Widget
               src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryText`}
               props={{
-                text: 'No boxes have been minted so far',
+                text: "No boxes have been minted so far",
               }}
             />
             <Widget
               src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
               props={{
-                text: 'Mint first Mystery Box',
+                text: "Mint first Mystery Box",
                 href: linkHref({
-                  widgetSrc: 'denbite.testnet/widget/MysteryBox.Manage',
+                  widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
                   params: {
-                    contract_id,
-                    page: 'MintBox',
+                    quest_id,
+                    page: "MintBox",
                   },
                 }),
               }}
@@ -313,7 +331,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
         <Widget
           src={`${widget_owner_id}/widget/MysteryBox.Manage.Screens.ListUserBoxes`}
           props={{
-            contract: currentContract,
+            quest: currentQuest,
             accounts,
           }}
         />
@@ -324,7 +342,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
         <Widget
           src={`${widget_owner_id}/widget/MysteryBox.Manage.Screens.${page}`}
           props={{
-            contract: currentContract,
+            quest: currentQuest,
           }}
         />
       );
@@ -332,15 +350,37 @@ Please reach out to Near Ukraine Team in order to have your collection verified
   }
 }
 
-console.log('page', page);
+const is_active_quest_id_present =
+  props.active_quest_id != undefined && !isNaN(props.active_quest_id);
+const is_quest_id_from_props_present =
+  props.quest_id != undefined && !isNaN(props.quest_id);
+const is_created_quest_id_present =
+  global_created_quest_id != undefined && !isNaN(global_created_quest_id);
+
+let quest_id_as_number = 0;
+
+if (is_active_quest_id_present) {
+  quest_id_as_number = parseInt(props.active_quest_id);
+} else if (is_quest_id_from_props_present) {
+  quest_id_as_number = parseInt(props.quest_id);
+} else if (is_created_quest_id_present) {
+  quest_id_as_number = global_created_quest_id;
+}
+
+logInfo("page", {
+  page,
+  quest_id_as_number,
+  active_quest_id: props.active_quest_id,
+  props_quest_id: props.quest_id,
+});
 
 return (
   <>
     <Layout
-      contract_id={contract_id}
-      active_home_button={!['Home', 'SignIn'].includes(page)}
+      quest_id={quest_id_as_number}
+      active_home_button={!["Home", "SignIn"].includes(page)}
     >
-      <Page page={page} account_id={account_id} contract_id={contract_id} />
+      <Page page={page} account_id={account_id} quest_id={quest_id_as_number} />
     </Layout>
     <Widget
       src={`${widget_owner_id}/widget/Templates.Notification`}

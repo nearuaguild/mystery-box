@@ -1,6 +1,11 @@
-const { href: linkHref } = VM.require('denbite.testnet/widget/core.lib.url');
+const widget_owner_id = "evasive-dime.testnet";
+const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+
+const { href: linkHref } = VM.require(`${widget_owner_id}/widget/core.lib.url`);
 
 linkHref || (linkHref = () => {});
+
+logInfo('HomeButton props', { props });
 
 const HomeButton = styled.button`
   border: 0;
@@ -37,9 +42,9 @@ return (
   <HomeButton>
     <Link
       to={linkHref({
-        widgetSrc: 'denbite.testnet/widget/MysteryBox.Manage',
+        widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
         params: {
-          contract_id: props.contract_id,
+          active_quest_id: props.quest_id,
         },
       })}
     >

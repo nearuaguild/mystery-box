@@ -1,4 +1,9 @@
-console.log('props', props);
+const widget_owner_id = "evasive-dime.testnet";
+const top_contract_id = "succinct-slave.testnet";
+
+const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+
+logInfo("MintBox props", props);
 
 const isValidAccount = (account) => {
   if (account.amount === undefined || account.amount === null) return false;
@@ -18,9 +23,9 @@ const isValidAccount = (account) => {
 
 const createAccount = () => ({
   id: Date.now(),
-  rarity: 'rare',
-  address: '',
-  amount: '1',
+  rarity: "rare",
+  address: "",
+  amount: "1",
 });
 
 State.init({
@@ -55,7 +60,7 @@ const WrapperMenu = styled.div`
 `;
 
 const MenuTitle = styled.p`
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 28px;
   font-weight: 700;
   letter-spacing: 0em;
@@ -65,7 +70,7 @@ const MenuTitle = styled.p`
 `;
 
 const MenuSubtitle = styled.p`
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 14px;
   font-weight: 400;
   letter-spacing: 0em;
@@ -108,7 +113,7 @@ const AddPoolButton = styled.button`
   width: 60%;
   height: 24px;
 
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0em;
@@ -166,7 +171,7 @@ const TableCell = styled.div`
   flex: 1;
   text-align: center;
 
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 11px;
   font-weight: 300;
   letter-spacing: 0em;
@@ -179,7 +184,7 @@ const TableCell = styled.div`
 `;
 
 const TextCell = styled.input`
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 11px;
   font-weight: 400;
   letter-spacing: 0em;
@@ -194,7 +199,7 @@ const TextCell = styled.input`
 `;
 
 const NumberCell = styled.input`
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0em;
@@ -224,7 +229,7 @@ const WrapperSocial = styled.div`
 `;
 
 const SocialText = styled.p`
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 12px;
   font-weight: 700;
   line-height: 16px;
@@ -249,7 +254,7 @@ const SocialIcon = styled.img`
 `;
 
 const deleteAccount = (id) => {
-  console.log('deleting account', id);
+  logInfo("deleting account", id);
 
   State.update((previousState) => {
     return {
@@ -260,7 +265,7 @@ const deleteAccount = (id) => {
 };
 
 const addAccount = () => {
-  console.log('add new account');
+  logInfo("add new account");
 
   State.update((previousState) => {
     return {
@@ -271,7 +276,7 @@ const addAccount = () => {
 };
 
 const updadeAccount = (id, field, value) => {
-  console.log(`updating account.${field}`, id, value);
+  logInfo(`updating account.${field}`, id, value);
 
   State.update((previousState) => {
     const { accounts } = previousState;
@@ -281,7 +286,7 @@ const updadeAccount = (id, field, value) => {
     if (account === -1) return previousState;
 
     // unknown field
-    if (account[field] === 'undefined') {
+    if (account[field] === "undefined") {
       console.error(
         `Can't update account property ${field} since it doesn't exist`
       );
@@ -304,10 +309,10 @@ const everyAccountIsValid = accounts.every(isValidAccount);
 
 const shouldSubmitButtonBeDisabled = !everyAccountIsValid;
 
-console.log('shouldSubmitButtonBeDisabled', shouldSubmitButtonBeDisabled);
+logInfo("shouldSubmitButtonBeDisabled", shouldSubmitButtonBeDisabled);
 
 const submitTransactionToMintBoxes = () => {
-  console.log('submitTransactionToMintBoxes', accounts);
+  logInfo("submitTransactionToMintBoxes", accounts);
 
   if (!everyAccountIsValid) return;
 
@@ -322,30 +327,33 @@ const submitTransactionToMintBoxes = () => {
     };
   }, {});
 
-  console.log('accountsGrouppedByRarity', accountsGrouppedByRarity);
+  logInfo("accountsGrouppedByRarity", accountsGrouppedByRarity);
 
   const txn = Object.entries(accountsGrouppedByRarity).map(
     ([rarity, partialAccounts]) => {
       const accounts = partialAccounts
         .map((partialAccount) =>
           Array(parseInt(partialAccount.amount)).fill(
-            partialAccount.address.replaceAll(' ', '')
+            partialAccount.address.replaceAll(" ", "")
           )
         )
         .flat();
 
+      const yoctoPerMintedBox = 10000;
+
       const total = accounts.reduce((prev, curr) => {
-        return prev + 2520 + 40 * curr.length;
+        return prev + yoctoPerMintedBox + 40 * curr.length;
       }, 0);
 
-      console.log('total', total);
+      logInfo("total", total);
 
       const totalNum = Big(680).plus(total).mul(Big(10).pow(18));
 
       return {
-        contractName: props.contract?.contract_id,
-        methodName: 'mint_many',
+        contractName: top_contract_id,
+        methodName: "mint_many",
         args: {
+          quest_id: props.quest.quest_id,
           rarity,
           accounts,
         },
@@ -361,24 +369,24 @@ const submitTransactionToMintBoxes = () => {
 return (
   <>
     <Widget
-      src="denbite.testnet/widget/MysteryBox.Manage.Components.Title"
+      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.Title`}
       props={{
-        text: 'Mint Box',
+        text: "Mint Box",
       }}
     />
     <WrapperMenu>
       <Widget
-        src="denbite.testnet/widget/MysteryBox.Manage.Components.MenuHeader"
+        src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuHeader`}
         props={{
-          title: props.contract?.title,
-          subtitle: props.contract?.contract_id,
+          title: props.quest?.title,
+          subtitle: props.quest?.quest_id,
         }}
       />
       <MenuContent>
         {accounts.map((account) => (
           <WrapperTable key={`account_unique_key_${account.id}`}>
             <Widget
-              src="denbite.testnet/widget/MysteryBox.Manage.Components.DeleteButton"
+              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.DeleteButton`}
               props={{
                 onClick: () => deleteAccount(account.id),
               }}
@@ -392,35 +400,35 @@ return (
               <TableRow>
                 <TableCell>
                   <Widget
-                    src={`denbite.testnet/widget/MysteryBox.Manage.Components.RarityButton`}
+                    src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.RarityButton`}
                     props={{
-                      rarity: 'rare',
-                      active: account.rarity === 'rare',
-                      tooltip: 'Rare',
+                      rarity: "rare",
+                      active: account.rarity === "rare",
+                      tooltip: "Rare",
                       onClick: () => {
-                        updadeAccount(account.id, 'rarity', 'rare');
+                        updadeAccount(account.id, "rarity", "rare");
                       },
                     }}
                   />
                   <Widget
-                    src={`denbite.testnet/widget/MysteryBox.Manage.Components.RarityButton`}
+                    src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.RarityButton`}
                     props={{
-                      rarity: 'epic',
-                      active: account.rarity === 'epic',
-                      tooltip: 'Epic',
+                      rarity: "epic",
+                      active: account.rarity === "epic",
+                      tooltip: "Epic",
                       onClick: () => {
-                        updadeAccount(account.id, 'rarity', 'epic');
+                        updadeAccount(account.id, "rarity", "epic");
                       },
                     }}
                   />
                   <Widget
-                    src={`denbite.testnet/widget/MysteryBox.Manage.Components.RarityButton`}
+                    src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.RarityButton`}
                     props={{
-                      rarity: 'legendary',
-                      active: account.rarity === 'legendary',
-                      tooltip: 'Legendary',
+                      rarity: "legendary",
+                      active: account.rarity === "legendary",
+                      tooltip: "Legendary",
                       onClick: () => {
-                        updadeAccount(account.id, 'rarity', 'legendary');
+                        updadeAccount(account.id, "rarity", "legendary");
                       },
                     }}
                   />
@@ -429,7 +437,7 @@ return (
                   <TextCell
                     value={account.address}
                     onChange={(e) => {
-                      updadeAccount(account.id, 'address', e.target.value);
+                      updadeAccount(account.id, "address", e.target.value);
                     }}
                   />
                 </TableCell>
@@ -441,7 +449,7 @@ return (
                     step="1"
                     value={account.amount}
                     onChange={(e) => {
-                      updadeAccount(account.id, 'amount', e.target.value);
+                      updadeAccount(account.id, "amount", e.target.value);
                     }}
                   />
                 </TableCell>
@@ -455,9 +463,9 @@ return (
       </MenuContent>
     </WrapperMenu>
     <Widget
-      src={`denbite.testnet/widget/MysteryBox.Manage.Components.SubmitButton`}
+      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.SubmitButton`}
       props={{
-        text: 'Submit',
+        text: "Submit",
         disabled: shouldSubmitButtonBeDisabled,
         onClick: submitTransactionToMintBoxes,
       }}

@@ -1,6 +1,12 @@
-use crate::*;
+use crate::contract::pools::Pool;
+use crate::contract::types::{ BoxId, Capacity, PoolId, Probability, TokenId };
+use near_sdk::{ env, require, AccountId };
 
 use std::str::FromStr;
+
+use super::enums::Network;
+use super::quest::Quest;
+use super::types::{ BoxRarity, BoxStatus };
 
 fn get_random_number(shift_amount: usize) -> u64 {
     let mut seed = env::random_seed();
@@ -12,21 +18,6 @@ fn get_random_number(shift_amount: usize) -> u64 {
     arr.copy_from_slice(&seed[..8]);
 
     u64::from_le_bytes(arr)
-}
-
-enum Network {
-    Mainnet,
-    Testnet,
-}
-
-impl From<AccountId> for Network {
-    fn from(account_id: AccountId) -> Self {
-        if account_id.to_string().ends_with(".near") {
-            return Network::Mainnet;
-        }
-
-        return Network::Testnet;
-    }
 }
 
 pub(crate) fn get_registry_iah_contract() -> AccountId {
@@ -47,38 +38,15 @@ pub(crate) fn get_issuer_iah_contract() -> AccountId {
     }
 }
 
-impl Contract {
-    pub(crate) fn internal_add_near_pool(
-        &mut self,
-        rarity: BoxRarity,
-        amount: u128,
-        capacity: Capacity,
-    ) {
-        let pool_id = self.next_pool_id.clone();
-
-        self.next_pool_id += 1;
-
-        let pool = Pool::create_near_pool(pool_id, rarity, amount, capacity);
-
-        self.pools.insert(&pool.id, &pool);
-
-        let mut pool_ids = self.pool_ids_by_rarity.get(&rarity).unwrap_or_default();
-        pool_ids.insert(pool_id.clone());
-        self.pool_ids_by_rarity.insert(&rarity, &pool_ids);
-    }
-
+impl Quest {
     pub(crate) fn internal_add_nft_pool(
         &mut self,
         rarity: BoxRarity,
         contract_id: AccountId,
-        token_id: TokenId,
+        token_id: TokenId
     ) {
         // to ensure tokens within the contract and rarity will be in the same pool
-        let key = vec![
-            contract_id.to_owned().to_string(),
-            rarity.to_owned().to_string(),
-        ]
-        .join(":");
+        let key = vec![contract_id.to_owned().to_string(), rarity.to_owned().to_string()].join(":");
 
         let pool = match self.nft_pool_by_key.get(&key) {
             Option::None => {
@@ -108,42 +76,14 @@ impl Contract {
         self.nft_pool_by_key.insert(&key, &pool.id);
     }
 
-    pub(crate) fn internal_mint(&mut self, owner_id: AccountId, rarity: BoxRarity) -> BoxData {
-        let box_id = self.next_box_id.clone();
-
-        self.next_box_id += 1;
-
-        let box_data = BoxData::new(box_id, rarity, owner_id);
-
-        self.boxes.insert(&box_data.id, &box_data);
-
-        let mut boxes_per_owner = self
-            .boxes_per_owner
-            .get(&box_data.owner_id)
-            .unwrap_or_default();
-
-        // should never panic
-        require!(boxes_per_owner.insert(box_data.id));
-
-        self.boxes_per_owner
-            .insert(&box_data.owner_id, &boxes_per_owner);
-        self.users.insert(&box_data.owner_id);
-
-        box_data
-    }
-
     pub(crate) fn internal_claim(&mut self, box_id: BoxId) -> PoolId {
         let mut box_data = self.boxes.get(&box_id).expect("ERR_BOX_NOT_FOUND");
 
-        require!(
-            box_data.status == BoxStatus::NonClaimed,
-            "ERR_BOX_ALREADY_CLAIMED"
-        );
+        require!(box_data.box_status == BoxStatus::NonClaimed, "ERR_BOX_ALREADY_CLAIMED");
 
         // take reward of some rarity
-        let available_pools = self
-            .pool_ids_by_rarity
-            .get(&box_data.rarity)
+        let available_pools = self.pool_ids_by_rarity
+            .get(&box_data.box_rarity)
             .unwrap_or_default()
             .iter()
             .filter_map(|pool_id| {
@@ -155,8 +95,10 @@ impl Contract {
 
         require!(available_pools.len() > 0, "ERR_NO_POOLS_AVAILABLE");
 
-        let total_available: Capacity =
-            available_pools.iter().map(|pool| pool.availability()).sum();
+        let total_available: Capacity = available_pools
+            .iter()
+            .map(|pool| pool.availability())
+            .sum();
 
         let random_number = get_random_number(0);
 
@@ -181,9 +123,8 @@ impl Contract {
             last += pool.availability().clone();
         };
 
-        let probability = self
-            .probability_by_rarity
-            .get(&box_data.rarity)
+        let probability = self.probability_by_rarity
+            .get(&box_data.box_rarity)
             .unwrap_or(Probability::ONE);
 
         let threshold = probability.calculate_threshold();
@@ -196,18 +137,18 @@ impl Contract {
             true => {
                 let reward = random_pool.take_reward_from_pool();
 
-                box_data.status = BoxStatus::Claimed {
+                box_data.box_status = BoxStatus::Claimed {
                     reward: Some(reward),
                 };
 
                 self.pools.insert(&random_pool.id, &random_pool);
             }
             false => {
-                box_data.status = BoxStatus::Claimed { reward: None };
+                box_data.box_status = BoxStatus::Claimed { reward: None };
             }
         }
 
-        self.boxes.insert(&box_data.id, &box_data);
+        self.boxes.insert(&box_data.box_id, &box_data);
 
         random_pool.id
     }
@@ -216,24 +157,17 @@ impl Contract {
         let mut box_data = self.boxes.get(&box_id).expect("ERR_BOX_NOT_FOUND");
         let mut pool = self.pools.get(&pool_id).expect("ERR_POOL_NOT_FOUND");
 
-        let reward_or_nothing = match box_data.status {
+        let reward_or_nothing = match box_data.box_status {
             BoxStatus::NonClaimed => unreachable!(),
             BoxStatus::Claimed { reward } => reward.to_owned(),
         };
 
-        box_data.status = BoxStatus::NonClaimed;
-        self.boxes.insert(&box_data.id, &box_data);
+        box_data.box_status = BoxStatus::NonClaimed;
+        self.boxes.insert(&box_data.box_id, &box_data);
 
         if let Some(reward) = reward_or_nothing {
             pool.put_reward_to_pool(reward);
             self.pools.insert(&pool.id, &pool);
         }
-    }
-
-    pub(crate) fn assert_only_owner(&self) {
-        require!(
-            env::predecessor_account_id() == self.owner_id,
-            "ERR_FORBIDDEN"
-        );
     }
 }

@@ -1,3 +1,5 @@
+const widget_owner_id = 'evasive-dime.testnet';
+
 const TableContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -87,7 +89,7 @@ return (
     <TableRow key={1}>
       <TableCell key={0}>
         <Widget
-          src="denbite.testnet/widget/MysteryBox.Manage.Components.RarityButton"
+          src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.RarityButton`}
           props={{
             rarity: 'rare',
             active: pool.rarity === 'rare',
@@ -96,7 +98,7 @@ return (
           }}
         />
         <Widget
-          src="denbite.testnet/widget/MysteryBox.Manage.Components.RarityButton"
+          src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.RarityButton`}
           props={{
             rarity: 'epic',
             active: pool.rarity === 'epic',
@@ -105,7 +107,7 @@ return (
           }}
         />
         <Widget
-          src="denbite.testnet/widget/MysteryBox.Manage.Components.RarityButton"
+          src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.RarityButton`}
           props={{
             rarity: 'legendary',
             active: pool.rarity === 'legendary',

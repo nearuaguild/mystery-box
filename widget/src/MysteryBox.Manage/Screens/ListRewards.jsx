@@ -1,4 +1,8 @@
-console.log('props', props);
+const widget_owner_id = "evasive-dime.testnet";
+
+const { logInfo, logError } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+
+logInfo('props', props);
 
 State.init({
   activeKind: 'near',
@@ -281,17 +285,17 @@ const rewards = (props.rewards || []).filter(
 return (
   <>
     <Widget
-      src="denbite.testnet/widget/MysteryBox.Manage.Components.Title"
+      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.Title`}
       props={{
         text: 'List Rewards',
       }}
     />
     <WrapperMenu>
       <Widget
-        src="denbite.testnet/widget/MysteryBox.Manage.Components.MenuHeader"
+        src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuHeader`}
         props={{
-          title: props.contract?.title,
-          subtitle: props.contract?.contract_id,
+          title: props.quest?.title,
+          subtitle: props.quest?.quest_id,
         }}
       />
       <MenuContent>

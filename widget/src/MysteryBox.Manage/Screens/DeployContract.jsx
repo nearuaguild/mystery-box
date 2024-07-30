@@ -1,4 +1,8 @@
-console.log('props', props);
+const widget_owner_id = "evasive-dime.testnet";
+
+const { logInfo, logError } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+
+logInfo('props', props);
 
 State.init({
   title: '',
@@ -131,19 +135,18 @@ const address = alias && alias + '.' + props.top_contract_id;
 
 const shouldSubmitButtonBeDisabled = !state.title;
 
-console.log('shouldSubmitButtonBeDisabled', shouldSubmitButtonBeDisabled);
+logInfo('shouldSubmitButtonBeDisabled', shouldSubmitButtonBeDisabled);
 
 const submitTransactionToDeployContract = () => {
-  console.log('submitTransactionToDeployContract', state.title, address);
+  logInfo('submitTransactionToDeployContract', state.title, address);
 
-  const baseDeposit = Big(10).pow(24).mul(6.1); // 6.1N
+  const baseDeposit = Big(10).pow(24).mul(0.5); // 0.5 NEAR
   const argsDeposit = Big(240).mul(state.title.length).mul(Big(10).pow(18));
 
   Near.call(
     props.top_contract_id,
-    'deploy_mystery_box_contract',
+    'create_quest',
     {
-      alias,
       title: state.title,
     },
     Big(10).pow(12).mul(300), // 300 TGas
@@ -154,16 +157,16 @@ const submitTransactionToDeployContract = () => {
 return (
   <>
     <Widget
-      src="denbite.testnet/widget/MysteryBox.Manage.Components.Title"
+      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.Title`}
       props={{
-        text: 'Deploy Contract',
+        text: 'Create a Giveaway',
       }}
     />
     <WrapperMenu>
       <MenuContent>
         <FieldRow>
           <WrapperHeader>
-            <PrimaryText>Contract Title</PrimaryText>
+            <PrimaryText>Giveaway Title</PrimaryText>
           </WrapperHeader>
           <WrapperContent>
             <TextInput
@@ -177,20 +180,12 @@ return (
             />
           </WrapperContent>
         </FieldRow>
-        <FieldRow>
-          <WrapperHeader>
-            <PrimaryText>Contract Address Is Going To Be</PrimaryText>
-          </WrapperHeader>
-          <WrapperContent>
-            <SecondaryText>{address || '<No Title>'}</SecondaryText>
-          </WrapperContent>
-        </FieldRow>
       </MenuContent>
     </WrapperMenu>
     <Widget
-      src={`denbite.testnet/widget/MysteryBox.Manage.Components.SubmitButton`}
+      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.SubmitButton`}
       props={{
-        text: 'Deploy',
+        text: 'Create',
         disabled: shouldSubmitButtonBeDisabled,
         onClick: submitTransactionToDeployContract,
       }}

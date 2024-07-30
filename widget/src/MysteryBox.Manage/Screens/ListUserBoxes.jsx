@@ -1,4 +1,8 @@
-console.log('props', props);
+const widget_owner_id = "evasive-dime.testnet";
+
+const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+
+logInfo('ListUserBoxes props', props);
 
 const WrapperMenu = styled.div`
   background: rgba(24, 36, 50, 1);
@@ -186,17 +190,17 @@ const accounts = props.accounts || [];
 return (
   <>
     <Widget
-      src="denbite.testnet/widget/MysteryBox.Manage.Components.Title"
+      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.Title`}
       props={{
         text: 'List User Boxes',
       }}
     />
     <WrapperMenu>
         <Widget
-          src="denbite.testnet/widget/MysteryBox.Manage.Components.MenuHeader"
+          src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuHeader`}
           props={{
-            title: props.contract?.title,
-            subtitle: props.contract?.contract_id,
+            title: props.quest?.title,
+            subtitle: props.quest?.quest_id,
           }}
         />
       <MenuContent>
@@ -218,14 +222,14 @@ return (
                 <TableCell key={1}>{account.boxes.length}</TableCell>
                 <TableCell key={2}>
                   {
-                    account.boxes.filter((box) => box.status.kind === 'claimed')
+                    account.boxes.filter((box) => box.box_status.kind === 'claimed')
                       .length
                   }
                 </TableCell>
                 <TableCell key={3}>
                   {
                     account.boxes.filter(
-                      (box) => box.status.kind === 'non_claimed'
+                      (box) => box.box_status.kind === 'non_claimed'
                     ).length
                   }
                 </TableCell>

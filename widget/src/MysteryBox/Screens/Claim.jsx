@@ -1,13 +1,18 @@
-console.log('Claim.props', props);
+const widget_owner_id = "evasive-dime.testnet";
+const top_contract_id = "succinct-slave.testnet";
 
-const base_ipfs = 'https://ipfs.near.social/ipfs/';
+const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+
+logInfo("Claim props", props);
+
+const base_ipfs = "https://ipfs.near.social/ipfs/";
 
 State.init({
-  active: 0,
+  active_box_index: 0,
 });
 
 const font = fetch(
-  'https://fonts.googleapis.com/css2?family=Kodchasan:wght@700&display=swap'
+  "https://fonts.googleapis.com/css2?family=Kodchasan:wght@700&display=swap"
 ).body;
 
 if (!font) {
@@ -55,7 +60,7 @@ const SingleBoxWrapper = styled.div`
   height: 100%;
   flex-basis: 80%;
 
-  display: ${(props) => (props.active ? 'flex' : 'none')};
+  display: ${(props) => (props.active ? "flex" : "none")};
 `;
 
 const levitation = styled.keyframes`
@@ -69,7 +74,7 @@ const levitation = styled.keyframes`
 
 const BoxImageWrapper = styled.div`
   animation-duration: 3s;
-  animation-iteration-count: ${(props) => (props.animate ? 'infinite' : '0')};
+  animation-iteration-count: ${(props) => (props.animate ? "infinite" : "0")};
   animation-name: ${levitation};
   animation-timing-function: ease;
   animation-direction: alternate;
@@ -106,7 +111,7 @@ const BoxTitle = styled.div`
 
   font-size: 14px;
   line-height: 20px;
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-weight: 700;
   letter-spacing: 0em;
   text-align: center;
@@ -139,7 +144,7 @@ const BoxRewardAmount = styled.p`
   white-space: nowrap; /* Don't forget this one */
   text-overflow: ellipsis;
   color: rgba(161, 224, 234, 1);
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 12px;
   font-weight: 700;
   line-height: 18px;
@@ -166,7 +171,7 @@ const BoxRewardTitle = styled.p`
   white-space: nowrap; /* Don't forget this one */
   text-overflow: ellipsis;
   color: rgba(255, 255, 255, 1);
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 12px;
   font-weight: 700;
   line-height: 18px;
@@ -179,7 +184,7 @@ const BoxRewardTitle = styled.p`
 
 const BoxLockedTitle = styled.p`
   color: #a1e0ea;
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 18px;
   font-weight: 700;
   letter-spacing: 0em;
@@ -214,7 +219,7 @@ const ClaimButton = styled.div`
   line-height: 1;
   padding: 0.6875em 2.5em;
 
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-weight: 700;
   letter-spacing: 0em;
   text-align: center;
@@ -224,7 +229,7 @@ const ClaimButton = styled.div`
   background: none;
 
   &:after {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
     border-radius: 100px;
@@ -246,7 +251,7 @@ const ClaimButton = styled.div`
 
 const OpenedBoxRewardTitle = styled.p`
   color: rgba(254, 185, 3, 1);
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 16px;
   font-weight: 700;
   line-height: 22px;
@@ -273,7 +278,7 @@ const ClaimedButton = styled.div`
   line-height: 1;
   padding: 0.5em 2em;
 
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-weight: 700;
   letter-spacing: 0em;
   text-align: center;
@@ -297,7 +302,7 @@ const BottomText = styled.p`
   color: white;
 
   font-size: 14px;
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-weight: 700;
   letter-spacing: 0em;
   text-align: center;
@@ -312,7 +317,7 @@ const WrapperSocial = styled.div`
 `;
 
 const SocialText = styled.p`
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 12px;
   font-weight: 700;
   line-height: 16px;
@@ -337,52 +342,54 @@ const SocialIcon = styled.img`
 `;
 
 const previousActiveBox = () => {
-  if (state.active === 0) return;
+  if (state.active_box_index === 0) return;
 
-  State.update({ active: state.active - 1 });
+  State.update({ active_box_index: state.active_box_index - 1 });
 };
 
 const nextActiveBox = () => {
-  if (state.active === props.boxes.length - 1) return;
+  if (state.active_box_index === props.boxes.length - 1) return;
 
-  State.update({ active: state.active + 1 });
+  State.update({ active_box_index: state.active_box_index + 1 });
 };
 
 const NonClaimedBoxComponent = ({ box }) => {
   /** @todo: concat with the URL object */
   const image = base_ipfs + box.ipfs;
-  const rarity = box.rarity;
+  const rarity = box.box_rarity;
 
   const onClick = () => {
-    console.log('clicked claim button', box.id);
+    logInfo("clicked claim button", box.box_id);
 
-    return props.onClaim(box.id);
+    return props.onClaim(box.box_id);
   };
 
-  const amounts = (box.rewards || []).map((reward) => {
+  const box_rewards = Array.isArray(box.rewards) ? box.rewards : [];
+
+  const amounts = box_rewards.map((reward) => {
     const count = reward.available || reward.token_ids?.length;
 
     const isPlural = count > 1;
 
-    const title = isPlural ? 'prizes' : 'prize';
+    const title = isPlural ? "prizes" : "prize";
 
     return `${count} ${title}`;
   });
 
-  const titles = (box.rewards || []).map((reward) => {
-    if (reward.kind === 'near') {
+  const titles = box_rewards.map((reward) => {
+    if (reward.kind === "near") {
       const amountInNear = Big(
         Big(reward.amount).div(1e24).toFixed(2)
       ).toNumber();
 
       return `${amountInNear} near token`;
-    } else if (reward.kind === 'non_fungible_token') {
-      const { name } = Near.view(reward.contract_id, 'nft_metadata');
+    } else if (reward.kind === "non_fungible_token") {
+      const { name } = Near.view(reward.contract_id, "nft_metadata");
 
       const maximumNameLength = 12;
       const shortName =
         name.length > maximumNameLength
-          ? name.substring(0, maximumNameLength) + '...'
+          ? name.substring(0, maximumNameLength) + "..."
           : name;
 
       return `${shortName} nft`;
@@ -396,12 +403,12 @@ const NonClaimedBoxComponent = ({ box }) => {
       </BoxTitleWrapper>
       <BoxRewardWrapper>
         <BoxRewardAmounts>
-          {amounts.map((text) => (
+          {amounts?.map((text) => (
             <BoxRewardAmount>{text}</BoxRewardAmount>
           ))}
         </BoxRewardAmounts>
         <BoxRewardTitles>
-          {titles.map((text) => (
+          {titles?.map((text) => (
             <BoxRewardTitle>{text}</BoxRewardTitle>
           ))}
         </BoxRewardTitles>
@@ -437,7 +444,7 @@ const LockIcon = ({}) => {
 const LockedBoxComponent = ({ box }) => {
   /** @todo: concat with the URL object */
   const image = base_ipfs + box.ipfs;
-  const rarity = box.rarity;
+  const rarity = box.box_rarity;
 
   return (
     <>
@@ -459,24 +466,24 @@ const LockedBoxComponent = ({ box }) => {
 const OpenedBoxComponent = ({ box }) => {
   /** @todo: concat with the URL object */
   const image = base_ipfs + box.ipfs;
-  const rarity = box.rarity;
+  const rarity = box.box_rarity;
 
-  const reward = box.status.reward;
+  const reward = box.box_status.reward;
 
   let text;
 
-  if (reward.kind === 'near') {
+  if (reward.kind === "near") {
     const amountInNear = Big(
       Big(reward.amount).div(1e24).toFixed(2)
     ).toNumber();
 
     text = `${amountInNear} near token`;
-  } else if (reward.kind === 'non_fungible_token') {
-    const { name } = Near.view(reward.contract_id, 'nft_metadata');
+  } else if (reward.kind === "non_fungible_token") {
+    const { name } = Near.view(reward.contract_id, "nft_metadata");
 
     text = `${name} nft`;
-  } else if (reward.kind === 'nothing') {
-    text = 'Better luck next time';
+  } else if (reward.kind === "nothing") {
+    text = "Better luck next time";
   }
 
   return (
@@ -498,14 +505,16 @@ const OpenedBoxComponent = ({ box }) => {
 };
 
 const BoxComponent = ({ box }) => {
-  if (box.status.kind === 'claimed')
-    return <OpenedBoxComponent key={box.id} box={box} />;
+  logInfo("box", { box });
 
-  if (box.status.kind === 'non_claimed' && box.rewards.length === 0)
-    return <LockedBoxComponent key={box.id} box={box} />;
+  if (box.box_status.kind === "claimed")
+    return <OpenedBoxComponent key={box.box_id} box={box} />;
 
-  if (box.status.kind === 'non_claimed')
-    return <NonClaimedBoxComponent key={box.id} box={box} />;
+  if (box.box_status.kind === "non_claimed" && box.rewards.length === 0)
+    return <LockedBoxComponent key={box.box_id} box={box} />;
+
+  if (box.box_status.kind === "non_claimed")
+    return <NonClaimedBoxComponent key={box.box_id} box={box} />;
 
   return <></>;
 };
@@ -532,7 +541,7 @@ const RightArrow = ({ onClick, disabled }) => (
         fill-rule="evenodd"
         clip-rule="evenodd"
         d="M0.550369 4.94975L5.50011 0L29.521 24.0209L29.542 24L34.4917 28.9497L34.4708 28.9707L34.4915 28.9914L29.5417 33.9411L29.521 33.9204L5.50032 57.9411L0.550575 52.9914L24.5713 28.9707L0.550369 4.94975Z"
-        fill={disabled ? '#818B94' : '#fff'}
+        fill={disabled ? "#818B94" : "#fff"}
       />
     </g>
   </Svg>
@@ -550,14 +559,16 @@ const LeftArrow = ({ onClick, disabled }) => (
         fill-rule="evenodd"
         clip-rule="evenodd"
         d="M0.550369 4.94975L5.50011 0L29.521 24.0209L29.542 24L34.4917 28.9497L34.4708 28.9707L34.4915 28.9914L29.5417 33.9411L29.521 33.9204L5.50032 57.9411L0.550575 52.9914L24.5713 28.9707L0.550369 4.94975Z"
-        fill={disabled ? '#818B94' : '#fff'}
+        fill={disabled ? "#818B94" : "#fff"}
       />
     </g>
   </Svg>
 );
 
-const available = (props.boxes || []).filter(
-  (box) => box.status.kind === 'non_claimed' && box.rewards.length > 0
+const boxes = Array.isArray(props.boxes) ? props.boxes : [];
+
+const available = boxes.filter(
+  (box) => box.box_status.kind === "non_claimed" && box.rewards.length > 0
 ).length;
 
 return (
@@ -570,30 +581,30 @@ return (
         />
         <SliderWrapper>
           <LeftArrow
-            disabled={state.active === 0}
+            disabled={state.active_box_index === 0}
             onClick={previousActiveBox}
           />
-          {props.boxes.map((box, index) => {
+          {boxes.map((box, index) => {
             return (
-              <SingleBoxWrapper active={state.active === index}>
+              <SingleBoxWrapper active={state.active_box_index === index}>
                 <BoxComponent box={box} />
               </SingleBoxWrapper>
             );
           })}
           <RightArrow
-            disabled={state.active === props.boxes.length - 1}
+            disabled={state.active_box_index === boxes.length - 1}
             onClick={nextActiveBox}
           />
         </SliderWrapper>
 
         <BottomText>
-          <span style={{ color: '#2bccc2' }}>{props.totalSupply}</span>
+          <span style={{ color: "#2bccc2" }}>{props.totalSupply}</span>
           minted boxes
           <br />
-          <span style={{ color: available > 0 ? '#FFD951' : '#2bccc2' }}>
+          <span style={{ color: available > 0 ? "#FFD951" : "#2bccc2" }}>
             {available}
           </span>
-          box{available === 1 ? '' : 'es'} available
+          box{available === 1 ? "" : "es"} available
         </BottomText>
 
         <WrapperSocial>

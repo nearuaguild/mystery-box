@@ -1,5 +1,6 @@
 use std::collections::BTreeSet;
-
+use contract::json::JsonPoolRewards;
+use contract::types::{Capacity, PoolId, Reward, TokenId};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::require;
 use near_sdk::{AccountId, Balance};
@@ -148,8 +149,8 @@ impl NonFungibleTokenPoolKind {
 
     pub fn add_token(&mut self, token_id: TokenId) {
         // should never panic
-        require!(self.tokens.insert(token_id.clone()));
-        require!(self.available_tokens.insert(token_id.clone()));
+        require!(self.tokens.insert(token_id.clone()), format!("Token add problem {}", token_id.clone()));
+        require!(self.available_tokens.insert(token_id.clone()), format!("Available tokens add problem {}", token_id.clone()));
     }
 
     pub fn take_first_token(&mut self) -> Option<TokenId> {

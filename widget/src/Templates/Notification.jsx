@@ -1,3 +1,7 @@
+const widget_owner_id = "evasive-dime.testnet";
+
+const { logInfo, logError } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+
 const rpc_endpoint = 'https://rpc.testnet.near.org';
 
 State.init({
@@ -27,8 +31,8 @@ const getTitleFromMethod = (method) => {
       return 'Adding NEAR reward was successful';
     case 'nft_transfer_call':
       return 'Adding NFT reward was successful';
-    case 'deploy_mystery_box_contract':
-      return 'Contract was deployed';
+    case 'create_quest':
+      return 'Giveaway has been created';
     default:
       return '';
   }
@@ -67,7 +71,7 @@ const fetchTransactionResult = (hash, account_id) => {
 
     const result = parseResultFromTransactionResponse(response);
 
-    console.log('tx result', result);
+    logInfo('tx result', result);
 
     if (!result) return;
 
@@ -108,10 +112,10 @@ const fetchTransactionResult = (hash, account_id) => {
 
 const value = Storage.get(props.tx_hash);
 
-console.log('value', value);
+logInfo('value', value);
 const hashExistInStorage = value !== null && value !== undefined;
 
-console.log('hashExistInStorage', hashExistInStorage);
+logInfo('hashExistInStorage', hashExistInStorage);
 
 try {
   if (props.tx_hash && !hashExistInStorage) {
@@ -128,7 +132,7 @@ if (!showNotification) return <></>;
 return (
   <NotificationWrapper>
     <Widget
-      src="denbite.testnet/widget/MysteryBox.Manage.Components.Notification"
+      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.Notification`}
       props={{
         title: state.title,
         subtitle: state.subtitle,

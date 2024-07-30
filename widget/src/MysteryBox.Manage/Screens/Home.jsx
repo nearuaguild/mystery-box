@@ -1,20 +1,23 @@
-const { href: linkHref } = VM.require('denbite.testnet/widget/core.lib.url');
+const widget_owner_id = "evasive-dime.testnet";
+
+const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+
+logInfo("Home props", props);
+const { href: linkHref } = VM.require(`${widget_owner_id}/widget/core.lib.url`);
 
 linkHref || (linkHref = () => {});
 
-const defaultContractIndex = props.defaultContractId
-  ? (props.contracts || []).findIndex(
-      (contract) => contract.contract_id === props.defaultContractId
-    )
-  : -1;
-const defaultActiveIndex =
-  defaultContractIndex !== -1 ? defaultContractIndex : 0;
+const active_quest_index_from_props = props.quests.findIndex((element) => element.quest_id === props.active_quest_id);
 
-console.log('defaultActiveIndex', defaultActiveIndex);
+logInfo('active_quest_index_from_props', active_quest_index_from_props);
 
 State.init({
-  active: defaultActiveIndex,
+  active_quest_index: active_quest_index_from_props != -1 ? active_quest_index_from_props : 0,
 });
+
+const getActiveQuestId = () => {
+  return props.quests[state.active_quest_index].quest_id;
+}
 
 const SliderWrapper = styled.div`
   display: flex;
@@ -133,24 +136,35 @@ const Bottom = styled.div`
 `;
 
 const previousActiveContract = () => {
-  if (state.active === 0) return;
+  if (state.active_quest_index === 0) return;
 
-  State.update({ active: state.active - 1 });
+  State.update({ active_quest_index: state.active_quest_index - 1 });
 };
 
 const nextActiveContract = () => {
-  if (state.active === props.contracts.length - 1) return;
+  logInfo("next active contract switch", { quests: props.quests, active_quest_id: getActiveQuestId() });
 
-  State.update({ active: state.active + 1 });
+  if(props.quests.length === 0 || props.quests.length === 1)
+  {
+    return;
+  }
+
+  const isTheLastQuest = state.active_quest_index >= props.quests.length - 1;
+  if (isTheLastQuest) 
+  {
+    return;
+  }
+
+  State.update({ active_quest_index: state.active_quest_index + 1 });
 };
 
-const contract = props.contracts[state.active];
+const quest = props.quests[state.active_quest_index];
 
 const createLinkToPage = (page) => {
   return linkHref({
-    widgetSrc: 'denbite.testnet/widget/MysteryBox.Manage',
+    widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
     params: {
-      contract_id: contract.contract_id,
+      quest_id: getActiveQuestId(),
       page,
     },
   });
@@ -159,36 +173,36 @@ const createLinkToPage = (page) => {
 return (
   <>
     <Widget
-      src="denbite.testnet/widget/MysteryBox.Manage.Components.Title"
+      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.Title`}
       props={{
-        text: 'Contracts',
+        text: 'My Giveaways',
       }}
     />
     <SliderWrapper>
       <LeftArrow
-        disabled={state.active === 0}
+        disabled={state.active_quest_index === 0}
         onClick={previousActiveContract}
       />
       <WrapperMenu>
         <Widget
-          src="denbite.testnet/widget/MysteryBox.Manage.Components.MenuHeader"
+          src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuHeader`}
           props={{
-            title: contract.title,
-            subtitle: contract.contract_id,
+            title: quest.title,
+            subtitle: quest.quest_id,
           }}
         />
         <MenuContent></MenuContent>
         <MenuFooter>
           <MenuFooterRow>
             <Widget
-              src={`denbite.testnet/widget/MysteryBox.Manage.Components.MenuButton`}
+              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuButton`}
               props={{
                 text: 'Add NEAR reward',
                 href: createLinkToPage('AddNearReward'),
               }}
             />
             <Widget
-              src={`denbite.testnet/widget/MysteryBox.Manage.Components.MenuButton`}
+              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuButton`}
               props={{
                 text: 'Add NFT reward',
                 href: createLinkToPage('AddNftReward'),
@@ -197,14 +211,14 @@ return (
           </MenuFooterRow>
           <MenuFooterRow>
             <Widget
-              src={`denbite.testnet/widget/MysteryBox.Manage.Components.MenuButton`}
+              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuButton`}
               props={{
                 text: 'Mint BOX',
                 href: createLinkToPage('MintBox'),
               }}
             />
             <Widget
-              src={`denbite.testnet/widget/MysteryBox.Manage.Components.MenuButton`}
+              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuButton`}
               props={{
                 text: 'List Rewards',
                 href: createLinkToPage('ListRewards'),
@@ -213,14 +227,14 @@ return (
           </MenuFooterRow>
           <MenuFooterRow>
             <Widget
-              src={`denbite.testnet/widget/MysteryBox.Manage.Components.MenuButton`}
+              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuButton`}
               props={{
                 text: 'List User Boxes',
                 href: createLinkToPage('ListUserBoxes'),
               }}
             />
             <Widget
-              src={`denbite.testnet/widget/MysteryBox.Manage.Components.MenuButton`}
+              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuButton`}
               props={{
                 disabled: true,
                 text: 'Statistics',
@@ -230,17 +244,17 @@ return (
         </MenuFooter>
       </WrapperMenu>
       <RightArrow
-        disabled={state.active === props.contracts.length - 1}
+        disabled={state.active_quest_index === props.quests.length - 1}
         onClick={nextActiveContract}
       />
     </SliderWrapper>
     <Bottom>
       <Widget
-        src={`denbite.testnet/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
+        src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
         props={{
-          text: 'Create another contract',
+          text: 'Create another giveaway',
           href: linkHref({
-            widgetSrc: 'denbite.testnet/widget/MysteryBox.Manage',
+            widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
             params: {
               page: 'DeployContract',
             },
@@ -248,13 +262,13 @@ return (
         }}
       />
       <Widget
-        src={`denbite.testnet/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
+        src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
         props={{
           text: 'View Claiming Page',
           href: linkHref({
-            widgetSrc: 'denbite.testnet/widget/MysteryBox',
+            widgetSrc: `${widget_owner_id}/widget/MysteryBox`,
             params: {
-              contract_id: contract.contract_id,
+              quest_id: quest.quest_id,
             },
           }),
           target: '_blank',

@@ -49,6 +49,5 @@ const Subtitle = styled.p`
 return (
   <Header>
     <Title>{props.title}</Title>
-    <Subtitle>{props.subtitle}</Subtitle>
   </Header>
 );

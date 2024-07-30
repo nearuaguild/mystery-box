@@ -1,12 +1,19 @@
+
 use std::fmt::{Display, Formatter, Result};
 
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::serde::{Deserialize, Serialize};
-use near_sdk::{AccountId, Balance};
+use near_sdk::{require, AccountId, Balance};
 
-use crate::*;
+// modules
+pub mod questbox_data;
 
 pub type TokenId = String;
+pub type BoxId = u128;
+pub type QuestTitle = String;
+pub type QuestId = u64;
+pub type PoolId = u32;
+pub type Capacity = u64;
 
 #[derive(
     BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug, PartialEq, Copy,
@@ -28,24 +35,12 @@ impl Display for BoxRarity {
     }
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Clone, Debug, PartialEq)]
+#[derive(BorshDeserialize, BorshSerialize, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde", rename_all = "snake_case")]
 pub enum BoxStatus {
     Claimed { reward: Option<Reward> },
     NonClaimed,
 }
-
-pub type BoxId = u128;
-
-#[derive(BorshDeserialize, BorshSerialize, Debug)]
-pub struct BoxData {
-    pub id: BoxId,
-    pub rarity: BoxRarity,
-    pub status: BoxStatus,
-    pub owner_id: AccountId,
-}
-
-pub type PoolId = u32;
-pub type Capacity = u64;
 
 #[derive(BorshDeserialize, BorshSerialize, Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde", rename_all = "snake_case")]
@@ -71,32 +66,6 @@ impl BoxRarity {
             BoxRarity::Legendary => {
                 String::from("bafkreigdv4mnfrndcob64wrwbqoqce257v7bvtxp2flnyqg2onukpssyoq")
             }
-        }
-    }
-}
-
-impl BoxData {
-    pub fn new(id: BoxId, rarity: BoxRarity, owner_id: AccountId) -> Self {
-        Self {
-            id,
-            rarity,
-            owner_id,
-            status: BoxStatus::NonClaimed,
-        }
-    }
-
-    pub fn ipfs(&self) -> String {
-        self.rarity.to_media_ipfs()
-    }
-}
-
-impl From<BoxData> for JsonBox {
-    fn from(value: BoxData) -> Self {
-        Self {
-            id: value.id,
-            ipfs: value.ipfs(),
-            rarity: value.rarity,
-            status: value.status.into(),
         }
     }
 }
@@ -135,7 +104,7 @@ impl Probability {
 
 #[cfg(test)]
 mod tests {
-    use crate::Probability;
+    use crate::contract::types::Probability;
 
     #[test]
     fn test_probability_threshold() {

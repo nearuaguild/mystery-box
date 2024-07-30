@@ -1,4 +1,4 @@
-console.log('props', props);
+const widget_owner_id = 'evasive-dime.testnet';
 
 const WrapperMenuButton = styled.div`
   flex-basis: 50%;

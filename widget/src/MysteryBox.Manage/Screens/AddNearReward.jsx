@@ -1,4 +1,11 @@
-console.log('props', props);
+const widget_owner_id = "evasive-dime.testnet";
+const top_contract_id = "succinct-slave.testnet";
+
+const { logInfo, logError } = VM.require(
+  `${widget_owner_id}/widget/Utils.Logger`
+);
+
+logInfo("AddNearReward props", props);
 
 const isValidPool = (pool) => {
   if (pool.capacity === undefined || pool.capacity === null) return false;
@@ -22,9 +29,9 @@ const isValidPool = (pool) => {
 
 const createPool = () => ({
   id: Date.now(),
-  rarity: 'rare',
-  capacity: '1',
-  amount: '0.1',
+  rarity: "rare",
+  capacity: "1",
+  amount: "0.1",
 });
 
 State.init({
@@ -64,7 +71,7 @@ const WrapperMenu = styled.div`
 `;
 
 const MenuTitle = styled.p`
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 24px;
   font-weight: 700;
   letter-spacing: 0em;
@@ -74,7 +81,7 @@ const MenuTitle = styled.p`
 `;
 
 const MenuSubtitle = styled.p`
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 14px;
   font-weight: 400;
   letter-spacing: 0em;
@@ -110,7 +117,7 @@ const MenuButton = styled.button`
   width: 45%;
   height: 36px;
 
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0em;
@@ -134,7 +141,7 @@ const AddPoolButton = styled.button`
   width: 60%;
   height: 24px;
 
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0em;
@@ -155,7 +162,7 @@ const WrapperTable = styled.div`
 `;
 
 const deletePool = (id) => {
-  console.log('deleting pool', id);
+  logInfo("deleting pool", id);
 
   State.update((previousState) => {
     return {
@@ -166,7 +173,7 @@ const deletePool = (id) => {
 };
 
 const addPool = () => {
-  console.log('add new pool');
+  logInfo("add new pool");
 
   State.update((previousState) => {
     return {
@@ -177,7 +184,7 @@ const addPool = () => {
 };
 
 const updadePool = (id, field, value) => {
-  console.log(`updating pool.${field}`, id, value);
+  logInfo(`updating pool.${field}`, id, value);
 
   State.update((previousState) => {
     const { pools } = previousState;
@@ -187,10 +194,8 @@ const updadePool = (id, field, value) => {
     if (pool === -1) return previousState;
 
     // unknown field
-    if (pool[field] === 'undefined') {
-      console.error(
-        `Can't update pool property ${field} since it doesn't exist`
-      );
+    if (pool[field] === "undefined") {
+      logError(`Can't update pool property ${field} since it doesn't exist`);
 
       return previousState;
     }
@@ -210,10 +215,10 @@ const everyPoolIsValid = pools.every(isValidPool);
 
 const shouldSubmitButtonBeDisabled = !everyPoolIsValid;
 
-console.log('shouldSubmitButtonBeDisabled', shouldSubmitButtonBeDisabled);
+logInfo("shouldSubmitButtonBeDisabled", shouldSubmitButtonBeDisabled);
 
 const submitTransactionToAddPools = () => {
-  console.log('submitTransactionToAddPools', pools);
+  logInfo("submitTransactionToAddPools", pools);
 
   if (!everyPoolIsValid) return;
 
@@ -223,9 +228,10 @@ const submitTransactionToAddPools = () => {
     const total = Big(pool.capacity).mul(amount);
 
     return {
-      contractName: props.contract?.contract_id,
-      methodName: 'add_near_reward',
+      contractName: top_contract_id,
+      methodName: "add_near_reward",
       args: {
+        quest_id: props.quest.quest_id,
         rarity: pool.rarity,
         capacity: pool.capacity,
         amount: amount.toFixed(),
@@ -241,30 +247,30 @@ const submitTransactionToAddPools = () => {
 return (
   <>
     <Widget
-      src="denbite.testnet/widget/MysteryBox.Manage.Components.Title"
+      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.Title`}
       props={{
-        text: 'Add Near Reward',
+        text: "Add Near Reward",
       }}
     />
     <WrapperMenu>
-        <Widget
-          src="denbite.testnet/widget/MysteryBox.Manage.Components.MenuHeader"
-          props={{
-            title: props.contract?.title,
-            subtitle: props.contract?.contract_id,
-          }}
-        />
+      <Widget
+        src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuHeader`}
+        props={{
+          title: props.quest?.title,
+          subtitle: props.quest?.quest_id,
+        }}
+      />
       <MenuContent>
         {pools.map((pool) => (
           <WrapperTable key={`pool_unique_key_${pool.id}`}>
             <Widget
-              src="denbite.testnet/widget/MysteryBox.Manage.Components.DeleteButton"
+              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.DeleteButton`}
               props={{
                 onClick: () => deletePool(pool.id),
               }}
             />
             <Widget
-              src="denbite.testnet/widget/MysteryBox.Manage.Components.NearPool"
+              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.NearPool`}
               props={{
                 pool: {
                   rarity: pool.rarity,
@@ -284,9 +290,9 @@ return (
       </MenuContent>
     </WrapperMenu>
     <Widget
-      src={`denbite.testnet/widget/MysteryBox.Manage.Components.SubmitButton`}
+      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.SubmitButton`}
       props={{
-        text: 'Submit',
+        text: "Submit",
         disabled: shouldSubmitButtonBeDisabled,
         onClick: submitTransactionToAddPools,
       }}
