@@ -1,4 +1,3 @@
-const widget_owner_id = "evasive-dime.testnet";
 
 const font = fetch(
   'https://fonts.googleapis.com/css2?family=Kodchasan:wght@300;400;500;700&display=swap'
@@ -109,7 +108,7 @@ function Layout({ children, quest_id, active_home_button }) {
         </HeaderLogo>
         <HeaderButton>
           <Widget
-            src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.HomeButton`}
+            src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.HomeButton`}
             props={{
               quest_id,
               active: active_home_button,
@@ -120,7 +119,7 @@ function Layout({ children, quest_id, active_home_button }) {
       </Header>
       <Content>{children}</Content>
       <Footer>
-        <Widget src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.Socials`} />
+        <Widget src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.Socials`} />
       </Footer>
     </Container>
   );

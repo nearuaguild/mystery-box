@@ -1,6 +1,5 @@
-const widget_owner_id = "evasive-dime.testnet";
 
-const { logInfo, logError } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+const { logInfo, logError } = VM.require(`${REPL_BOS}/widget/Utils.Logger`);
 
 logInfo('props', props);
 
@@ -285,14 +284,14 @@ const rewards = (props.rewards || []).filter(
 return (
   <>
     <Widget
-      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.Title`}
+      src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.Title`}
       props={{
         text: 'List Rewards',
       }}
     />
     <WrapperMenu>
       <Widget
-        src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuHeader`}
+        src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.MenuHeader`}
         props={{
           title: props.quest?.title,
           subtitle: props.quest?.quest_id,

@@ -89,7 +89,7 @@ return (
     <TableRow key={1}>
       <TableCell key={0}>
         <Widget
-          src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.RarityButton`}
+          src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.RarityButton`}
           props={{
             rarity: 'rare',
             active: pool.rarity === 'rare',
@@ -98,7 +98,7 @@ return (
           }}
         />
         <Widget
-          src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.RarityButton`}
+          src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.RarityButton`}
           props={{
             rarity: 'epic',
             active: pool.rarity === 'epic',
@@ -107,7 +107,7 @@ return (
           }}
         />
         <Widget
-          src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.RarityButton`}
+          src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.RarityButton`}
           props={{
             rarity: 'legendary',
             active: pool.rarity === 'legendary',

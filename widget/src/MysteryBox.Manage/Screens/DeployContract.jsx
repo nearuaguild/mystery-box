@@ -1,11 +1,9 @@
-const widget_owner_id = "evasive-dime.testnet";
+const { logInfo, logError } = VM.require(`${REPL_BOS}/widget/Utils.Logger`);
 
-const { logInfo, logError } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
-
-logInfo('props', props);
+logInfo("props", props);
 
 State.init({
-  title: '',
+  title: "",
 });
 
 const WrapperMenu = styled.div`
@@ -63,7 +61,7 @@ const FieldRow = styled.div`
 `;
 
 const PrimaryText = styled.p`
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 14px;
   font-weight: 500;
   letter-spacing: 0em;
@@ -75,7 +73,7 @@ const PrimaryText = styled.p`
 `;
 
 const SecondaryText = styled.p`
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 11px;
   font-weight: 400;
   letter-spacing: 0em;
@@ -87,7 +85,7 @@ const SecondaryText = styled.p`
 `;
 
 const TextInput = styled.input`
-  font-family: 'Kodchasan', sans-serif;
+  font-family: "Kodchasan", sans-serif;
   font-size: 12px;
   font-weight: 400;
   letter-spacing: 0em;
@@ -125,27 +123,27 @@ const WrapperContent = styled.div`
 function convertToSlug(text) {
   return text
     .toLowerCase()
-    .replace(/[^\w ]+/g, '')
-    .replace(/ +/g, '-');
+    .replace(/[^\w ]+/g, "")
+    .replace(/ +/g, "-");
 }
 
 const alias = state.title && convertToSlug(state.title).substring(0, 24);
 
-const address = alias && alias + '.' + props.top_contract_id;
+const address = alias && alias + "." + `${REPL_CONTRACT}`;
 
 const shouldSubmitButtonBeDisabled = !state.title;
 
-logInfo('shouldSubmitButtonBeDisabled', shouldSubmitButtonBeDisabled);
+logInfo("shouldSubmitButtonBeDisabled", shouldSubmitButtonBeDisabled);
 
 const submitTransactionToDeployContract = () => {
-  logInfo('submitTransactionToDeployContract', state.title, address);
+  logInfo("submitTransactionToDeployContract", state.title, address);
 
   const baseDeposit = Big(10).pow(24).mul(0.5); // 0.5 NEAR
   const argsDeposit = Big(240).mul(state.title.length).mul(Big(10).pow(18));
 
   Near.call(
-    props.top_contract_id,
-    'create_quest',
+    `${REPL_CONTRACT}`,
+    "create_quest",
     {
       title: state.title,
     },
@@ -157,9 +155,9 @@ const submitTransactionToDeployContract = () => {
 return (
   <>
     <Widget
-      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.Title`}
+      src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.Title`}
       props={{
-        text: 'Create a Giveaway',
+        text: "Create a Giveaway",
       }}
     />
     <WrapperMenu>
@@ -183,9 +181,9 @@ return (
       </MenuContent>
     </WrapperMenu>
     <Widget
-      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.SubmitButton`}
+      src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.SubmitButton`}
       props={{
-        text: 'Create',
+        text: "Create",
         disabled: shouldSubmitButtonBeDisabled,
         onClick: submitTransactionToDeployContract,
       }}

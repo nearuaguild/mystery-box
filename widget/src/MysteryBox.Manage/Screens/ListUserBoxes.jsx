@@ -1,6 +1,5 @@
-const widget_owner_id = "evasive-dime.testnet";
 
-const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+const { logInfo } = VM.require(`${REPL_BOS}/widget/Utils.Logger`);
 
 logInfo('ListUserBoxes props', props);
 
@@ -190,14 +189,14 @@ const accounts = props.accounts || [];
 return (
   <>
     <Widget
-      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.Title`}
+      src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.Title`}
       props={{
         text: 'List User Boxes',
       }}
     />
     <WrapperMenu>
         <Widget
-          src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuHeader`}
+          src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.MenuHeader`}
           props={{
             title: props.quest?.title,
             subtitle: props.quest?.quest_id,

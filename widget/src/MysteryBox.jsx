@@ -1,11 +1,7 @@
-const widget_owner_id = "evasive-dime.testnet";
-const top_contract_id = "succinct-slave.testnet";
 
-const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+const { logInfo } = VM.require(`${REPL_BOS}/widget/Utils.Logger`);
 
 logInfo("MysteryBox props", { props, context });
-
-const rpc_endpoint = "https://rpc.testnet.near.org";
 
 const account_id = context.accountId;
 const quest_id = isNaN(props.quest_id) ? null : parseInt(props.quest_id);
@@ -30,7 +26,7 @@ State.init({
 if (quest_id == null) {
   return (
     <Widget
-      src={`${widget_owner_id}/widget/MysteryBox.Screens.InvalidContract`}
+      src={`${REPL_BOS}/widget/MysteryBox.Screens.InvalidContract`}
     />
   );
 }
@@ -39,7 +35,7 @@ if (quest_id == null) {
 if (!account_id) {
   return (
     <Widget
-      src={`${widget_owner_id}/widget/MysteryBox.Screens.AuthenticationRequired`}
+      src={`${REPL_BOS}/widget/MysteryBox.Screens.AuthenticationRequired`}
       props={{
         url: "https://near.org/signin",
       }}
@@ -54,7 +50,7 @@ const fetchRewards = (quest_id) => {
 };
 
 const fetchAvailableRewardsByRarity = (quest_id, rarity) => {
-  const data = Near.view(top_contract_id, "available_rewards", {
+  const data = Near.view(`${REPL_CONTRACT}`, "available_rewards", {
     quest_id,
     rarity: rarity,
     pagination: {
@@ -85,7 +81,7 @@ const fetchAndUpdateRewardsByRarity = (quest_id, rarity) => {
 };
 
 const fetchUserBoxes = (account_id) => {
-  const boxes = Near.view(top_contract_id, "questboxes_for_quest_per_owner", {
+  const boxes = Near.view(`${REPL_CONTRACT}`, "questboxes_for_quest_per_owner", {
     account_id: account_id,
     quest_id,
     pagination: {
@@ -110,7 +106,7 @@ const fetchUserBoxes = (account_id) => {
 };
 
 const fetchTotalSupply = (quest_id) => {
-  const totalSupply = Near.view(top_contract_id, "questboxes_total_supply", {
+  const totalSupply = Near.view(`${REPL_CONTRACT}`, "questboxes_total_supply", {
     quest_id,
   });
 
@@ -122,7 +118,7 @@ const fetchTotalSupply = (quest_id) => {
 };
 
 const fetchTransactionByHash = (hash, sender_id) => {
-  return fetch(rpc_endpoint, {
+  return fetch(`${REPL_RPC_URL}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -193,7 +189,7 @@ try {
   logInfo("caught error on fetch rewards:", err);
   return (
     <Widget
-      src={`${widget_owner_id}/widget/MysteryBox.Screens.InvalidContract`}
+      src={`${REPL_BOS}/widget/MysteryBox.Screens.InvalidContract`}
     />
   );
 }
@@ -201,7 +197,7 @@ try {
 if (state.showVerificationScreen === true) {
   return (
     <Widget
-      src={`${widget_owner_id}/widget/MysteryBox.Screens.VerificationRequired`}
+      src={`${REPL_BOS}/widget/MysteryBox.Screens.VerificationRequired`}
       props={{
         url: "https://i-am-human.app?community=nearukraine&vertical=regionalcommunities",
       }}
@@ -230,7 +226,7 @@ if (state.showClaimAnimationScreen === true) {
 
   return (
     <Widget
-      src={`${widget_owner_id}/widget/MysteryBox.Screens.ClaimAnimation`}
+      src={`${REPL_BOS}/widget/MysteryBox.Screens.ClaimAnimation`}
       props={{
         reward: state.lastClaimedBoxReward,
         rarity: state.lastClaimedBoxRarity,
@@ -247,7 +243,7 @@ const boxes = Object.values(state.boxes).map((box) => ({
 
 if (boxes.length === 0) {
   return (
-    <Widget src={`${widget_owner_id}/widget/MysteryBox.Screens.NoBoxesFound`} />
+    <Widget src={`${REPL_BOS}/widget/MysteryBox.Screens.NoBoxesFound`} />
   );
 }
 
@@ -290,7 +286,7 @@ const onClaim = (box_id) => {
   const gas = Big(100e12).toString(); // 100 TGas
 
   return Near.call(
-    top_contract_id,
+    `${REPL_CONTRACT}`,
     "claim",
     {
       quest_id,
@@ -303,7 +299,7 @@ const onClaim = (box_id) => {
 
 return (
   <Widget
-    src={`${widget_owner_id}/widget/MysteryBox.Screens.Claim`}
+    src={`${REPL_BOS}/widget/MysteryBox.Screens.Claim`}
     props={{
       onClaim,
       boxes,

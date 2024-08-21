@@ -1,0 +1,5 @@
+{
+    "REPL_RPC_URL": "https://rpc.testnet.near.org",
+    "REPL_BOS": "mystery_box.near",
+    "REPL_CONTRACT": "available-fuel.testnet"
+}

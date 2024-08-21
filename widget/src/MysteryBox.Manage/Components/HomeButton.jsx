@@ -1,7 +1,6 @@
-const widget_owner_id = "evasive-dime.testnet";
-const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+const { logInfo } = VM.require(`${REPL_BOS}/widget/Utils.Logger`);
 
-const { href: linkHref } = VM.require(`${widget_owner_id}/widget/core.lib.url`);
+const { href: linkHref } = VM.require(`${REPL_BOS}/widget/core.lib.url`);
 
 linkHref || (linkHref = () => {});
 
@@ -42,7 +41,7 @@ return (
   <HomeButton>
     <Link
       to={linkHref({
-        widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
+        widgetSrc: `${REPL_BOS}/widget/MysteryBox.Manage`,
         params: {
           active_quest_id: props.quest_id,
         },

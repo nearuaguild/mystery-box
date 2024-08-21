@@ -1,8 +1,6 @@
-const widget_owner_id = "evasive-dime.testnet";
-const top_contract_id = "succinct-slave.testnet";
 
 const { logInfo, logError } = VM.require(
-  `${widget_owner_id}/widget/Utils.Logger`
+  `${REPL_BOS}/widget/Utils.Logger`
 );
 
 logInfo("AddNftReward props", props);
@@ -381,7 +379,7 @@ const submitTransactionToAddNftRewards = () => {
         contractName: rarity.contract,
         methodName: "nft_transfer_call",
         args: {
-          receiver_id: top_contract_id,
+          receiver_id: `${REPL_CONTRACT}`,
           token_id: rarity.token_id,
           msg: JSON.stringify({
             rarity: rarity.value,
@@ -442,7 +440,7 @@ return (
             <RarityText>Set NFT Rarity</RarityText>
             <RarityPickerMenu>
               <Widget
-                src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.RarityButton`}
+                src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.RarityButton`}
                 props={{
                   rarity: "rare",
                   active: rarity === "rare",
@@ -453,7 +451,7 @@ return (
                 }}
               />
               <Widget
-                src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.RarityButton`}
+                src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.RarityButton`}
                 props={{
                   rarity: "epic",
                   active: rarity === "epic",
@@ -464,7 +462,7 @@ return (
                 }}
               />
               <Widget
-                src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.RarityButton`}
+                src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.RarityButton`}
                 props={{
                   rarity: "legendary",
                   active: rarity === "legendary",
@@ -488,7 +486,7 @@ return (
       />
     </SliderWrapper>
     <Widget
-      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.SubmitButton`}
+      src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.SubmitButton`}
       props={{
         text: "Submit",
         disabled: shouldSubmitButtonBeDisabled,

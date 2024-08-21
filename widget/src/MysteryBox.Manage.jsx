@@ -1,15 +1,12 @@
-const widget_owner_id = "evasive-dime.testnet";
-const top_contract_id = "succinct-slave.testnet";
 
-const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
-const rpc_endpoint = "https://rpc.testnet.near.org";
+const { logInfo } = VM.require(`${REPL_BOS}/widget/Utils.Logger`);
 
 let global_created_quest_id = undefined;
 
 logInfo("MysteryBox.Manage props", props);
 
 const fetchTransactionByHash = (hash, sender_id) => {
-  return fetch(rpc_endpoint, {
+  return fetch(`${REPL_RPC_URL}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -82,13 +79,13 @@ const determinePageAndActiveQuestFromProps = () => {
 const page = determinePageAndActiveQuestFromProps();
 
 // Import our modules
-const { Layout } = VM.require(`${widget_owner_id}/widget/Templates.Layout`);
+const { Layout } = VM.require(`${REPL_BOS}/widget/Templates.Layout`);
 
 if (!Layout) {
   return <p>Loading modules...</p>;
 }
 
-const { href: linkHref } = VM.require(`${widget_owner_id}/widget/core.lib.url`);
+const { href: linkHref } = VM.require(`${REPL_BOS}/widget/core.lib.url`);
 
 linkHref || (linkHref = () => {});
 
@@ -96,7 +93,7 @@ function Page({ page, account_id, quest_id }) {
   if (page === "SignIn") {
     return (
       <Widget
-        src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryText`}
+        src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.PrimaryText`}
         props={{
           text: "Please sign in with your near wallet to proceed",
         }}
@@ -107,16 +104,13 @@ function Page({ page, account_id, quest_id }) {
   if (page === "DeployContract") {
     return (
       <Widget
-        src={`${widget_owner_id}/widget/MysteryBox.Manage.Screens.DeployContract`}
-        props={{
-          top_contract_id,
-        }}
+        src={`${REPL_BOS}/widget/MysteryBox.Manage.Screens.DeployContract`}
       />
     );
   }
 
   const quests =
-    Near.view(top_contract_id, "quests_per_owner", {
+    Near.view(`${REPL_CONTRACT}`, "quests_per_owner", {
       account_id,
     }) || [];
 
@@ -132,7 +126,7 @@ function Page({ page, account_id, quest_id }) {
         return (
           <>
             <Widget
-              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryText`}
+              src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.PrimaryText`}
               props={{
                 text: `
                 Ready for an adventure?
@@ -141,11 +135,11 @@ function Page({ page, account_id, quest_id }) {
               }}
             />
             <Widget
-              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
+              src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
               props={{
                 text: "Create new giveaway",
                 href: linkHref({
-                  widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
+                  widgetSrc: `${REPL_BOS}/widget/MysteryBox.Manage`,
                   params: {
                     quest_id,
                     page: "DeployContract",
@@ -159,7 +153,7 @@ function Page({ page, account_id, quest_id }) {
 
       return (
         <Widget
-          src={`${widget_owner_id}/widget/MysteryBox.Manage.Screens.Home`}
+          src={`${REPL_BOS}/widget/MysteryBox.Manage.Screens.Home`}
           props={{
             quests: quests,
             active_quest_id: quest_id,
@@ -169,7 +163,7 @@ function Page({ page, account_id, quest_id }) {
     }
     case "AddNftReward": {
       const contracts = Near.view(
-        top_contract_id,
+        `${REPL_CONTRACT}`,
         "get_trusted_nft_contracts",
         {}
       );
@@ -197,7 +191,7 @@ function Page({ page, account_id, quest_id }) {
       if (tokens.length === 0)
         return (
           <Widget
-            src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryText`}
+            src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.PrimaryText`}
             props={{
               text: `
               NFT rewards are supported only from trusted collections!
@@ -209,7 +203,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
 
       return (
         <Widget
-          src={`${widget_owner_id}/widget/MysteryBox.Manage.Screens.AddNftReward`}
+          src={`${REPL_BOS}/widget/MysteryBox.Manage.Screens.AddNftReward`}
           props={{
             quest: currentQuest,
             tokens,
@@ -221,7 +215,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
       /** @todo fetch rarity from backend */
 
       const fetchRewards = (rarity) => {
-        const rewards = Near.view(top_contract_id, "rewards", {
+        const rewards = Near.view(`${REPL_CONTRACT}`, "rewards", {
           quest_id,
           rarity,
         });
@@ -242,17 +236,17 @@ Please reach out to Near Ukraine Team in order to have your collection verified
         return (
           <>
             <Widget
-              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryText`}
+              src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.PrimaryText`}
               props={{
                 text: "No rewards have been added so far",
               }}
             />
             <Widget
-              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
+              src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
               props={{
                 text: "Add first NEAR reward",
                 href: linkHref({
-                  widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
+                  widgetSrc: `${REPL_BOS}/widget/MysteryBox.Manage`,
                   params: {
                     quest_id,
                     page: "AddNearReward",
@@ -265,7 +259,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
 
       return (
         <Widget
-          src={`${widget_owner_id}/widget/MysteryBox.Manage.Screens.ListRewards`}
+          src={`${REPL_BOS}/widget/MysteryBox.Manage.Screens.ListRewards`}
           props={{
             quest: currentQuest,
             rewards,
@@ -275,7 +269,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
     }
     case "ListUserBoxes": {
       /** @todo fetch addresses from backend */
-      const addresses = Near.view(top_contract_id, "get_users", {
+      const addresses = Near.view(`${REPL_CONTRACT}`, "get_users", {
         quest_id,
         pagination: {
           page: 1,
@@ -289,7 +283,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
         return {
           account_id: address,
           boxes:
-            Near.view(top_contract_id, "questboxes_per_owner", {
+            Near.view(`${REPL_CONTRACT}`, "questboxes_per_owner", {
               account_id: address,
               quest_id,
               pagination: {
@@ -306,17 +300,17 @@ Please reach out to Near Ukraine Team in order to have your collection verified
         return (
           <>
             <Widget
-              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryText`}
+              src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.PrimaryText`}
               props={{
                 text: "No boxes have been minted so far",
               }}
             />
             <Widget
-              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
+              src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
               props={{
                 text: "Mint first Mystery Box",
                 href: linkHref({
-                  widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
+                  widgetSrc: `${REPL_BOS}/widget/MysteryBox.Manage`,
                   params: {
                     quest_id,
                     page: "MintBox",
@@ -329,7 +323,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
 
       return (
         <Widget
-          src={`${widget_owner_id}/widget/MysteryBox.Manage.Screens.ListUserBoxes`}
+          src={`${REPL_BOS}/widget/MysteryBox.Manage.Screens.ListUserBoxes`}
           props={{
             quest: currentQuest,
             accounts,
@@ -340,7 +334,7 @@ Please reach out to Near Ukraine Team in order to have your collection verified
     default: {
       return (
         <Widget
-          src={`${widget_owner_id}/widget/MysteryBox.Manage.Screens.${page}`}
+          src={`${REPL_BOS}/widget/MysteryBox.Manage.Screens.${page}`}
           props={{
             quest: currentQuest,
           }}
@@ -383,7 +377,7 @@ return (
       <Page page={page} account_id={account_id} quest_id={quest_id_as_number} />
     </Layout>
     <Widget
-      src={`${widget_owner_id}/widget/Templates.Notification`}
+      src={`${REPL_BOS}/widget/Templates.Notification`}
       props={{
         tx_hash: props.transactionHashes,
       }}

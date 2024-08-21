@@ -2,3 +2,4 @@ context.json
 flags.json
 props.json
 /.vscode
+*.tmp

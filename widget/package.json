@@ -1,0 +1,7 @@
+{
+  "name": "widget",
+  "packageManager": "yarn@4.2.2",
+  "scripts": {
+    "dev": "./dev.sh -n dev"
+  }
+}

@@ -1,8 +1,6 @@
-const widget_owner_id = "evasive-dime.testnet";
-const top_contract_id = "succinct-slave.testnet";
 
 const { logInfo, logError } = VM.require(
-  `${widget_owner_id}/widget/Utils.Logger`
+  `${REPL_BOS}/widget/Utils.Logger`
 );
 
 logInfo("AddNearReward props", props);
@@ -228,7 +226,7 @@ const submitTransactionToAddPools = () => {
     const total = Big(pool.capacity).mul(amount);
 
     return {
-      contractName: top_contract_id,
+      contractName: `${REPL_CONTRACT}`,
       methodName: "add_near_reward",
       args: {
         quest_id: props.quest.quest_id,
@@ -247,14 +245,14 @@ const submitTransactionToAddPools = () => {
 return (
   <>
     <Widget
-      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.Title`}
+      src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.Title`}
       props={{
         text: "Add Near Reward",
       }}
     />
     <WrapperMenu>
       <Widget
-        src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuHeader`}
+        src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.MenuHeader`}
         props={{
           title: props.quest?.title,
           subtitle: props.quest?.quest_id,
@@ -264,13 +262,13 @@ return (
         {pools.map((pool) => (
           <WrapperTable key={`pool_unique_key_${pool.id}`}>
             <Widget
-              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.DeleteButton`}
+              src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.DeleteButton`}
               props={{
                 onClick: () => deletePool(pool.id),
               }}
             />
             <Widget
-              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.NearPool`}
+              src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.NearPool`}
               props={{
                 pool: {
                   rarity: pool.rarity,
@@ -290,7 +288,7 @@ return (
       </MenuContent>
     </WrapperMenu>
     <Widget
-      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.SubmitButton`}
+      src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.SubmitButton`}
       props={{
         text: "Submit",
         disabled: shouldSubmitButtonBeDisabled,

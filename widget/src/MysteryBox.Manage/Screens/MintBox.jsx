@@ -1,7 +1,5 @@
-const widget_owner_id = "evasive-dime.testnet";
-const top_contract_id = "succinct-slave.testnet";
 
-const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+const { logInfo } = VM.require(`${REPL_BOS}/widget/Utils.Logger`);
 
 logInfo("MintBox props", props);
 
@@ -350,7 +348,7 @@ const submitTransactionToMintBoxes = () => {
       const totalNum = Big(680).plus(total).mul(Big(10).pow(18));
 
       return {
-        contractName: top_contract_id,
+        contractName: `${REPL_CONTRACT}`,
         methodName: "mint_many",
         args: {
           quest_id: props.quest.quest_id,
@@ -369,14 +367,14 @@ const submitTransactionToMintBoxes = () => {
 return (
   <>
     <Widget
-      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.Title`}
+      src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.Title`}
       props={{
         text: "Mint Box",
       }}
     />
     <WrapperMenu>
       <Widget
-        src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuHeader`}
+        src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.MenuHeader`}
         props={{
           title: props.quest?.title,
           subtitle: props.quest?.quest_id,
@@ -386,7 +384,7 @@ return (
         {accounts.map((account) => (
           <WrapperTable key={`account_unique_key_${account.id}`}>
             <Widget
-              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.DeleteButton`}
+              src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.DeleteButton`}
               props={{
                 onClick: () => deleteAccount(account.id),
               }}
@@ -400,7 +398,7 @@ return (
               <TableRow>
                 <TableCell>
                   <Widget
-                    src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.RarityButton`}
+                    src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.RarityButton`}
                     props={{
                       rarity: "rare",
                       active: account.rarity === "rare",
@@ -411,7 +409,7 @@ return (
                     }}
                   />
                   <Widget
-                    src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.RarityButton`}
+                    src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.RarityButton`}
                     props={{
                       rarity: "epic",
                       active: account.rarity === "epic",
@@ -422,7 +420,7 @@ return (
                     }}
                   />
                   <Widget
-                    src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.RarityButton`}
+                    src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.RarityButton`}
                     props={{
                       rarity: "legendary",
                       active: account.rarity === "legendary",
@@ -463,7 +461,7 @@ return (
       </MenuContent>
     </WrapperMenu>
     <Widget
-      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.SubmitButton`}
+      src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.SubmitButton`}
       props={{
         text: "Submit",
         disabled: shouldSubmitButtonBeDisabled,

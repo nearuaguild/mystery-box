@@ -1,4 +1,3 @@
-const widget_owner_id = "evasive-dime.testnet";
 
 const font = fetch(
   "https://fonts.googleapis.com/css2?family=Kodchasan:wght@700&display=swap"
@@ -122,7 +121,7 @@ const SocialIcon = styled.img`
 return (
   <Wrapper>
     <Widget
-      src={`${widget_owner_id}/widget/MysteryBox.Components.BackgroundStars`}
+      src={`${REPL_BOS}/widget/MysteryBox.Components.BackgroundStars`}
     />
     <WrapperContent>
       <Empty />

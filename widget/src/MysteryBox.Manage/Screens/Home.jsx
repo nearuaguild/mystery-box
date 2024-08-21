@@ -1,9 +1,8 @@
-const widget_owner_id = "evasive-dime.testnet";
 
-const { logInfo } = VM.require(`${widget_owner_id}/widget/Utils.Logger`);
+const { logInfo } = VM.require(`${REPL_BOS}/widget/Utils.Logger`);
 
 logInfo("Home props", props);
-const { href: linkHref } = VM.require(`${widget_owner_id}/widget/core.lib.url`);
+const { href: linkHref } = VM.require(`${REPL_BOS}/widget/core.lib.url`);
 
 linkHref || (linkHref = () => {});
 
@@ -162,7 +161,7 @@ const quest = props.quests[state.active_quest_index];
 
 const createLinkToPage = (page) => {
   return linkHref({
-    widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
+    widgetSrc: `${REPL_BOS}/widget/MysteryBox.Manage`,
     params: {
       quest_id: getActiveQuestId(),
       page,
@@ -173,7 +172,7 @@ const createLinkToPage = (page) => {
 return (
   <>
     <Widget
-      src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.Title`}
+      src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.Title`}
       props={{
         text: 'My Giveaways',
       }}
@@ -185,7 +184,7 @@ return (
       />
       <WrapperMenu>
         <Widget
-          src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuHeader`}
+          src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.MenuHeader`}
           props={{
             title: quest.title,
             subtitle: quest.quest_id,
@@ -195,14 +194,14 @@ return (
         <MenuFooter>
           <MenuFooterRow>
             <Widget
-              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuButton`}
+              src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.MenuButton`}
               props={{
                 text: 'Add NEAR reward',
                 href: createLinkToPage('AddNearReward'),
               }}
             />
             <Widget
-              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuButton`}
+              src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.MenuButton`}
               props={{
                 text: 'Add NFT reward',
                 href: createLinkToPage('AddNftReward'),
@@ -211,14 +210,14 @@ return (
           </MenuFooterRow>
           <MenuFooterRow>
             <Widget
-              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuButton`}
+              src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.MenuButton`}
               props={{
                 text: 'Mint BOX',
                 href: createLinkToPage('MintBox'),
               }}
             />
             <Widget
-              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuButton`}
+              src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.MenuButton`}
               props={{
                 text: 'List Rewards',
                 href: createLinkToPage('ListRewards'),
@@ -227,14 +226,14 @@ return (
           </MenuFooterRow>
           <MenuFooterRow>
             <Widget
-              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuButton`}
+              src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.MenuButton`}
               props={{
                 text: 'List User Boxes',
                 href: createLinkToPage('ListUserBoxes'),
               }}
             />
             <Widget
-              src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.MenuButton`}
+              src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.MenuButton`}
               props={{
                 disabled: true,
                 text: 'Statistics',
@@ -250,11 +249,11 @@ return (
     </SliderWrapper>
     <Bottom>
       <Widget
-        src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
+        src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
         props={{
           text: 'Create another giveaway',
           href: linkHref({
-            widgetSrc: `${widget_owner_id}/widget/MysteryBox.Manage`,
+            widgetSrc: `${REPL_BOS}/widget/MysteryBox.Manage`,
             params: {
               page: 'DeployContract',
             },
@@ -262,11 +261,11 @@ return (
         }}
       />
       <Widget
-        src={`${widget_owner_id}/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
+        src={`${REPL_BOS}/widget/MysteryBox.Manage.Components.PrimaryLinkButton`}
         props={{
           text: 'View Claiming Page',
           href: linkHref({
-            widgetSrc: `${widget_owner_id}/widget/MysteryBox`,
+            widgetSrc: `${REPL_BOS}/widget/MysteryBox`,
             params: {
               quest_id: quest.quest_id,
             },

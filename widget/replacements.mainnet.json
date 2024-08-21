@@ -1,0 +1,5 @@
+{
+    "REPL_RPC_URL": "https://rpc.mainnet.near.org",
+    "REPL_BOS": "nearukraineguild.near",
+    "REPL_CONTRACT": "mb.nearukraineguild.near"
+}
