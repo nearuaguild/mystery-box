@@ -1,0 +1,109 @@
+name: Deploy the entire application
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to deploy
+        type: environment
+        required: true
+      commit_sha:
+        description: Full commit SHA
+        type: string
+        required: true
+
+jobs:
+  variables:
+    runs-on: ubuntu-latest
+    name: "Define variables"
+    outputs:
+      environment: ${{ steps.environment.outputs.value }}
+      commit_sha: ${{ steps.commit_sha.outputs.value }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Determine environment
+        id: environment
+        run: echo "value=${{ inputs.environment || 'testnet' }}" >> $GITHUB_OUTPUT
+
+      - name: Determine commit SHA
+        id: commit_sha
+        run: echo "value=${{ github.event.inputs.commit_sha || '$(git rev-parse HEAD)' }}" >> $GITHUB_OUTPUT
+
+  deploy_widgets:
+    needs: [variables]
+    runs-on: ubuntu-latest
+    name: "Deploy components on BOS"
+    environment: ${{ needs.variables.outputs.environment }}
+    defaults:
+      run:
+        working-directory: widget
+    env:
+      NEAR_NETWORK: ${{ vars.NEAR_NETWORK }}
+      NEAR_SOCIAL_ACCOUNT_ID: ${{ vars.NEAR_SOCIAL_ACCOUNT_ID }}
+      NEAR_SOCIAL_ACCOUNT_PUBLIC_KEY: ${{ vars.NEAR_SOCIAL_ACCOUNT_PUBLIC_KEY }}
+      NEAR_SOCIAL_ACCOUNT_PRIVATE_KEY: ${{ secrets.NEAR_SOCIAL_ACCOUNT_PRIVATE_KEY }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ needs.variables.outputs.commit_sha }}
+
+      - name: Set replacements
+        id: set_replacements
+        run: |
+          echo "replacements=$(jq -r '[to_entries[] | .["find"] = "${" + .key + "}" | .["replace"] = .value | del(.key, .value), {"find": "${REPL_BOS}", "replace": "'$NEAR_SOCIAL_ACCOUNT_ID'"}]' replacements.$NEAR_NETWORK.json | tr -d "\n\r")" >> $GITHUB_OUTPUT
+
+      - name: Replace placeholders
+        uses: flcdrg/replace-multiple-action@v1
+        with:
+          files: "**/*.jsx"
+          find: "${{ steps.set_replacements.outputs.replacements }}"
+          prefix: "(^|.*)"
+          suffix: "($|.*)"
+
+      - name: Install bos CLI
+        run: |
+          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/FroVolod/bos-cli-rs/releases/download/v0.3.2/bos-cli-installer.sh | sh
+
+      - name: Deploy widgets
+        run: |
+          which bos
+          echo $PATH
+          bos components deploy "$NEAR_SOCIAL_ACCOUNT_ID" sign-as "$NEAR_SOCIAL_ACCOUNT_ID" network-config $NEAR_NETWORK sign-with-plaintext-private-key --signer-public-key "$NEAR_SOCIAL_ACCOUNT_PUBLIC_KEY" --signer-private-key "$NEAR_SOCIAL_ACCOUNT_PRIVATE_KEY" send
+
+  deploy_contract:
+    needs: [variables]
+    runs-on: ubuntu-latest
+    name: "Build and deploy Rust contract"
+    environment: ${{ needs.variables.outputs.environment }}
+    defaults:
+      run:
+        working-directory: contract
+    env:
+      NEAR_NETWORK: ${{ vars.NEAR_NETWORK }}
+      NEAR_CONTRACT_ACCOUNT_ID: ${{ vars.NEAR_CONTRACT_ACCOUNT_ID }}
+      NEAR_CONTRACT_ACCOUNT_PUBLIC_KEY: ${{ vars.NEAR_CONTRACT_ACCOUNT_PUBLIC_KEY }}
+      NEAR_CONTRACT_ACCOUNT_PRIVATE_KEY: ${{ secrets.NEAR_CONTRACT_ACCOUNT_PRIVATE_KEY }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.variables.outputs.commit_sha }}
+
+      - uses: Swatinem/rust-cache@v1
+      - name: Install cargo-near
+        run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/near/cargo-near/releases/latest/download/cargo-near-installer.sh | sh
+      - name: Build contract
+        run: cargo near build --no-docker --no-abi
+      - name: Install near CLI
+        run: |
+          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/near/near-cli-rs/releases/download/v0.3.1/near-cli-rs-v0.3.1-installer.sh | sh
+      - name: Deploy contract
+        run: |
+          near contract deploy $NEAR_CONTRACT_ACCOUNT_ID use-file ./target/near/mystery_box.wasm without-init-call network-config $NEAR_NETWORK sign-with-plaintext-private-key --signer-public-key "$NEAR_CONTRACT_ACCOUNT_PUBLIC_KEY" --signer-private-key "$NEAR_CONTRACT_ACCOUNT_PRIVATE_KEY" send
